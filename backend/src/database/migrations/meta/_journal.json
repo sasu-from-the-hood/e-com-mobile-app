@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1761940314172,
+      "tag": "0000_unusual_morlun",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1762086916525,
+      "tag": "0001_small_adam_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1762090015398,
+      "tag": "0002_worried_firelord",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1762100565640,
+      "tag": "0003_open_gunslinger",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1762154258709,
+      "tag": "0004_first_gorilla_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1762156504254,
+      "tag": "0005_fast_supernaut",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1762157389166,
+      "tag": "0006_striped_dark_phoenix",
+      "breakpoints": true
+    }
+  ]
+}

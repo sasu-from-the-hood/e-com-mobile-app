@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `color_images` json DEFAULT ('{}');
