@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { View, StyleSheet, TextInput, TouchableOpacity, ScrollView, FlatList } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, TextInput, TouchableOpacity, ScrollView, FlatList, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
@@ -10,6 +10,7 @@ import { ProductCard } from '@/components/shop';
 import { ProductSkeleton } from '@/components/shop/product-skeleton';
 import { AppTheme } from '@/constants/app-theme';
 import { useSearch, usePopularSearches, useSearchHistory } from '@/hooks/useSearch';
+import { URL } from '@/config';
 
 interface SearchTerm {
   term: string;
@@ -33,6 +34,7 @@ export default function ShopSearchScreen() {
   const { results, loading, searchProducts, trackSearchClick } = useSearch();
   const { searches: popularSearches } = usePopularSearches();
   const { history: searchHistory, clearHistory, refetch: refreshHistory } = useSearchHistory();
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const handleClearHistory = async () => {
     try {
@@ -44,8 +46,18 @@ export default function ShopSearchScreen() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    
+    // Clear existing timeout
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+    
     if (query.trim()) {
-      searchProducts(query); 
+      // Debounce search with 800ms delay
+      const timeout = setTimeout(() => {
+        searchProducts(query);
+      }, 800);
+      setDebounceTimeout(timeout);
     }
   };
 
@@ -117,7 +129,7 @@ export default function ShopSearchScreen() {
       {!searchQuery && (
         <ScrollView style={styles.content}>
           {/* Search History */}
-          {searchHistory && searchHistory.length > 0 && (
+          {searchHistory && searchHistory.length > 0 ? (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <ThemedText style={styles.sectionTitle}>Recent Searches (Top 5)</ThemedText>
@@ -141,23 +153,33 @@ export default function ShopSearchScreen() {
                 </TouchableOpacity>
               ))}
             </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <Search size={64} color={AppTheme.colors.mutedForeground} />
+              <ThemedText style={styles.emptyStateTitle}>No search yet</ThemedText>
+              <ThemedText style={styles.emptyStateText}>
+                Start searching for products to see your history here
+              </ThemedText>
+            </View>
           )}
 
           {/* Popular Search */}
-          <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Popular Search</ThemedText>
-            <View style={styles.chipsContainer}>
-              {(popularSearches || []).map((item: SearchTerm, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.chip, { backgroundColor: item.color || AppTheme.colors.secondary }]}
-                  onPress={() => handleSearch(item.term)}
-                >
-                  <ThemedText style={styles.chipText}>{item.term}</ThemedText>
-                </TouchableOpacity>
-              ))}
+          {popularSearches && popularSearches.length > 0 && (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Popular Search</ThemedText>
+              <View style={styles.chipsContainer}>
+                {(popularSearches || []).map((item: SearchTerm, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[styles.chip, { backgroundColor: item.color || AppTheme.colors.secondary }]}
+                    onPress={() => handleSearch(item.term)}
+                  >
+                    <ThemedText style={styles.chipText}>{item.term}</ThemedText>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
-          </View>
+          )}
         </ScrollView>
       )}
     </SafeAreaView>
@@ -165,15 +187,63 @@ export default function ShopSearchScreen() {
 }
 
 // Product Row Card Component for search results
-function ProductRowCard({ product, onPress }: { product: Product; onPress: () => void }) {
+const ProductRowCard = React.memo(({ product, onPress }: { product: Product; onPress: () => void }) => {
+  const getImageUrl = (imagePath: string | undefined) => {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    return `${URL.IMAGE}${imagePath}`;
+  };
+
+  // Get image from colorImages - just show first image from first color
+  const colorImages = (product as any).colorImages || {};
+  const colors = Object.keys(colorImages);
+  
+  let imageUrl = '';
+  let borderColor = '';
+
+  if (colors.length > 0) {
+    // Get first color and its first image
+    const firstColor = colors[0];
+    borderColor = firstColor;
+    const firstColorImages = colorImages[firstColor] || [];
+    if (firstColorImages.length > 0) {
+      imageUrl = getImageUrl(firstColorImages[0]);
+    }
+  }
+
+  // Fallback to product.image if no colorImages
+  if (!imageUrl && product.image) {
+    imageUrl = getImageUrl(product.image);
+  }
+
   return (
     <TouchableOpacity style={styles.productRow} onPress={onPress} activeOpacity={0.7}>
+      <View style={styles.productImageContainer}>
+        <View style={[
+          styles.productImageWrapper,
+          borderColor && { borderWidth: 3, borderColor: borderColor }
+        ]}>
+          {imageUrl ? (
+            <Image
+              source={{ uri: imageUrl }}
+              style={styles.productImage}
+              contentFit="cover"
+            />
+          ) : (
+            <View style={styles.productImagePlaceholder}>
+              <ThemedText style={styles.imagePlaceholder}>IMG</ThemedText>
+            </View>
+          )}
+        </View>
+      </View>
       <View style={styles.productInfo}>
         <ThemedText style={styles.productName} numberOfLines={2}>
           {product.name}
         </ThemedText>
         <ThemedText style={styles.productPrice}>
-          ${product.price}
+          ETB {product.price}
         </ThemedText>
         {product.colors && product.colors.length > 0 && (
           <View style={styles.colorsContainer}>
@@ -194,22 +264,12 @@ function ProductRowCard({ product, onPress }: { product: Product; onPress: () =>
           </ThemedText>
         )}
       </View>
-      <View style={styles.productImageContainer}>
-        {product.image ? (
-          <Image
-            source={product.image}
-            style={styles.productImage}
-            contentFit="cover"
-          />
-        ) : (
-          <View style={styles.productImagePlaceholder}>
-            <ThemedText style={styles.imagePlaceholder}>IMG</ThemedText>
-          </View>
-        )}
-      </View>
     </TouchableOpacity>
   );
-}
+}, (prevProps, nextProps) => {
+  // Only re-render if product id changes
+  return prevProps.product.id === nextProps.product.id;
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -324,17 +384,23 @@ const styles = StyleSheet.create({
   productImageContainer: {
     width: 80,
     height: 80,
+    marginRight: AppTheme.spacing.md,
+  },
+  productImageWrapper: {
+    width: '100%',
+    height: '100%',
+    borderRadius: AppTheme.borderRadius.md,
+    overflow: 'hidden',
+    backgroundColor: AppTheme.colors.secondary,
   },
   productImage: {
     width: '100%',
     height: '100%',
-    borderRadius: AppTheme.borderRadius.md,
   },
   productImagePlaceholder: {
     width: '100%',
     height: '100%',
     backgroundColor: AppTheme.colors.secondary,
-    borderRadius: AppTheme.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -363,5 +429,29 @@ const styles = StyleSheet.create({
   skeletonRow: {
     height: 100,
     marginBottom: AppTheme.spacing.md,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: AppTheme.spacing.xl,
+    marginTop: AppTheme.spacing.xxxl,
+  },
+  emptyStateTitle: {
+    fontSize: AppTheme.fontSize.xl,
+    fontWeight: AppTheme.fontWeight.bold,
+    marginTop: AppTheme.spacing.lg,
+    marginBottom: AppTheme.spacing.sm,
+  },
+  emptyStateText: {
+    fontSize: AppTheme.fontSize.base,
+    color: AppTheme.colors.mutedForeground,
+    textAlign: 'center',
+  },
+  helperText: {
+    fontSize: AppTheme.fontSize.base,
+    color: AppTheme.colors.mutedForeground,
+    textAlign: 'center',
+    paddingVertical: AppTheme.spacing.xl,
   },
 });

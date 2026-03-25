@@ -5,15 +5,24 @@ export interface PrimaryButtonProps {
   onPress: () => void;
   style?: ViewStyle;
   loading?: boolean;
+  disabled?: boolean;
+  variant?: 'primary' | 'destructive';
 }
 
-export function PrimaryButton({ title, onPress, style, loading }: PrimaryButtonProps) {
+export function PrimaryButton({ title, onPress, style, loading, disabled, variant = 'primary' }: PrimaryButtonProps) {
+  const isDisabled = loading || disabled;
+  
   return (
     <TouchableOpacity
-      style={[styles.button, loading && styles.buttonDisabled, style]}
-      onPress={loading ? undefined : onPress}
+      style={[
+        styles.button, 
+        variant === 'destructive' && styles.buttonDestructive,
+        isDisabled && styles.buttonDisabled, 
+        style
+      ]}
+      onPress={isDisabled ? undefined : onPress}
       activeOpacity={0.8}
-      disabled={loading}
+      disabled={isDisabled}
     >
       {loading ? (
         <ActivityIndicator color="#FFFFFF" />
@@ -50,5 +59,9 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.7,
+  },
+  buttonDestructive: {
+    backgroundColor: '#DC2626',
+    shadowColor: '#DC2626',
   },
 });

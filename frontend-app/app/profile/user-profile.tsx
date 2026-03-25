@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
-import { Package, MapPin, CreditCard, Bell, Settings, HelpCircle, LogOut, Edit3, ShoppingCart } from 'lucide-react-native';
+import { Package, MapPin, Bell, Settings, HelpCircle, LogOut, Edit3, ShoppingCart } from 'lucide-react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Avatar } from '@/components/ui/Avatar';
 import { ProfileMenuItem } from '@/components/profile/profile-menu-item';
@@ -95,11 +95,6 @@ export default function UserProfileScreen() {
             title="Addresses"
             icon={<MapPin size={24} color={AppTheme.colors.primary} />}
             onPress={() => router.push('/profile/address-list')}
-          />
-          <ProfileMenuItem
-            title="Payment Methods"
-            icon={<CreditCard size={24} color={AppTheme.colors.primary} />}
-            onPress={() => router.push('/profile/payment-methods')}
           />
           <ProfileMenuItem
             title="Notifications"

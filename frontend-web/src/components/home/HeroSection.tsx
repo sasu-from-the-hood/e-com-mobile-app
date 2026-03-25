@@ -2,55 +2,13 @@ import { Button } from "@/components/ui/button"
 import { useSession } from "@/hooks/auth/auth-client"
 import { useFetchConfig } from "@/hooks/FetchConfig"
 import { useNavigate } from "react-router-dom"
-import { ArrowRight, ShoppingBag } from "lucide-react"
-import { useState } from "react"
+import { ArrowRight } from "lucide-react"
+import { PhoneMockup } from "./PhoneMockup"
 
 export function HeroSection() {
   const { data: session } = useSession()
   const { data: handshake } = useFetchConfig()
   const navigate = useNavigate()
-  
-  const [selectedColor, setSelectedColor] = useState('pink')
-  const [quantity, setQuantity] = useState(1)
-  const [cartItems, setCartItems] = useState([
-    { id: 1, name: 'Minimalist Chair', price: 235, color: 'bg-pink-300', quantity: 1 },
-  ])
-  const [showPayment, setShowPayment] = useState(false)
-  
-  const colors = [
-    { name: 'pink', bg: 'bg-pink-300', border: 'border-pink-400' },
-    { name: 'black', bg: 'bg-gray-800', border: 'border-gray-900' },
-    {name : 'blue', bg: 'bg-blue-800', border: 'border-blue-900' }
-  ]
-  
-  const getColorClass = (colorName: string) => {
-    const colorMap: Record<string, string> = {
-      pink: 'bg-pink-300',
-      black: 'bg-gray-800',
-      blue: 'bg-blue-800'
-    }
-    return colorMap[colorName] || 'bg-pink-300'
-  }
-  
-  const handleAddToCart = () => {
-    const newItem = {
-      id: Date.now(),
-      name: 'Minimal Chair',
-      price: 115,
-      color: getColorClass(selectedColor),
-      quantity: quantity
-    }
-    setCartItems([...cartItems, newItem])
-    setQuantity(1)
-  }
-  
-  const updateCartQuantity = (id: number, delta: number) => {
-    setCartItems(cartItems.map(item => 
-      item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-    ))
-  }
-  
-  const cartTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
   return (
     <section id="home" className="relative overflow-hidden min-h-screen flex items-center bg-gray-900">
@@ -59,7 +17,7 @@ export function HeroSection() {
       <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-gray-300 to-transparent opacity-20" />
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 xl:gap-12 items-center">
           {/* Left Content */}
           <div className="animate-fade-in-up">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white mb-8 leading-tight">
@@ -98,7 +56,7 @@ export function HeroSection() {
             </div>
             
             {/* Stats */}
-            <div className="flex items-center space-x-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-8">
               <div>
                 <div className="text-4xl font-bold text-white">{handshake?.stats?.totalUsers || '1.5M'}</div>
                 <div className="text-gray-400">Users using this app</div>
@@ -121,165 +79,30 @@ export function HeroSection() {
           </div>
           
           {/* Right Content - Mobile Mockups */}
-          <div className="relative flex justify-center lg:justify-end">
-            <div className="relative group">
+          <div className="relative flex justify-center overflow-hidden">
+            <div className="relative group max-w-full">
               {/* Main Phone - Product View */}
-              <div className="relative z-10 w-80 h-[650px] bg-black rounded-[3rem] p-3 shadow-2xl transform rotate-3 transition-all duration-500 ease-in-out hover:rotate-6 hover:scale-105 hover:-translate-y-2 cursor-pointer">
-                <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden">
-                  {/* Status Bar */}
-                  <div className="bg-gray-100  h-8 rounded-t-[2.5rem] flex items-center justify-center">
-                    <div className="w-32 h-4 bg-black rounded-full" />
-                  </div>
-                  <div className="bg-gray-100 p-4 h-full">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                      <ArrowRight className="w-6 h-6 rotate-180 text-gray-600" />
-                      <span className="font-semibold text-gray-800">Product</span>
-                      <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center relative">
-                        <ShoppingBag className="w-4 h-4 text-white" />
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">2</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Product Card */}
-                    <div className="bg-white rounded-3xl shadow-lg p-4">
-                      {/* Product Image */}
-                      <div className={`w-full h-48 bg-gradient-to-br ${selectedColor === 'pink' ? 'from-pink-200 to-pink-300' : selectedColor === 'blue' ? 'from-blue-300 to-blue-400' : 'from-gray-700 to-gray-800'} rounded-2xl mb-4 flex items-center justify-center relative overflow-hidden transition-all duration-500`}>
-                        <div className={`w-24 h-32 ${selectedColor === 'pink' ? 'bg-pink-400' : selectedColor === 'blue' ? 'bg-blue-600' : 'bg-gray-900'} rounded-2xl transform rotate-12 opacity-80 transition-all duration-500`} />
-                        <button className="absolute top-3 right-3 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md hover:scale-125 transition-all duration-300 hover:bg-red-50 active:scale-95">
-                          <div className="w-3 h-3 bg-red-500 rounded-full transition-colors hover:bg-red-600" />
-                        </button>
-                      </div>
-                      
-                      {/* Product Info */}
-                      <div className="text-red-500 text-2xl font-bold mb-2">Birr {(115 * quantity).toFixed(2)}</div>
-                      <div className="font-bold text-gray-800 text-base mb-1">Minimal Chair</div>
-                      <div className="text-xs text-gray-500 mb-3">Color option</div>
-                      
-                      {/* Color Options */}
-                      <div className="flex space-x-2 mb-4">
-                        {colors.map((color) => (
-                          <button
-                            key={color.name}
-                            onClick={() => setSelectedColor(color.name)}
-                            className={`w-6 h-6 ${color.bg} rounded-full border-2 ${selectedColor === color.name ? color.border + ' ring-2 ring-offset-2 ring-gray-400' : 'border-transparent'} hover:scale-125 transition-all duration-300 active:scale-95`}
-                          />
-                        ))}
-                      </div>
-                      
-                      
-                      {/* Description */}
-                      <div className="text-xs text-gray-500 mb-4">
-                        <div className="font-semibold mb-1">Description</div>
-                        <div className="text-gray-400 leading-relaxed">
-                          Minimal chair made with high quality materials.
-                        </div>
-                      </div>
-                      
-                      {/* Add to Cart Button */}
-                      <button
-                        onClick={handleAddToCart}
-                        className="w-full bg-gray-900 text-white rounded-2xl py-3 text-sm font-semibold hover:bg-gray-800 transition-all duration-300 flex items-center justify-center space-x-2 hover:scale-105 active:scale-95 hover:shadow-lg"
-                      >
-                        <span className="transition-transform duration-300">+</span>
-                        <span>Add to Cart</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              <div className="relative z-10 transform rotate-1 lg:rotate-3 transition-all duration-500 ease-in-out hover:rotate-6 hover:scale-105 hover:-translate-y-2 cursor-pointer">
+                <PhoneMockup 
+                  type="product" 
+                  className="w-64 sm:w-72 lg:w-80 h-auto drop-shadow-2xl" 
+                />
               </div>
               
               {/* Secondary Phone - Cart View */}
-              <div className="absolute -right-20 top-16 w-72 h-[580px] bg-black rounded-[2.5rem] p-3 shadow-xl transform -rotate-2 transition-all duration-700 ease-in-out group-hover:rotate-2 group-hover:scale-110 group-hover:translate-x-4 group-hover:-translate-y-4 cursor-pointer hover:z-20">
-                <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden">
-                  {/* Status Bar */}
-                  <div className="bg-gray-100 h-7 rounded-t-[2rem] flex items-center justify-center">
-                    <div className="w-24 h-3 bg-black rounded-full" />
-                  </div>
-                  <div className="bg-gray-100 p-4 h-full flex flex-col">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-4">
-                      <button className="p-1 hover:bg-gray-200 rounded-full transition-colors">
-                        <ArrowRight className="w-5 h-5 rotate-180 text-gray-600" />
-                      </button>
-                      <span className="font-semibold text-gray-800 text-lg">Cart</span>
-                      <div className="w-6" />
-                    </div>
-                    
-                    {/* Cart Items */}
-                    <div className="space-y-3 mb-4 flex-1 overflow-y-auto max-h-[280px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                      {cartItems.map((item) => (
-                        <div key={item.id} className="bg-white rounded-2xl p-3 flex items-center space-x-3 shadow-sm">
-                          <div className={`w-10 h-10 ${item.color} rounded-xl`} />
-                          <div className="flex-1">
-                            <div className="text-xs font-medium text-gray-800">{item.name}</div>
-                            <div className="text-red-500 font-bold text-sm">Birr{(item.price * item.quantity).toFixed(2)}</div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() => updateCartQuantity(item.id, -1)}
-                              className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold hover:bg-gray-300 transition-all duration-300 hover:scale-110 active:scale-95"
-                            >
-                              -
-                            </button>
-                            <span className="text-gray-600 text-xs w-4 text-center transition-all duration-300">{item.quantity}</span>
-                            <button
-                              onClick={() => updateCartQuantity(item.id, 1)}
-                              className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold hover:bg-gray-300 transition-all duration-300 hover:scale-110 active:scale-95"
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Summary */}
-                    <div className="bg-white rounded-2xl p-3 mb-3">
-                      <div className="space-y-1 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Subtotal Items</span>
-                          <span className="text-gray-800">Birr{cartTotal.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Shipping Fee</span>
-                          <span className="text-gray-800">Birr0.00</span>
-                        </div>
-                        <hr className="my-1" />
-                        <div className="flex justify-between font-bold text-sm">
-                          <span>Subtotal</span>
-                          <span className="text-red-500">Birr{cartTotal.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Payment Options */}
-                    {showPayment && (
-                      <div className="bg-white rounded-2xl p-3 mb-3 space-y-2">
-                        <div className="text-xs font-semibold text-gray-800 mb-2">Payment Method</div>
-                        <button className="w-full bg-blue-600 text-white rounded-xl py-2 text-xs font-semibold hover:bg-blue-700 transition-all duration-300 hover:scale-105 active:scale-95">
-                          💳 Credit Card
-                        </button>
-                        <button className="w-full bg-green-600 text-white rounded-xl py-2 text-xs font-semibold hover:bg-green-700 transition-all duration-300 hover:scale-105 active:scale-95">
-                          💰 Cash on Delivery
-                        </button>
-                        <button className="w-full bg-purple-600 text-white rounded-xl py-2 text-xs font-semibold hover:bg-purple-700 transition-all duration-300 hover:scale-105 active:scale-95">
-                          📱 Mobile Money
-                        </button>
-                      </div>
-                    )}
-                    
-                    {/* Checkout Button */}
-                    <button
-                      onClick={() => setShowPayment(!showPayment)}
-                      className="w-full mb-10 bg-gray-900 text-white rounded-2xl py-3 text-sm font-semibold hover:bg-gray-800 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-lg"
-                    >
-                      {showPayment ? 'Hide Payment' : 'Checkout'}
-                    </button>
-                  </div>
-                </div>
+              <div className="absolute -right-4 sm:-right-6 lg:-right-12 top-8 sm:top-12 lg:top-16 transform -rotate-1 lg:-rotate-2 transition-all duration-700 ease-in-out group-hover:rotate-2 group-hover:scale-110 group-hover:translate-x-2 lg:group-hover:translate-x-4 group-hover:-translate-y-4 cursor-pointer hover:z-20">
+                <PhoneMockup 
+                  type="cart" 
+                  className="w-56 sm:w-64 lg:w-72 h-auto drop-shadow-xl opacity-90 hover:opacity-100" 
+                />
+              </div>
+
+              {/* Third Phone - Home View (Background) */}
+              <div className="absolute -left-8 sm:-left-12 lg:-left-16 top-20 sm:top-24 lg:top-32 transform rotate-2 lg:rotate-3 transition-all duration-1000 ease-in-out group-hover:-rotate-1 group-hover:scale-95 group-hover:-translate-x-2 lg:group-hover:-translate-x-4 group-hover:translate-y-2 cursor-pointer opacity-60 hover:opacity-80">
+                <PhoneMockup 
+                  type="home" 
+                  className="w-48 sm:w-56 lg:w-64 h-auto drop-shadow-lg" 
+                />
               </div>
             </div>
           </div>

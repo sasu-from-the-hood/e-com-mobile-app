@@ -1,6 +1,38 @@
 import { useRef, useState } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, Dimensions } from 'react-native';
 import { AppTheme } from '@/constants/app-theme';
+
+const { width } = Dimensions.get('window');
+const isSmallDevice = width < 375;
+const isTinyDevice = width < 350;
+
+// Calculate responsive input size
+const getInputSize = () => {
+  if (isTinyDevice) {
+    return {
+      width: 40,
+      height: 48,
+      fontSize: AppTheme.fontSize.xl,
+      gap: AppTheme.spacing.xs,
+    };
+  } else if (isSmallDevice) {
+    return {
+      width: 45,
+      height: 52,
+      fontSize: AppTheme.fontSize.xl,
+      gap: AppTheme.spacing.sm,
+    };
+  } else {
+    return {
+      width: 50,
+      height: 56,
+      fontSize: AppTheme.fontSize.xxl,
+      gap: AppTheme.spacing.md,
+    };
+  }
+};
+
+const inputSize = getInputSize();
 
 export interface OTPInputProps {
   length?: number;
@@ -54,16 +86,19 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: AppTheme.spacing.md,
+    alignItems: 'center',
+    gap: inputSize.gap,
+    paddingHorizontal: AppTheme.spacing.sm,
+    flexWrap: 'nowrap',
   },
   input: {
-    width: 50,
-    height: 56,
+    width: inputSize.width,
+    height: inputSize.height,
     borderWidth: 2,
     borderColor: AppTheme.colors.border,
     borderRadius: AppTheme.borderRadius.md,
     textAlign: 'center',
-    fontSize: AppTheme.fontSize.xxl,
+    fontSize: inputSize.fontSize,
     fontWeight: AppTheme.fontWeight.bold,
     color: AppTheme.colors.foreground,
   },

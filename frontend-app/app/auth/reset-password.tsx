@@ -8,8 +8,13 @@ import { PrimaryButton } from '@/components/onboarding/primary-button';
 import { PasswordInput } from '@/components/auth/password-input';
 import { AppTheme } from '@/constants/app-theme';
 import { validatePassword } from '@/utils/validators';
-import { authClient } from '@/lib/auth-client';
+import { appAuthClient } from '@/lib/app-auth-client';
 import { showToast } from '@/utils/toast';
+import { 
+  isTinyDevice, 
+  getResponsivePadding, 
+  getResponsiveFontSize,
+} from '@/utils/responsive';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -38,20 +43,20 @@ export default function ResetPasswordScreen() {
     if (!newErrors.newPassword && !newErrors.confirmPassword) {
       setIsLoading(true);
       try {
-        const { data, error } = await authClient.phoneNumber.resetPassword({
-          otp: params.otp,
-          phoneNumber: params.phoneNumber,
-          newPassword,
-        });
-
-        if (error) {
-          showToast('error', error.message || 'Failed to reset password');
-        } else {
-          showToast('success', 'Password reset successfully!');
-          router.replace('/auth/login');
-        }
-      } catch (err) {
-        showToast('error', 'Network error. Please check your connection.');
+        console.log('[ResetPassword] Resetting password for:', params.phoneNumber);
+        await appAuthClient.resetPassword(
+          params.phoneNumber,
+          params.otp,
+          newPassword
+        );
+        console.log('[ResetPassword] Password reset successful');
+        
+        showToast('success', 'Password reset successfully!');
+        router.replace('/auth/login');
+      } catch (err: any) {
+        console.error('[ResetPassword] Failed to reset password:', err);
+        console.error('[ResetPassword] Error message:', err.message);
+        showToast('error', err.message || 'Failed to reset password');
       } finally {
         setIsLoading(false);
       }
@@ -110,23 +115,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: AppTheme.spacing.lg,
-    paddingTop: AppTheme.spacing.xxl,
+    flexGrow: 1,
+    paddingHorizontal: getResponsivePadding(),
+    paddingTop: isTinyDevice ? AppTheme.spacing.lg : AppTheme.spacing.xxl,
+    paddingBottom: AppTheme.spacing.xl,
+    width: '100%',
   },
   header: {
-    marginBottom: AppTheme.spacing.xxl,
+    marginBottom: isTinyDevice ? AppTheme.spacing.lg : AppTheme.spacing.xxl,
+    alignItems: 'flex-start',
   },
   title: {
-    fontSize: AppTheme.fontSize.xxxl,
+    fontSize: getResponsiveFontSize(AppTheme.fontSize.xxxl),
     fontWeight: AppTheme.fontWeight.bold,
     marginBottom: AppTheme.spacing.sm,
+    textAlign: 'left',
   },
   subtitle: {
-    fontSize: AppTheme.fontSize.base,
+    fontSize: getResponsiveFontSize(AppTheme.fontSize.base),
     color: AppTheme.colors.mutedForeground,
+    textAlign: 'left',
   },
   form: {
-    marginTop: AppTheme.spacing.xl,
-    gap: AppTheme.spacing.lg,
+    marginTop: isTinyDevice ? AppTheme.spacing.md : AppTheme.spacing.xl,
+    gap: isTinyDevice ? AppTheme.spacing.md : AppTheme.spacing.lg,
   },
 });

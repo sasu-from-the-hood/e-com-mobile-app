@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { config } from '../config/env_config.js'
+import { notifyError } from './error-notifier.js'
 
 type LogLevelName = 'silent' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
 
@@ -88,7 +89,14 @@ function baseLog(level: LogLevelName, message: unknown, meta?: Record<string, un
 
 export const logger = {
   error(message: unknown, meta?: Record<string, unknown>) {
-    if (shouldLog('error')) baseLog('error', message, meta)
+    if (shouldLog('error')) {
+      baseLog('error', message, meta)
+      // Notify error (saves to file and attempts email)
+      const errorMessage = typeof message === 'string' ? message : JSON.stringify(message)
+      notifyError(errorMessage, meta).catch(err => {
+        console.error('[Logger] Failed to notify error:', err)
+      })
+    }
   },
   warn(message: unknown, meta?: Record<string, unknown>) {
     if (shouldLog('warn')) baseLog('warn', message, meta)

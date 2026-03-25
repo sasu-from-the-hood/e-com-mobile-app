@@ -1,1 +1,0 @@
-ALTER TABLE `cart_items` MODIFY COLUMN `selected` varchar(5) DEFAULT 'false';

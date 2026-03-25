@@ -5,7 +5,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { ThemedText } from '@/components/themed-text';
 import { AppTheme } from '@/constants/app-theme';
 import { settingsStorage } from '@/utils/settings-storage';
-import { authClient } from '@/lib/auth-client';
+import { appAuthClient } from '@/lib/app-auth-client';
 import { showToast } from '@/utils/toast';
 
 
@@ -56,9 +56,14 @@ export function BiometricLoginButtons({ onSuccess }: BiometricLoginButtonsProps)
 
       if (result.success) {
         try {
-          await authClient.signIn.passkey();
-          showToast('success', 'Touch ID authentication successful');
-          onSuccess();
+          // Check if user is already authenticated
+          const isAuthenticated = await appAuthClient.isAuthenticated();
+          if (isAuthenticated) {
+            showToast('success', 'Touch ID authentication successful');
+            onSuccess();
+          } else {
+            showToast('error', 'Please login first to enable Touch ID');
+          }
         } catch (error) {
           showToast('error', 'Touch ID authentication failed');
         }

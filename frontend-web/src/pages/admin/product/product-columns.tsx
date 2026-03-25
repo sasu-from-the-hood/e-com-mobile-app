@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { IconDots } from "@tabler/icons-react"
+import { IconDots, IconEdit, IconLink, IconShare, IconBrandWhatsapp, IconBrandTwitter, IconTrash } from "@tabler/icons-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { URL } from "@/config"
+import { toast } from "sonner"
 
 interface Product {
   id: string
@@ -34,6 +35,8 @@ interface Product {
   rating?: string
   reviewCount?: number
   categoryId?: string
+  warehouseId?: string
+  warehouseName?: string
 }
 
 interface ProductColumnProps {
@@ -46,6 +49,11 @@ export const createProductColumns = ({ onEdit, onDelete }: ProductColumnProps) =
     accessorKey: "categoryName",
     header: "Category",
     cell: (value: string | undefined) => value || "Uncategorized"
+  },
+  {
+    accessorKey: "warehouseName",
+    header: "Warehouse",
+    cell: (value: string | undefined) => value || <span className="text-xs text-gray-500">No warehouse</span>
   },
   { 
     accessorKey: "name", 
@@ -175,25 +183,67 @@ export const createProductColumns = ({ onEdit, onDelete }: ProductColumnProps) =
             <IconDots className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>Product Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onEdit(row)} className="cursor-pointer">
+            <IconEdit className="mr-2 h-4 w-4" />
             <span>Edit Product</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.id)} className="cursor-pointer">
-            <span>Copy ID</span>
+          <DropdownMenuItem 
+            onClick={() => {
+              const productUrl = `${window.location.origin}/product/${row.slug || row.id}`
+              navigator.clipboard.writeText(productUrl)
+              toast.success("Product URL copied to clipboard!")
+            }} 
+            className="cursor-pointer"
+          >
+            <IconLink className="mr-2 h-4 w-4" />
+            <span>Copy Product URL</span>
           </DropdownMenuItem>
-          {row.slug && (
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.slug)} className="cursor-pointer">
-              <span>Copy Slug</span>
-            </DropdownMenuItem>
-          )}
+          <DropdownMenuItem 
+            onClick={() => {
+              const productUrl = `${window.location.origin}/product/${row.slug || row.id}`
+              const shareText = `Check out this amazing product: ${row.name} - Only Birr ${row.price}! ${productUrl}`
+              navigator.clipboard.writeText(shareText)
+              toast.success("Social share text copied to clipboard!")
+            }} 
+            className="cursor-pointer"
+          >
+            <IconShare className="mr-2 h-4 w-4" />
+            <span>Copy Social Share Text</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={() => {
+              const productUrl = `${window.location.origin}/product/${row.slug || row.id}`
+              const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`🛍️ Check out this amazing product!\n\n*${row.name}*\nPrice: Birr ${row.price}\n\n${productUrl}`)}`
+              window.open(whatsappUrl, '_blank')
+              toast.success("Opening WhatsApp to share product!")
+            }} 
+            className="cursor-pointer"
+          >
+            <IconBrandWhatsapp className="mr-2 h-4 w-4" />
+            <span>Share on WhatsApp</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => {
+              const productUrl = `${window.location.origin}/product/${row.slug || row.id}`
+              const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`🛍️ Check out this amazing product: ${row.name} - Only Birr ${row.price}!`)}&url=${encodeURIComponent(productUrl)}&hashtags=shopping,deals`
+              window.open(twitterUrl, '_blank')
+              toast.success("Opening Twitter to share product!")
+            }} 
+            className="cursor-pointer"
+          >
+            <IconBrandTwitter className="mr-2 h-4 w-4" />
+            <span>Share on Twitter</span>
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem 
             onClick={() => onDelete(row.id)} 
             className="text-red-600 focus:text-red-600 cursor-pointer"
           >
+            <IconTrash className="mr-2 h-4 w-4" />
             <span>Delete Product</span>
           </DropdownMenuItem>
         </DropdownMenuContent>

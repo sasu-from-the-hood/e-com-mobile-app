@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { authClient } from '@/lib/auth-client';
+import { appAuthClient, User } from '@/lib/app-auth-client';
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [networkError, setNetworkError] = useState<boolean>(false);
   const router = useRouter();
 
@@ -17,24 +17,34 @@ export function useAuth() {
       setNetworkError(false);
       
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth check timeout')), 500)
+        setTimeout(() => reject(new Error('Auth check timeout')), 5000)
       );
       
-      const session = await Promise.race([
-        authClient.getSession(),
+      const currentUser = await Promise.race([
+        appAuthClient.getSession(),
         timeoutPromise
-      ]) as any;
+      ]) as User | null;
       
-      if (session?.data?.user) {
+      if (currentUser) {
+        // Check if user is banned
+        if (currentUser.role === 'banned') {
+          setIsAuthenticated(false);
+          setUser(null);
+          router.replace('/auth/banned');
+          return;
+        }
+        
         setIsAuthenticated(true);
-        setUser(session.data.user);
+        setUser(currentUser);
       } else {
         setIsAuthenticated(false);
         setUser(null);
       }
     } catch (error: any) {
       console.log('Auth check error:', error);
-      const isNetworkError = error.message?.includes('timeout') || error.message?.includes('CONNECTION_TIMED_OUT');
+      const isNetworkError = error.message?.includes('timeout') || 
+                            error.message?.includes('CONNECTION_TIMED_OUT') || 
+                            error.message?.includes('Network');
       setNetworkError(isNetworkError);
       setIsAuthenticated(false);
       setUser(null);
@@ -49,13 +59,10 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      // Try to sign out from server
-      await authClient.signOut();
+      await appAuthClient.logout();
     } catch (error: any) {
-      console.error('Server logout error:', error);
-      // Continue with local logout even if server fails
+      console.error('Logout error:', error);
     } finally {
-      // Always clear local state regardless of server response
       setIsAuthenticated(false);
       setUser(null);
       router.replace('/auth/login');

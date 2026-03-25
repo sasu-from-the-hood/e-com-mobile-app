@@ -38,7 +38,7 @@ export const getBanners = publicProcedure
   .handler(async () => {
     const banners = []
 
-    // 1. High Discount Products Banner
+    // 1. High Discount Featured Products Banner
     const highDiscountProduct = await db
       .select({
         id: products.id,
@@ -50,7 +50,8 @@ export const getBanners = publicProcedure
       .where(and(
         gte(products.discount, 20),
         products.isActive,
-        products.inStock
+        products.inStock,
+        products.isFeatured
       ))
       .orderBy(desc(products.discount))
       .limit(1)
@@ -69,7 +70,7 @@ export const getBanners = publicProcedure
       })
     }
     
-    // 2. Low Stock Alert Banner (creates urgency)
+    // 2. Low Stock Alert Banner (creates urgency) - Featured only
     const lowStockProduct = await db
       .select({
         id: products.id,
@@ -81,7 +82,8 @@ export const getBanners = publicProcedure
       .where(and(
         lte(products.stockQuantity, products.lowStockThreshold),
         products.inStock,
-        products.isActive
+        products.isActive,
+        products.isFeatured
       ))
       .orderBy(asc(products.stockQuantity))
       .limit(1)
@@ -99,7 +101,7 @@ export const getBanners = publicProcedure
       })
     }
 
-    // 3. Low Price Banner
+    // 3. Low Price Banner - Featured only
     const lowPriceProduct = await db
       .select({
         id: products.id,
@@ -111,7 +113,8 @@ export const getBanners = publicProcedure
       .where(and(
         sql`${products.price} <= 25`,
         products.isActive,
-        products.inStock
+        products.inStock,
+        products.isFeatured
       ))
       .orderBy(asc(products.price))
       .limit(1)
@@ -129,7 +132,7 @@ export const getBanners = publicProcedure
       })
     }
 
-    // 4. New Arrivals Banner (recent products)
+    // 4. New Arrivals Banner (recent products) - Featured only
     const newProduct = await db
       .select({
         id: products.id,
@@ -140,7 +143,8 @@ export const getBanners = publicProcedure
       .where(and(
         gte(products.createdAt, sql`DATE_SUB(NOW(), INTERVAL 7 DAY)`),
         products.isActive,
-        products.inStock
+        products.inStock,
+        products.isFeatured
       ))
       .orderBy(desc(products.createdAt))
       .limit(1)
@@ -158,7 +162,7 @@ export const getBanners = publicProcedure
       })
     }
     
-    // Fallback banners if no data
+    // Fallback banners if no featured products
     if (banners.length === 0) {
       return [
         {

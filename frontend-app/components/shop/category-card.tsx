@@ -6,7 +6,7 @@ import { AppTheme } from '@/constants/app-theme';
 export interface CategoryCardProps {
   title: string;
   productCount: number;
-  imageUrl: string;
+  imageUrl?: string;
   imageAlt: string;
   onPress: () => void;
   variant?: 'large' | 'medium';
@@ -28,12 +28,18 @@ export function CategoryCard({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <Image
-        source={{ uri: imageUrl }}
-        style={styles.image}
-        contentFit="cover"
-        alt={imageAlt}
-      />
+      {imageUrl ? (
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.image}
+          contentFit="cover"
+          alt={imageAlt}
+        />
+      ) : (
+        <View style={[styles.image, styles.noImageContainer]}>
+          <ThemedText style={styles.noImageText}>No Image</ThemedText>
+        </View>
+      )}
       <View style={styles.overlay} />
       <View style={styles.content}>
         <ThemedText style={styles.title}>{title}</ThemedText>
@@ -58,6 +64,16 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     position: 'absolute',
+  },
+  noImageContainer: {
+    backgroundColor: AppTheme.colors.muted,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noImageText: {
+    fontSize: AppTheme.fontSize.base,
+    color: AppTheme.colors.mutedForeground,
+    fontWeight: AppTheme.fontWeight.medium,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

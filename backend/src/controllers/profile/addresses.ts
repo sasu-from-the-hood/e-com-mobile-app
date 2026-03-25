@@ -1,9 +1,10 @@
 import { z } from 'zod';
-import { protectedProcedure } from '../../middleware/orpc.js';
+import { os } from '@orpc/server';
 import { db } from '../../database/db.js';
 import { addresses } from '../../database/schema/index.js';
 import { eq, and } from 'drizzle-orm';
 import cuid from 'cuid';
+import { jwtAuthMiddleware } from '../../middleware/jwt-auth.js';
 
 const addressSchema = z.object({
   fullName: z.string(),
@@ -20,7 +21,8 @@ const addressSchema = z.object({
   isDefault: z.boolean().default(false)
 });
 
-export const getAddresses = protectedProcedure
+export const getAddresses = os
+  .use(jwtAuthMiddleware)
   .handler(async ({ context }) => {
     return await db
       .select()
@@ -28,7 +30,8 @@ export const getAddresses = protectedProcedure
       .where(eq(addresses.userId, context.user.id));
   });
 
-export const addAddress = protectedProcedure
+export const addAddress = os
+  .use(jwtAuthMiddleware)
   .input(addressSchema)
   .handler(async ({ input, context }) => {
     try {
@@ -40,7 +43,7 @@ export const addAddress = protectedProcedure
           .where(eq(addresses.userId, context.user.id));
       }
 
-      const result = await db.insert(addresses).values({
+      const [result] = await db.insert(addresses).values({
         id: cuid(),
         ...input,
         userId: context.user.id
@@ -53,7 +56,8 @@ export const addAddress = protectedProcedure
     }
   });
 
-export const updateAddress = protectedProcedure
+export const updateAddress = os
+  .use(jwtAuthMiddleware)
   .input(z.object({ 
     id: z.string(),
     ...addressSchema.shape
@@ -86,7 +90,8 @@ export const updateAddress = protectedProcedure
     }
   });
 
-export const deleteAddress = protectedProcedure
+export const deleteAddress = os
+  .use(jwtAuthMiddleware)
   .input(z.string())
   .handler(async ({ input, context }) => {
     return await db

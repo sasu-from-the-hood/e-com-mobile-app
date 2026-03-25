@@ -1,53 +1,45 @@
-import { useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { PrimaryButton } from '@/components/onboarding/primary-button';
 import { TextLink } from '@/components/onboarding/text-link';
 import { EthiopianPhoneInput } from '@/components/ui/ethiopian-phone-input';
 import { AppTheme } from '@/constants/app-theme';
-import { validateEthiopianPhone } from '@/utils/phone-validator';
-import { authClient } from '@/lib/auth-client';
+import { appAuthClient } from '@/lib/app-auth-client';
 import { showToast } from '@/utils/toast';
+import { validateEthiopianPhone } from '@/utils/phone-validator';
+import { 
+  isTinyDevice, 
+  getResponsivePadding, 
+  getResponsiveFontSize,
+} from '@/utils/responsive';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSendCode = async () => {
+  const handleSendOTP = async () => {
     if (!validateEthiopianPhone(phoneNumber)) {
-      setError('Please enter a valid Ethiopian phone number (9 digits starting with 9 or 7)');
+      showToast('error', 'Please enter a valid Ethiopian phone number (9 digits starting with 9 or 7)');
       return;
     }
 
-    setError('');
-    setIsLoading(true);
-    
+    setLoading(true);
     try {
-      const { data, error: apiError } = await authClient.phoneNumber.requestPasswordReset({
-        phoneNumber: `+251${phoneNumber}`,
+      await appAuthClient.sendResetPasswordOTP(`+251${phoneNumber}`);
+      showToast('success', 'OTP sent successfully');
+      router.push({
+        pathname: '/auth/reset-password',
+        params: { phoneNumber: `+251${phoneNumber}` },
       });
-
-      if (apiError) {
-        showToast('error', apiError.message || 'Failed to send verification code');
-      } else {
-        // Navigate to OTP verification screen
-        router.push({
-          pathname: '/auth/otp-verification',
-          params: { 
-            phoneNumber: `+251${phoneNumber}`,
-            purpose: 'password_reset'
-          }
-        });
-      }
-    } catch (err) {
-      showToast('error', 'Network error. Please check your connection.');
+    } catch (error: any) {
+      showToast('error', error.message || 'Failed to send OTP');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -60,34 +52,29 @@ export default function ForgotPasswordScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
-            <ThemedText style={styles.title}>Reset Password</ThemedText>
+            <ThemedText style={styles.title}>Forgot Password?</ThemedText>
             <ThemedText style={styles.subtitle}>
-              Enter your phone number to receive a verification code
+              Enter your phone number and we'll send you an OTP to reset your password
             </ThemedText>
           </View>
 
           <View style={styles.form}>
             <EthiopianPhoneInput
               value={phoneNumber}
-              onChangeText={(text) => {
-                setPhoneNumber(text);
-                setError('');
-              }}
-              error={error}
+              onChangeText={setPhoneNumber}
+              onSubmitEditing={handleSendOTP}
             />
 
             <PrimaryButton
-              title={isLoading ? "Sending Code..." : "Send Code"}
-              onPress={handleSendCode}
+              title={loading ? 'Sending...' : 'Send OTP'}
+              onPress={handleSendOTP}
             />
 
-            <View style={styles.loginPrompt}>
-              <ThemedText style={styles.loginText}>Remember your password? </ThemedText>
-              <TextLink
-                title="Sign In"
-                onPress={() => router.back()}
-              />
-            </View>
+            <TextLink
+              title="Back to Login"
+              onPress={() => router.back()}
+              style={styles.backLink}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -104,32 +91,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: AppTheme.spacing.lg,
-    paddingTop: AppTheme.spacing.xxl,
+    flexGrow: 1,
+    paddingHorizontal: getResponsivePadding(),
+    paddingTop: isTinyDevice ? AppTheme.spacing.lg : AppTheme.spacing.xxl,
+    paddingBottom: AppTheme.spacing.xl,
+    width: '100%',
   },
   header: {
-    marginBottom: AppTheme.spacing.xxl,
+    marginBottom: isTinyDevice ? AppTheme.spacing.lg : AppTheme.spacing.xxl,
+    alignItems: 'flex-start',
   },
   title: {
-    fontSize: AppTheme.fontSize.xxxl,
+    fontSize: getResponsiveFontSize(AppTheme.fontSize.xxxl),
     fontWeight: AppTheme.fontWeight.bold,
-    marginBottom: AppTheme.spacing.sm,
+    marginBottom: AppTheme.spacing.md,
+    textAlign: 'left',
   },
   subtitle: {
-    fontSize: AppTheme.fontSize.base,
+    fontSize: getResponsiveFontSize(AppTheme.fontSize.base),
     color: AppTheme.colors.mutedForeground,
+    textAlign: 'left',
   },
   form: {
-    marginTop: AppTheme.spacing.xl,
-    gap: AppTheme.spacing.lg,
+    gap: isTinyDevice ? AppTheme.spacing.sm : AppTheme.spacing.md,
   },
-  loginPrompt: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loginText: {
-    fontSize: AppTheme.fontSize.base,
-    color: AppTheme.colors.mutedForeground,
+  backLink: {
+    alignSelf: 'center',
+    marginTop: AppTheme.spacing.md,
   },
 });

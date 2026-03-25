@@ -1,19 +1,24 @@
 import { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Switch, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Switch, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Globe, Shield, Bell, HelpCircle } from 'lucide-react-native';
+import { Globe, Shield, Bell, Trash2, Eye, EyeOff } from 'lucide-react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ProfileMenuItem } from '@/components/profile/profile-menu-item';
 import { AppTheme } from '@/constants/app-theme';
 import { settingsStorage, SettingsTable } from '@/utils/settings-storage';
 import { LanguageBottomSheet } from '@/components/ui/LanguageBottomSheet';
 import { useTranslation } from '@/hooks/useTranslation';
-import { authClient } from '@/lib/auth-client';
+import { appAuthClient } from '@/lib/app-auth-client';
+import { showToast } from '@/utils/toast';
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { PrimaryButton } from '@/components/onboarding/primary-button';
 
 export default function SettingsScreen() {
   const { t, changeLanguage } = useTranslation();
+  const router = useRouter();
   const [settings, setSettings] = useState<SettingsTable>({
     faceIdEnabled: true,
     touchIdEnabled: false,
@@ -22,7 +27,11 @@ export default function SettingsScreen() {
     language: 'auto',
   });
   const [showLanguageSheet, setShowLanguageSheet] = useState(false);
+  const [showDeleteSheet, setShowDeleteSheet] = useState(false);
   const [touchIdSupported, setTouchIdSupported] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -51,29 +60,33 @@ export default function SettingsScreen() {
       });
       
       if (result.success) {
-        try {
-          await authClient.passkey.addPasskey({ name: 'Touch ID' });
-          await settingsStorage.updateSetting('touchIdEnabled', true);
-          setSettings(prev => ({ ...prev, touchIdEnabled: true }));
-          Alert.alert('Success', 'Touch ID enabled successfully');
-        } catch (error) {
-          Alert.alert('Error', 'Failed to register Touch ID');
-          console.log('Registration error:', error);
-        }
+        await settingsStorage.updateSetting('touchIdEnabled', true);
+        setSettings(prev => ({ ...prev, touchIdEnabled: true }));
+        showToast('success', 'Touch ID enabled successfully');
       }
     } else {
-      try {
-        const passkeysRes = await authClient.passkey.listUserPasskeys();
-        if ('data' in passkeysRes && passkeysRes.data) {
-          for (const pk of passkeysRes.data) {
-            await authClient.passkey.deletePasskey({ id: pk.id });
-          }
-        }
-        await settingsStorage.updateSetting('touchIdEnabled', false);
-        setSettings(prev => ({ ...prev, touchIdEnabled: false }));
-      } catch (error) {
-        Alert.alert('Error', 'Failed to remove Touch ID');
-      }
+      await settingsStorage.updateSetting('touchIdEnabled', false);
+      setSettings(prev => ({ ...prev, touchIdEnabled: false }));
+      showToast('success', 'Touch ID disabled');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword.trim()) {
+      showToast('error', 'Please enter your password');
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await appAuthClient.deleteAccount(deletePassword);
+      showToast('success', 'Account deleted successfully');
+      setShowDeleteSheet(false);
+      router.replace('/auth/login');
+    } catch (error: any) {
+      showToast('error', error.message || 'Failed to delete account');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -151,6 +164,17 @@ export default function SettingsScreen() {
             </View>
           </View>
 
+          {/* Account */}
+          <View style={styles.section}>
+            <ThemedText style={styles.sectionTitle}>Account</ThemedText>
+            <ProfileMenuItem
+              title="Delete Account"
+              subtitle="Permanently delete your account"
+              icon={<Trash2 size={24} color={AppTheme.colors.destructive} />}
+              onPress={() => setShowDeleteSheet(true)}
+              destructive
+            />
+          </View>
         </View>
       </ScrollView>
       
@@ -160,6 +184,54 @@ export default function SettingsScreen() {
         selectedLanguage={settings.language}
         onSelectLanguage={(language) => updateSetting('language', language)}
       />
+
+      {/* Delete Account Bottom Sheet */}
+      <BottomSheet
+        visible={showDeleteSheet}
+        onClose={() => {
+          setShowDeleteSheet(false);
+          setDeletePassword('');
+          setShowPassword(false);
+        }}
+        title="Delete Account"
+      >
+        <View style={styles.deleteContent}>
+          <ThemedText style={styles.deleteWarning}>
+            This action cannot be undone. All your data will be permanently deleted.
+          </ThemedText>
+          
+          <View style={styles.passwordContainer}>
+            <ThemedText style={styles.label}>Enter your password to confirm</ThemedText>
+            <View style={styles.passwordInputContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                value={deletePassword}
+                onChangeText={setDeletePassword}
+                placeholder="Password"
+                placeholderTextColor={AppTheme.colors.mutedForeground}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeButton}
+              >
+                {showPassword ? (
+                  <EyeOff size={20} color={AppTheme.colors.mutedForeground} />
+                ) : (
+                  <Eye size={20} color={AppTheme.colors.mutedForeground} />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <PrimaryButton
+            title="Delete Account"
+            onPress={handleDeleteAccount}
+            loading={deleting}
+            variant="destructive"
+          />
+        </View>
+      </BottomSheet>
     </SafeAreaView>
   );
 }
@@ -208,5 +280,39 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: AppTheme.fontSize.base,
     fontWeight: AppTheme.fontWeight.medium,
+  },
+  deleteContent: {
+    gap: AppTheme.spacing.lg,
+  },
+  deleteWarning: {
+    fontSize: AppTheme.fontSize.sm,
+    color: AppTheme.colors.destructive,
+    textAlign: 'center',
+    padding: AppTheme.spacing.md,
+    backgroundColor: AppTheme.colors.destructive + '10',
+    borderRadius: AppTheme.borderRadius.md,
+  },
+  passwordContainer: {
+    gap: AppTheme.spacing.sm,
+  },
+  label: {
+    fontSize: AppTheme.fontSize.sm,
+    fontWeight: AppTheme.fontWeight.medium,
+  },
+  passwordInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: AppTheme.colors.border,
+    borderRadius: AppTheme.borderRadius.md,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: AppTheme.spacing.md,
+    fontSize: AppTheme.fontSize.base,
+    color: AppTheme.colors.foreground,
+  },
+  eyeButton: {
+    padding: AppTheme.spacing.md,
   },
 });

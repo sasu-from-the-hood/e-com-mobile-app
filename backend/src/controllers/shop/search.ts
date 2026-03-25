@@ -1,5 +1,7 @@
 import { z } from 'zod';
-import { publicProcedure, protectedProcedure } from '../../middleware/orpc.js';
+import { publicProcedure } from '../../middleware/orpc.js';
+import { os } from '@orpc/server';
+import { jwtAuthMiddleware } from '../../middleware/jwt-auth.js';
 import { db } from '../../database/db.js';
 import { products, searchHistory } from '../../database/schema/index.js';
 import { like, desc, or, sql, eq, and } from 'drizzle-orm';
@@ -23,7 +25,8 @@ const parseProductData = (product: any) => {
 
 
 
-export const searchProducts = protectedProcedure
+export const searchProducts = os
+  .use(jwtAuthMiddleware)
   .input(z.object({
     query: z.string(),
     limit: z.number().default(20)
@@ -45,7 +48,8 @@ export const searchProducts = protectedProcedure
     return results.map(parseProductData);
   });
 
-export const trackSearchClick = protectedProcedure
+export const trackSearchClick = os
+  .use(jwtAuthMiddleware)
   .input(z.object({
     productId: z.string()
   }))
@@ -102,7 +106,8 @@ export const getPopularSearches = publicProcedure
     }));
   });
 
-export const getUserSearchHistory = protectedProcedure
+export const getUserSearchHistory = os
+  .use(jwtAuthMiddleware)
   .handler(async ({ context }) => {
     const history = await db
       .select({
@@ -123,7 +128,8 @@ export const getUserSearchHistory = protectedProcedure
     }));
   });
 
-export const clearSearchHistory = protectedProcedure
+export const clearSearchHistory = os
+  .use(jwtAuthMiddleware)
   .handler(async ({ context }) => {
     await db
       .delete(searchHistory)

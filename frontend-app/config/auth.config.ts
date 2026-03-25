@@ -1,7 +1,7 @@
 
 export const authConfig = {
-  baseURL: 'http://10.165.86.100:3000',
-  ImageUrl : 'http://10.165.86.100:3000',
+  baseURL: 'http://10.208.123.100:3000',
+  ImageUrl : 'http://10.208.123.100:3000',
 
   otp: {
     length: 6,

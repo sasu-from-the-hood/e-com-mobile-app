@@ -93,7 +93,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove, onToggleSelection }
         </View>
         <View style={styles.bottomRow}>
           <ThemedText style={styles.price}>
-            {formatPrice(item.price)}
+            ETB {formatPrice(item.price)}
           </ThemedText>
           <QuantityControl
             quantity={item.quantity}

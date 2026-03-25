@@ -18,6 +18,7 @@ export interface Product {
   colors?: string[];
   sizes?: string[];
   tags?: string[];
+  variantStock?: { [key: string]: number }; // Stock per color-size variant (e.g., "#931f1f-M": 10)
   rating?: string;
   reviewCount?: number;
   inStock?: boolean;
@@ -118,10 +119,12 @@ export interface Order {
   id: string;
   orderNumber: string;
   date: Date;
+  createdAt?: Date;
   status: string;
   items: number;
   total: number;
   thumbnail: any;
+  deliveryBoy?: boolean;
 }
 
 // Notification types

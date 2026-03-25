@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import { env } from 'process'
 
 const nodeEnv = process.env.NODE_ENV ?? 'development'
 const version = process.env.VERSION ?? process.env.npm_package_version ?? '1.0.0'
@@ -55,6 +56,7 @@ export const config = {
   allowedOrigins,
   port,
   version,
+  BACKEND_URL : process.env.BACKEND_URL,
   logLevel,
   mysql: {
     host: process.env.DB_HOST ?? '127.0.0.1',
@@ -72,6 +74,18 @@ export const config = {
   BackEndUrl : process.env.BACKEND_URL,
   window: toNumber(process.env.BETTERAUTH_RATE_LIMIT_WINDOW_MS, 900000) / 1000, 
   max: toNumber(process.env.BETTERAUTH_RATE_LIMIT_MAX_ATTEMPTS, 100),
+  jwt: {
+    secret: process.env.JWT_SECRET ?? 'your-super-secret-jwt-key-change-this-in-production',
+    expiry: process.env.JWT_EXPIRY ?? '15m',
+    refreshExpiry: process.env.JWT_REFRESH_EXPIRY ?? '7d',
+    issuer: process.env.JWT_ISSUER ?? 'myapp',
+    audience: process.env.JWT_AUDIENCE ?? 'myapp-users',
+  },
+  afrosms: {
+    apiKey: process.env.AFROSMS_API_KEY ?? '',
+    baseUrl: process.env.AFROSMS_BASE_URL ?? 'https://api.afromessage.com/api/send',
+    senderId: process.env.AFROSMS_SENDER_ID ?? '',
+  },
 }
 
 

@@ -10,7 +10,7 @@ export function useNotifications() {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const result = await orpcClient.getNotifications();
+      const result = await orpcClient.appGetNotifications();
       setNotifications(result);
       setUnreadCount(result.filter((n: any) => !n.read).length);
       setError(null);
@@ -23,12 +23,13 @@ export function useNotifications() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await orpcClient.markAsRead(notificationId);
+      await orpcClient.appMarkAsRead(notificationId);
       setNotifications(prev => 
         prev.map((notif: any) => 
           notif.id === notificationId ? { ...notif, read: true } : notif
         )
       );
+      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to mark as read');
     }
@@ -36,10 +37,11 @@ export function useNotifications() {
 
   const markAllAsRead = async () => {
     try {
-      await orpcClient.markAllAsRead();
+      await orpcClient.appMarkAllAsRead();
       setNotifications(prev => 
         prev.map((notif: any) => ({ ...notif, read: true }))
       );
+      setUnreadCount(0);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to mark all as read');
     }

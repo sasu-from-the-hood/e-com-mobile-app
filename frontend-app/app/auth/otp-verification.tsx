@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Dimensions, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -9,9 +9,14 @@ import { TextLink } from '@/components/onboarding/text-link';
 import { OTPInput } from '@/components/auth/otp-input';
 import { AppTheme } from '@/constants/app-theme';
 import { formatPhoneNumber } from '@/utils/auth-formatters';
-import { authClient } from '@/lib/auth-client';
+import { appAuthClient } from '@/lib/app-auth-client';
 import type { OTPPurpose } from '@/types/auth.types';
 import { showToast } from '@/utils/toast';
+
+const { width, height } = Dimensions.get('window');
+const isSmallDevice = width < 375;
+const isMediumDevice = width >= 375 && width < 768;
+const isLargeDevice = width >= 768;
 
 export default function OTPVerificationScreen() {
   const router = useRouter();
@@ -38,26 +43,21 @@ export default function OTPVerificationScreen() {
     setIsLoading(true);
     try {
       if (params.purpose === 'signup') {
-        // Verify phone number for signup
-        const { data, error } = await authClient.phoneNumber.verify({
-          phoneNumber: params.phoneNumber,
+        // Verify OTP and complete registration
+        await appAuthClient.verifyRegisterOTP(
+          params.phoneNumber,
           code,
-          disableSession: false,
-          updatePhoneNumber: false,
-        });
-
-        if (error) {
-          if (error.message?.includes('Too many attempts')) {
-            showToast('error', 'Please request a new verification code');
-          } else {
-            showToast('error', error.message || 'Invalid verification code');
-          }
-        } else if (data) {
-          showToast('success', 'Account created successfully!');
-          router.replace('/shop/shop-home');
-        }
+          params.password || '',
+          params.phoneNumber // Use phone as default name
+        );
+        
+        showToast('success', 'Account created successfully!');
+        router.replace('/shop/shop-home');
       } else if (params.purpose === 'password_reset') {
-        // For password reset, navigate to reset password screen with OTP
+        // Verify OTP for password reset
+        await appAuthClient.verifyResetPasswordOTP(params.phoneNumber, code);
+        
+        // Navigate to reset password screen
         router.push({
           pathname: '/auth/reset-password',
           params: {
@@ -66,8 +66,8 @@ export default function OTPVerificationScreen() {
           }
         });
       }
-    } catch (err) {
-      showToast('error', 'Network error. Please check your connection.');
+    } catch (err: any) {
+      showToast('error', err.message || 'Invalid verification code');
     } finally {
       setIsLoading(false);
     }
@@ -78,19 +78,17 @@ export default function OTPVerificationScreen() {
     
     setIsLoading(true);
     try {
-      const { error } = await authClient.phoneNumber.sendOtp({
-        phoneNumber: params.phoneNumber,
-      });
-
-      if (error) {
-        showToast('error', error.message || 'Failed to resend code');
-      } else {
-        showToast('success', 'Verification code sent!');
-        setCanResend(false);
-        setCountdown(60);
+      if (params.purpose === 'signup') {
+        await appAuthClient.resendRegisterOTP(params.phoneNumber);
+      } else if (params.purpose === 'password_reset') {
+        await appAuthClient.resendResetPasswordOTP(params.phoneNumber);
       }
-    } catch (err) {
-      showToast('error', 'Network error. Please check your connection.');
+      
+      showToast('success', 'Verification code sent!');
+      setCanResend(false);
+      setCountdown(60);
+    } catch (err: any) {
+      showToast('error', err.message || 'Failed to resend code');
     } finally {
       setIsLoading(false);
     }
@@ -99,46 +97,57 @@ export default function OTPVerificationScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <ThemedText style={styles.title}>Verify Phone Number</ThemedText>
-          <ThemedText style={styles.subtitle}>
-            We've sent a verification code to
-          </ThemedText>
-          <ThemedText style={styles.phoneNumber}>
-            {formatPhoneNumber(params.phoneNumber)}
-          </ThemedText>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.otpSection}>
-            <ThemedText style={styles.label}>Enter verification code</ThemedText>
-            <OTPInput
-              length={6}
-              onComplete={handleVerifyOTP}
-            />
-          </View>
-
-          <View style={styles.resendSection}>
-            <ThemedText style={styles.resendText}>Didn't receive code? </ThemedText>
-            {canResend ? (
-              <TextLink
-                title="Resend Code"
-                onPress={handleResendCode}
-              />
-            ) : (
-              <ThemedText style={styles.countdown}>
-                Resend in {countdown}s
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <ThemedText style={styles.title}>Verify Phone Number</ThemedText>
+              <ThemedText style={styles.subtitle}>
+                We've sent a verification code to
               </ThemedText>
-            )}
-          </View>
+              <ThemedText style={styles.phoneNumber}>
+                {formatPhoneNumber(params.phoneNumber)}
+              </ThemedText>
+            </View>
 
-          <PrimaryButton
-            title={isLoading ? "Verifying..." : "Verify"}
-            onPress={() => {}}
-          />
-        </View>
-      </View>
+            <View style={styles.form}>
+              <View style={styles.otpSection}>
+                <ThemedText style={styles.label}>Enter verification code</ThemedText>
+                <OTPInput
+                  length={6}
+                  onComplete={handleVerifyOTP}
+                />
+              </View>
+
+              <View style={styles.resendSection}>
+                <ThemedText style={styles.resendText}>Didn't receive code? </ThemedText>
+                {canResend ? (
+                  <TextLink
+                    title="Resend Code"
+                    onPress={handleResendCode}
+                  />
+                ) : (
+                  <ThemedText style={styles.countdown}>
+                    Resend in {countdown}s
+                  </ThemedText>
+                )}
+              </View>
+
+              <PrimaryButton
+                title={isLoading ? "Verifying..." : "Verify"}
+                onPress={() => {}}
+              />
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -148,52 +157,67 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: AppTheme.colors.background,
   },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
   content: {
     flex: 1,
-    padding: AppTheme.spacing.lg,
-    paddingTop: AppTheme.spacing.xxl,
+    paddingHorizontal: isLargeDevice ? width * 0.15 : isSmallDevice ? AppTheme.spacing.md : AppTheme.spacing.lg,
+    paddingVertical: isSmallDevice ? AppTheme.spacing.lg : AppTheme.spacing.xxl,
+    width: '100%',
   },
   header: {
-    marginBottom: AppTheme.spacing.xxl,
+    marginBottom: isSmallDevice ? AppTheme.spacing.lg : AppTheme.spacing.xxl,
+    alignItems: 'flex-start',
   },
   title: {
-    fontSize: AppTheme.fontSize.xxxl,
+    fontSize: isSmallDevice ? AppTheme.fontSize.xxl : isLargeDevice ? 36 : AppTheme.fontSize.xxxl,
     fontWeight: AppTheme.fontWeight.bold,
     marginBottom: AppTheme.spacing.sm,
+    textAlign: 'left',
   },
   subtitle: {
-    fontSize: AppTheme.fontSize.base,
+    fontSize: isSmallDevice ? AppTheme.fontSize.sm : AppTheme.fontSize.base,
     color: AppTheme.colors.mutedForeground,
     marginBottom: AppTheme.spacing.xs,
+    textAlign: 'left',
   },
   phoneNumber: {
-    fontSize: AppTheme.fontSize.lg,
+    fontSize: isSmallDevice ? AppTheme.fontSize.base : AppTheme.fontSize.lg,
     fontWeight: AppTheme.fontWeight.semibold,
     color: AppTheme.colors.primary,
+    textAlign: 'center',
   },
   form: {
-    marginTop: AppTheme.spacing.xl,
-    gap: AppTheme.spacing.xl,
+    marginTop: isSmallDevice ? AppTheme.spacing.md : AppTheme.spacing.xl,
+    gap: isSmallDevice ? AppTheme.spacing.lg : AppTheme.spacing.xl,
   },
   otpSection: {
     gap: AppTheme.spacing.md,
+    alignItems: 'center',
   },
   label: {
-    fontSize: AppTheme.fontSize.sm,
+    fontSize: isSmallDevice ? AppTheme.fontSize.xs : AppTheme.fontSize.sm,
     fontWeight: AppTheme.fontWeight.medium,
     textAlign: 'center',
+    color: AppTheme.colors.foreground,
   },
   resendSection: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    paddingHorizontal: AppTheme.spacing.md,
   },
   resendText: {
-    fontSize: AppTheme.fontSize.base,
+    fontSize: isSmallDevice ? AppTheme.fontSize.sm : AppTheme.fontSize.base,
     color: AppTheme.colors.mutedForeground,
   },
   countdown: {
-    fontSize: AppTheme.fontSize.base,
+    fontSize: isSmallDevice ? AppTheme.fontSize.sm : AppTheme.fontSize.base,
     color: AppTheme.colors.mutedForeground,
     fontWeight: AppTheme.fontWeight.medium,
   },

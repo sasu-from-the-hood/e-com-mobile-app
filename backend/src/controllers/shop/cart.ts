@@ -1,12 +1,14 @@
 import { z } from 'zod';
-import { protectedProcedure } from '../../middleware/orpc.js';
+import { os } from '@orpc/server';
+import { jwtAuthMiddleware } from '../../middleware/jwt-auth.js';
 import { db } from '../../database/db.js';
 import { cartItems, products } from '../../database/schema/index.js';
 import { eq, and, isNull } from 'drizzle-orm';
 import cuid from 'cuid';
 import { createNotification } from '../notifications.js';
 
-export const getCart = protectedProcedure
+export const getCart = os
+  .use(jwtAuthMiddleware)
   .handler(async ({ context }) => {
     try {
       const result = await db
@@ -68,7 +70,8 @@ export const getCart = protectedProcedure
     }
   });
 
-export const addToCart = protectedProcedure
+export const addToCart = os
+  .use(jwtAuthMiddleware)
   .input(z.object({
     productId: z.string(),
     quantity: z.number().min(1),
@@ -142,7 +145,8 @@ console.log("error in add to cart:", error);
   }
   });
 
-export const updateCart = protectedProcedure
+export const updateCart = os
+  .use(jwtAuthMiddleware)
   .input(z.object({
     id: z.string(),
     quantity: z.number().min(1)
@@ -157,7 +161,8 @@ export const updateCart = protectedProcedure
       ));
   });
 
-export const removeFromCart = protectedProcedure
+export const removeFromCart = os
+  .use(jwtAuthMiddleware)
   .input(z.string())
   .handler(async ({ input, context }) => {
     return await db
@@ -168,14 +173,16 @@ export const removeFromCart = protectedProcedure
       ));
   });
 
-export const clearCart = protectedProcedure
+export const clearCart = os
+  .use(jwtAuthMiddleware)
   .handler(async ({ context }) => {
     return await db
       .delete(cartItems)
       .where(eq(cartItems.userId, context.user.id));
   });
 
-export const toggleCartItemSelection = protectedProcedure
+export const toggleCartItemSelection = os
+  .use(jwtAuthMiddleware)
   .input(z.object({
     id: z.string(),
     selected: z.boolean()
@@ -190,7 +197,8 @@ export const toggleCartItemSelection = protectedProcedure
       ));
   });
 
-export const getCartTotal = protectedProcedure
+export const getCartTotal = os
+  .use(jwtAuthMiddleware)
   .handler(async ({ context }) => {
     const result = await db
       .select({

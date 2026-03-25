@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
+import { ChevronLeft } from 'lucide-react-native';
 import { ThemedText } from '@/components/themed-text';
 import { AddressCard } from '@/components/shop/address-card';
 import { PrimaryButton } from '@/components/onboarding/primary-button';
@@ -14,6 +15,8 @@ import { ProductSkeleton } from '@/components/shop/product-skeleton';
 import { formatPrice } from '@/utils/formatters';
 import { URL } from '@/config';
 import type { CartItem as CartItemType } from '@/types/schema';
+import { orpcClient } from '@/lib/orpc-client';
+import { showToast } from '@/utils/toast';
 
 export default function ShopCheckoutScreen() {
   const router = useRouter();
@@ -21,6 +24,7 @@ export default function ShopCheckoutScreen() {
   const { cart, loading: cartLoading, getTotal } = useCart();
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [backendTotal, setBackendTotal] = React.useState<any>(null);
+  const [placing, setPlacing] = useState(false);
 
   React.useEffect(() => {
     if (addresses.length > 0 && !selectedAddressId) {
@@ -68,13 +72,44 @@ export default function ShopCheckoutScreen() {
     return fullUrl;
   };
 
+  const handlePlaceOrder = async () => {
+    if (!selectedAddressId) {
+      showToast('error', 'Please select a delivery address');
+      return;
+    }
+
+    setPlacing(true);
+    try {
+      const order = await orpcClient.createOrder({
+        shippingAddress: selectedAddressId,
+        paymentMethodId: 'cod' // Cash on Delivery
+      });
+      
+      showToast('success', 'Order placed successfully!');
+      router.replace('/orders/order-history');
+    } catch (error: any) {
+      console.error('Place order error:', error);
+      showToast('error', error.message || 'Failed to place order');
+    } finally {
+      setPlacing(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/shop/shop-cart')}
+            activeOpacity={0.7}
+          >
+            <ChevronLeft size={24} color={AppTheme.colors.foreground} />
+          </TouchableOpacity>
           <ThemedText style={styles.title}>Checkout</ThemedText>
+          <View style={styles.placeholder} />
         </View>
 
         {/* Cart Items Section */}
@@ -159,10 +194,14 @@ export default function ShopCheckoutScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
+        <View style={styles.paymentInfo}>
+          <ThemedText style={styles.paymentLabel}>Payment Method</ThemedText>
+          <ThemedText style={styles.paymentValue}>Cash on Delivery</ThemedText>
+        </View>
         <PrimaryButton
-          title={addresses.length === 0 ? "Add Address" : "Continue to Payment"}
-          onPress={() => addresses.length === 0 ? router.push('/profile/address-list') : router.push('/shop/shop-payment')}
-          disabled={transformedCart.length === 0 || (addresses.length > 0 && !selectedAddressId)}
+          title={addresses.length === 0 ? "Add Address" : placing ? "Placing Order..." : "Order Now"}
+          onPress={addresses.length === 0 ? () => router.push('/profile/address-list') : handlePlaceOrder}
+          disabled={transformedCart.length === 0 || (addresses.length > 0 && !selectedAddressId) || placing}
         />
       </View>
     </SafeAreaView>
@@ -175,14 +214,28 @@ const styles = StyleSheet.create({
     backgroundColor: AppTheme.colors.background,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: AppTheme.spacing.md,
     paddingVertical: AppTheme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: AppTheme.colors.border,
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: AppTheme.colors.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   title: {
-    fontSize: AppTheme.fontSize.xxl,
+    fontSize: AppTheme.fontSize.xl,
     fontWeight: AppTheme.fontWeight.bold,
+  },
+  placeholder: {
+    width: 40,
   },
   section: {
     padding: AppTheme.spacing.md,
@@ -280,6 +333,21 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: AppTheme.colors.border,
     backgroundColor: AppTheme.colors.background,
+  },
+  paymentInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: AppTheme.spacing.md,
+  },
+  paymentLabel: {
+    fontSize: AppTheme.fontSize.base,
+    color: AppTheme.colors.mutedForeground,
+  },
+  paymentValue: {
+    fontSize: AppTheme.fontSize.base,
+    fontWeight: AppTheme.fontWeight.semibold,
+    color: AppTheme.colors.primary,
   },
   emptyText: {
     fontSize: AppTheme.fontSize.base,

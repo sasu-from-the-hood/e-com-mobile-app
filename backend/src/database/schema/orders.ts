@@ -33,6 +33,8 @@ export const orders = mysqlTable("orders", {
   shippingMethod: varchar("shipping_method", { length: 100 }),
   trackingNumber: varchar("tracking_number", { length: 100 }),
   courierService: varchar("courier_service", { length: 100 }),
+  deliveryBoy: boolean("delivery_boy").default(false),
+  deliveryBoyId: varchar("delivery_boy_id", { length: 36 }),
   estimatedDelivery: timestamp("estimated_delivery", { fsp: 3 }),
   shippedAt: timestamp("shipped_at", { fsp: 3 }),
   deliveredAt: timestamp("delivered_at", { fsp: 3 }),

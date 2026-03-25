@@ -71,6 +71,10 @@ export function useCategories() {
       try {
         setLoading(true);
         const result = await orpcClient.getCategories();
+        console.log('=== FRONTEND CATEGORIES ===');
+        console.log('Total categories received:', result.length);
+        console.log('First category:', result[0]);
+        console.log('Categories with image field:', result.filter((c: any) => c.image).length);
         setCategories(result);
         setError(null);
       } catch (err) {

@@ -13,8 +13,13 @@ import { PasswordInput } from '@/components/auth/password-input';
 import { AppTheme } from '@/constants/app-theme';
 import { validateEthiopianPhone } from '@/utils/phone-validator';
 import { validatePassword } from '@/utils/validators';
-import { authClient } from '@/lib/auth-client';
+import { appAuthClient } from '@/lib/app-auth-client';
 import { showToast } from '@/utils/toast';
+import { 
+  isTinyDevice, 
+  getResponsivePadding, 
+  getResponsiveFontSize,
+} from '@/utils/responsive';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -40,28 +45,37 @@ export default function LoginScreen() {
     if (!newErrors.phoneNumber && !newErrors.password) {
       setIsLoading(true);
       try {
-        const { data, error } = await authClient.signIn.phoneNumber({
-          phoneNumber: `+251${phoneNumber}`,
-          password,
-          rememberMe: true,
-        });
-
-        if (error) {
-          if (error.message?.includes('PHONE_NUMBER_NOT_VERIFIED')) {
-            showToast('warning', 'Please verify your phone number first');
-            router.push({
-              pathname: '/auth/otp-verification',
-              params: { phoneNumber: `+251${phoneNumber}`, purpose: 'signup' }
-            });
-          } else {
-            showToast('error', error.message || 'Invalid phone number or password');
-          }
-        } else if (data) {
-          await checkAuth(); // Update auth state
-          router.replace('/shop/shop-home');
+        console.log('[Login] Attempting login for:', `+251${phoneNumber}`);
+        await appAuthClient.login(`+251${phoneNumber}`, password);
+        console.log('[Login] Login successful');
+        
+        // Check session to verify user status (banned, etc.)
+        const session = await appAuthClient.getSession();
+        
+        if (!session) {
+          showToast('error', 'Failed to verify session. Please try again.');
+          await appAuthClient.logout();
+          return;
         }
-      } catch (err) {
-        showToast('error', 'Network error. Please check your connection.');
+        
+        // Check if user is banned
+        if (session.role === 'banned') {
+          showToast('error', 'Your account has been banned. Please contact support.');
+          await appAuthClient.logout();
+          setIsLoading(false);
+          return;
+        }
+        
+        // Check for other flags if needed
+        // if (session.someOtherFlag) { ... }
+        
+        await checkAuth(); // Refresh auth state
+        showToast('success', 'Login successful!');
+        router.replace('/shop/shop-home');
+      } catch (err: any) {
+        console.error('[Login] Login failed:', err);
+        console.error('[Login] Error message:', err.message);
+        showToast('error', err.message || 'Login failed. Please check your credentials.');
       } finally {
         setIsLoading(false);
       }
@@ -141,23 +155,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: AppTheme.spacing.lg,
-    paddingTop: AppTheme.spacing.xxl,
+    flexGrow: 1,
+    paddingHorizontal: getResponsivePadding(),
+    paddingTop: isTinyDevice ? AppTheme.spacing.lg : AppTheme.spacing.xxl,
+    paddingBottom: AppTheme.spacing.xl,
+    width: '100%',
   },
   header: {
-    marginBottom: AppTheme.spacing.xxl,
+    marginBottom: isTinyDevice ? AppTheme.spacing.lg : AppTheme.spacing.xxl,
+    alignItems: 'flex-start',
   },
   title: {
-    fontSize: AppTheme.fontSize.xxxl,
+    fontSize: getResponsiveFontSize(AppTheme.fontSize.xxxl),
     fontWeight: AppTheme.fontWeight.bold,
     marginBottom: AppTheme.spacing.md,
+    textAlign: 'left',
   },
   subtitle: {
-    fontSize: AppTheme.fontSize.base,
+    fontSize: getResponsiveFontSize(AppTheme.fontSize.base),
     color: AppTheme.colors.mutedForeground,
+    textAlign: 'left',
   },
   form: {
-    gap: AppTheme.spacing.md,
+    gap: isTinyDevice ? AppTheme.spacing.sm : AppTheme.spacing.md,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
@@ -174,16 +194,17 @@ const styles = StyleSheet.create({
     backgroundColor: AppTheme.colors.border,
   },
   dividerText: {
-    fontSize: AppTheme.fontSize.sm,
+    fontSize: getResponsiveFontSize(AppTheme.fontSize.sm),
     color: AppTheme.colors.mutedForeground,
   },
   signupPrompt: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   signupText: {
-    fontSize: AppTheme.fontSize.base,
+    fontSize: getResponsiveFontSize(AppTheme.fontSize.base),
     color: AppTheme.colors.mutedForeground,
   },
 });

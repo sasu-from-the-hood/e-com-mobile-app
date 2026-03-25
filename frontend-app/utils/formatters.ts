@@ -1,6 +1,6 @@
 export const formatPrice = (price: number | string): string => {
   const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-  return `$${numPrice.toFixed(2)}`;
+  return `${numPrice.toFixed(2)}`;
 };
 
 export const formatDiscount = (discount: number): string => {
@@ -15,12 +15,24 @@ export const formatOrderNumber = (orderNum: string): string => {
   return `#${orderNum}`;
 };
 
-export const formatDate = (date: Date): string => {
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+export const formatDate = (date: Date | string | null | undefined): string => {
+  if (!date) return 'N/A';
+  
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  if (isNaN(dateObj.getTime())) return 'Invalid Date';
+  
+  return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-export const formatTime = (date: Date): string => {
-  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+export const formatTime = (date: Date | string | null | undefined): string => {
+  if (!date) return 'N/A';
+  
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  if (isNaN(dateObj.getTime())) return 'Invalid Time';
+  
+  return dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 };
 
 export const formatPhoneNumber = (phone: string): string => {

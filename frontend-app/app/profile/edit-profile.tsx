@@ -13,7 +13,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { PrimaryButton } from '@/components/onboarding/primary-button';
 import { AppTheme } from '@/constants/app-theme';
 import { showToast } from '@/utils/toast';
-import { authClient } from '@/lib/auth-client';
+import { appAuthClient } from '@/lib/app-auth-client';
 import { useAuth } from '@/hooks/useAuth';
 import { ImagePickerBottomSheet } from '@/components/ui/ImagePickerBottomSheet';
 import { orpcClient } from '@/lib/orpc-client';
@@ -124,15 +124,25 @@ export default function EditProfileScreen() {
         reader.readAsDataURL(blob);
       });
       
-      const fileData = {
+      console.log('[Upload] Sending image data:', {
+        dataLength: base64Data.length,
+        dataPreview: base64Data.substring(0, 50),
+        type: blob.type || 'image/jpeg',
+        name: 'avatar.jpg',
+        hasOldUrl: !!user?.image
+      });
+      
+      const result = await orpcClient.appUploadAvatar({
         data: base64Data,
         type: blob.type || 'image/jpeg',
         name: 'avatar.jpg',
         oldImageUrl: user?.image
-      };
+      });
       
+      if (!result.success) {
+        throw new Error(result.error || 'Upload failed');
+      }
       
-      const result = await orpcClient.uploadAvatar({ image: fileData });
       return `${authConfig.baseURL}${result.imageUrl}`;
     } catch (error) {
       console.error('Upload error:', error);
@@ -160,18 +170,15 @@ export default function EditProfileScreen() {
         imageUrl = await uploadAvatar(avatar);
       }
       
-      await authClient.updateUser({
-        name: name || user?.name || user?.user_metadata?.name || user?.email || '',
+      // Update profile using custom JWT auth
+      await appAuthClient.updateProfile({
+        name: name || user?.name || user?.email || '',
         image: imageUrl,
       });
       
-      // If password change requested
+      // TODO: Add password change functionality
       if (newPassword && currentPassword) {
-        await authClient.changePassword({
-          currentPassword,
-          newPassword,
-        });
-        showToast('success', 'Password updated successfully');
+        showToast('info', 'Password change not yet implemented');
       }
       
       showToast('success', 'Profile updated successfully');

@@ -15,6 +15,8 @@ import { useRecommendations } from '@/hooks/useRecommendations';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuth } from '@/hooks/useAuth';
 import { useNewArrivals } from '@/hooks/useNewArrivals';
+import { useBrowseAll } from '@/hooks/useBrowseAll';
+import { authConfig as URL } from '@/config/auth.config';
 
 export default function ShopHomeScreen() {
   const router = useRouter();
@@ -24,6 +26,11 @@ export default function ShopHomeScreen() {
   const { categories } = useCategories();
   const { recommendations, loading: recommendationsLoading, trackInteraction } = useRecommendations(6);
   const { unreadCount } = useNotifications();
+  
+  // Get IDs to exclude from browse all
+  const excludeIds = [...newArrivals.map((p: any) => p.id), ...recommendations.map((p: any) => p.id)];
+  const { products: browseAllProducts, loading: browseAllLoading } = useBrowseAll(excludeIds, 6);
+  
   const [isBottomNavVisible, setIsBottomNavVisible] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const scrollY = useRef(0);
@@ -172,6 +179,40 @@ export default function ShopHomeScreen() {
             )}
           </ScrollView>
 
+          {/* Browse All Section */}
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleContainer}>
+              <ThemedText style={styles.sectionTitle}>Browse All Products </ThemedText>
+              <ThemedText style={styles.fireEmoji}>🛍️</ThemedText>
+            </View>
+            <TouchableOpacity onPress={() => router.push(`/shop/browse-all?excludeIds=${excludeIds.join(',')}`)}>
+              <ThemedText style={styles.seeAll}>See All</ThemedText>
+            </TouchableOpacity>
+          </View>
+
+          {/* Browse All Grid */}
+          <View style={styles.productsGrid}>
+            {browseAllLoading ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <View key={index} style={styles.productWrapper}>
+                  <ProductSkeleton />
+                </View>
+              ))
+            ) : (
+              browseAllProducts.map((product: any) => (
+                <View key={product.id} style={styles.productWrapper}>
+                  <ProductCard
+                    product={product}
+                    onPress={() => {
+                      trackInteraction(product.id, 'view');
+                      router.push(`/shop/product-detail?id=${product.id}`);
+                    }}
+                  />
+                </View>
+              ))
+            )}
+          </View>
+
           </ScrollView>
         ) : (
           <ScrollView 
@@ -191,19 +232,22 @@ export default function ShopHomeScreen() {
             }}
             scrollEventThrottle={16}
           >
-          {categories.map((category: any) => (
-            <CategoryCard
-              key={category.id}
-              title={category.name}
-              productCount={category.productCount}
-              imageUrl={category.imageUrl || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8'}
-              imageAlt={category.name}
-              variant="medium"
-              onPress={() => {
-                router.push(`/shop/category/${category.id}?name=${encodeURIComponent(category.name)}`);
-              }}
-            />
-            ))}
+          {categories.map((category: any) => {
+            console.log('Rendering category:', category.name, 'Image:', category.image, 'Full URL:', category.image ? `${URL.ImageUrl}${category.image}` : 'No image');
+            return (
+              <CategoryCard
+                key={category.id}
+                title={category.name}
+                productCount={category.productCount}
+                imageUrl={category.image ? `${URL.ImageUrl}${category.image}` : undefined}
+                imageAlt={category.name}
+                variant="medium"
+                onPress={() => {
+                  router.push(`/shop/category/${category.id}?name=${encodeURIComponent(category.name)}`);
+                }}
+              />
+            );
+          })}
           </ScrollView>
         )}
       </View>

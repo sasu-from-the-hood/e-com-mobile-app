@@ -12,6 +12,7 @@ export const otpConfig: OtpConfig = {
 export const betterauthConfig = {
   otp: otpConfig,
   trustOrgin: config.allowedOrigins,
+  BASEURL :  config.BACKEND_URL,
   rateLimit: {
     window: config.window,
     max: config.max,

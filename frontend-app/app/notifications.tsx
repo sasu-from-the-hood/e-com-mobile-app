@@ -80,8 +80,19 @@ export default function NotificationsScreen() {
           </View>
         )}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, notifications.length === 0 && styles.emptyContainer]}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          !loading && (
+            <View style={styles.emptyState}>
+              <Bell size={64} color={AppTheme.colors.mutedForeground} />
+              <ThemedText style={styles.emptyTitle}>No Notifications Yet</ThemedText>
+              <ThemedText style={styles.emptyMessage}>
+                You'll see notifications about your orders and promotions here
+              </ThemedText>
+            </View>
+          )
+        }
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -189,5 +200,28 @@ const styles = StyleSheet.create({
   timestamp: {
     fontSize: AppTheme.fontSize.xs,
     color: AppTheme.colors.mutedForeground,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: AppTheme.spacing.xxl * 2,
+  },
+  emptyTitle: {
+    fontSize: AppTheme.fontSize.xl,
+    fontWeight: AppTheme.fontWeight.bold,
+    marginTop: AppTheme.spacing.lg,
+    marginBottom: AppTheme.spacing.sm,
+  },
+  emptyMessage: {
+    fontSize: AppTheme.fontSize.base,
+    color: AppTheme.colors.mutedForeground,
+    textAlign: 'center',
+    paddingHorizontal: AppTheme.spacing.xl,
   },
 });

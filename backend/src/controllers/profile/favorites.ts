@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { protectedProcedure } from '../../middleware/orpc.js';
+import { os } from '@orpc/server';
+import { jwtAuthMiddleware } from '../../middleware/jwt-auth.js';
 import { db } from '../../database/db.js';
 import { favorites, products } from '../../database/schema/index.js';
 import { eq, and } from 'drizzle-orm';
@@ -20,7 +21,8 @@ const parseProductData = (product: any) => {
   };
 };
 
-export const getFavorites = protectedProcedure
+export const getFavorites = os
+  .use(jwtAuthMiddleware)
   .handler(async ({ context }) => {
     const result = await db
       .select({
@@ -37,7 +39,8 @@ export const getFavorites = protectedProcedure
     }));
   });
 
-export const addToFavorites = protectedProcedure
+export const addToFavorites = os
+  .use(jwtAuthMiddleware)
   .input(z.string())
   .handler(async ({ input, context }) => {
     const existing = await db
@@ -59,7 +62,8 @@ export const addToFavorites = protectedProcedure
     });
   });
 
-export const removeFromFavorites = protectedProcedure
+export const removeFromFavorites = os
+  .use(jwtAuthMiddleware)
   .input(z.string())
   .handler(async ({ input, context }) => {
     return await db

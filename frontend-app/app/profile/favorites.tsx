@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { useState, useRef } from 'react';
 import { Image } from 'expo-image';
-import { Search, Bell } from 'lucide-react-native';
+import { Search, Bell, Heart } from 'lucide-react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ProductCard } from '@/components/shop';
 import { ProductSkeleton } from '@/components/shop/product-skeleton';
@@ -46,8 +46,12 @@ export default function FavoritesScreen() {
           <ProductSkeleton />
         </View>
       ) : favorites.length === 0 ? (
-        <View style={styles.content}>
-          <ThemedText style={styles.emptyText}>No favorites yet</ThemedText>
+        <View style={styles.emptyState}>
+          <Heart size={64} color={AppTheme.colors.mutedForeground} />
+          <ThemedText style={styles.emptyStateTitle}>No favorites yet</ThemedText>
+          <ThemedText style={styles.emptyStateText}>
+            Start adding products to your favorites to see them here
+          </ThemedText>
         </View>
       ) : (
         <FlatList
@@ -137,6 +141,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: AppTheme.spacing.xl,
+  },
+  emptyStateTitle: {
+    fontSize: AppTheme.fontSize.xl,
+    fontWeight: AppTheme.fontWeight.bold,
+    marginTop: AppTheme.spacing.lg,
+    marginBottom: AppTheme.spacing.sm,
+  },
+  emptyStateText: {
+    fontSize: AppTheme.fontSize.base,
+    color: AppTheme.colors.mutedForeground,
+    textAlign: 'center',
   },
   emptyText: {
     fontSize: AppTheme.fontSize.base,

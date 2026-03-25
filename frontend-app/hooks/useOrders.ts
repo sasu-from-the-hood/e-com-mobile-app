@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { orpcClient } from '@/lib/orpc-client';
+import type { Order } from '@/types/schema';
 
 export function useOrders() {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const result = await orpcClient.getOrders();
+      const result = await orpcClient.appGetOrders();
       setOrders(result);
       setError(null);
     } catch (err) {
@@ -21,7 +22,7 @@ export function useOrders() {
 
   const createOrder = async (data: { shippingAddress: string; paymentMethodId: string }) => {
     try {
-      const result = await orpcClient.createOrder(data);
+      const result = await orpcClient.appCreateOrder(data);
       await fetchOrders();
       return result;
     } catch (err) {
@@ -38,7 +39,7 @@ export function useOrders() {
 }
 
 export function useOrder(id: string) {
-  const [order, setOrder] = useState(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +49,7 @@ export function useOrder(id: string) {
     const fetchOrder = async () => {
       try {
         setLoading(true);
-        const result = await orpcClient.getOrder(id);
+        const result = await orpcClient.appGetOrder(id);
         setOrder(result);
         setError(null);
       } catch (err) {

@@ -84,6 +84,7 @@ app.use("/rpc/*", betterAuthRateLimitMiddleware)
 
 // ORPC via Fetch adapter
 const rpcHandler = new RPCHandler(router)
+
 app.all('/rpc/*', async (c) => {
   try {
     const { matched, response } = await rpcHandler.handle(c.req.raw, {
@@ -104,7 +105,6 @@ app.all('/rpc/*', async (c) => {
       path: c.req.path,
       method: c.req.method,
     })
-    return c.json({ error: 'RPC error' }, 500)
   }
 })
 

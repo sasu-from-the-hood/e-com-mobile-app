@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { protectedProcedure, adminProcedure } from '../middleware/orpc.js';
+import { jwtProtectedProcedure } from '../middleware/jwt-auth.js';
 import { db } from '../database/db.js';
 import { notifications } from '../database/schema/index.js';
 import { eq, desc } from 'drizzle-orm';
 import cuid from 'cuid';
 
-export const getNotifications = protectedProcedure
+export const getNotifications = jwtProtectedProcedure
   .handler(async ({ context }) => {
     return await db
       .select()
@@ -14,7 +15,7 @@ export const getNotifications = protectedProcedure
       .orderBy(desc(notifications.createdAt));
   });
 
-export const markAsRead = protectedProcedure
+export const markAsRead = jwtProtectedProcedure
   .input(z.string())
   .handler(async ({ input, context }) => {
     return await db
@@ -23,7 +24,7 @@ export const markAsRead = protectedProcedure
       .where(eq(notifications.id, input));
   });
 
-export const markAllAsRead = protectedProcedure
+export const markAllAsRead = jwtProtectedProcedure
   .handler(async ({ context }) => {
     return await db
       .update(notifications)

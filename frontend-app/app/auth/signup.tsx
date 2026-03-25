@@ -11,8 +11,13 @@ import { PasswordInput } from '@/components/auth/password-input';
 import { AppTheme } from '@/constants/app-theme';
 import { validateEthiopianPhone } from '@/utils/phone-validator';
 import { validatePassword } from '@/utils/validators';
-import { authClient } from '@/lib/auth-client';
+import { appAuthClient } from '@/lib/app-auth-client';
 import { showToast } from '@/utils/toast';
+import { 
+  isTinyDevice, 
+  getResponsivePadding, 
+  getResponsiveFontSize,
+} from '@/utils/responsive';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -44,26 +49,25 @@ export default function SignupScreen() {
     if (!newErrors.phoneNumber && !newErrors.password && !newErrors.confirmPassword) {
       setIsLoading(true);
       try {
+        console.log('[Signup] Sending OTP to:', `+251${phoneNumber}`);
         // Send OTP to phone number
-        const { data, error } = await authClient.phoneNumber.sendOtp({
-          phoneNumber: `+251${phoneNumber}`,
+        await appAuthClient.sendRegisterOTP(`+251${phoneNumber}`, password);
+        console.log('[Signup] OTP sent successfully');
+        showToast('success', 'Verification code sent!');
+        
+        // Navigate to OTP verification screen
+        router.push({
+          pathname: '/auth/otp-verification',
+          params: { 
+            phoneNumber: `+251${phoneNumber}`, 
+            password,
+            purpose: 'signup' 
+          }
         });
-
-        if (error) {
-          showToast('error', error.message || 'Failed to send verification code');
-        } else {
-          // Navigate to OTP verification screen
-          router.push({
-            pathname: '/auth/otp-verification',
-            params: { 
-              phoneNumber: `+251${phoneNumber}`, 
-              password,
-              purpose: 'signup' 
-            }
-          });
-        }
-      } catch (err) {
-        showToast('error', 'Network error. Please check your connection.');
+      } catch (err: any) {
+        console.error('[Signup] Failed to send OTP:', err);
+        console.error('[Signup] Error message:', err.message);
+        showToast('error', err.message || 'Failed to send verification code');
       } finally {
         setIsLoading(false);
       }
@@ -132,31 +136,38 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: AppTheme.spacing.lg,
-    paddingTop: AppTheme.spacing.xxl,
+    flexGrow: 1,
+    paddingHorizontal: getResponsivePadding(),
+    paddingTop: isTinyDevice ? AppTheme.spacing.lg : AppTheme.spacing.xxl,
+    paddingBottom: AppTheme.spacing.xl,
+    width: '100%',
   },
   header: {
-    marginBottom: AppTheme.spacing.xxl,
+    marginBottom: isTinyDevice ? AppTheme.spacing.lg : AppTheme.spacing.xxl,
+    alignItems: 'flex-start',
   },
   title: {
-    fontSize: AppTheme.fontSize.xxxl,
+    fontSize: getResponsiveFontSize(AppTheme.fontSize.xxxl),
     fontWeight: AppTheme.fontWeight.bold,
     marginBottom: AppTheme.spacing.sm,
+    textAlign: 'left',
   },
   subtitle: {
-    fontSize: AppTheme.fontSize.base,
+    fontSize: getResponsiveFontSize(AppTheme.fontSize.base),
     color: AppTheme.colors.mutedForeground,
+    textAlign: 'left',
   },
   form: {
-    gap: AppTheme.spacing.lg,
+    gap: isTinyDevice ? AppTheme.spacing.md : AppTheme.spacing.lg,
   },
   loginPrompt: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   loginText: {
-    fontSize: AppTheme.fontSize.base,
+    fontSize: getResponsiveFontSize(AppTheme.fontSize.base),
     color: AppTheme.colors.mutedForeground,
   },
 });

@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `variant_stock` json DEFAULT ('{}');

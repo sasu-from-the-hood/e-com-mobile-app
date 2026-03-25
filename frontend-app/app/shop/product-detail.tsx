@@ -5,7 +5,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
 import { Heart, Star, Plus, Minus, X } from 'lucide-react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { ThemedText } from '@/components/themed-text';
 import { PrimaryButton } from '@/components/onboarding/primary-button';
 import { AppTheme } from '@/constants/app-theme';
@@ -35,8 +34,128 @@ export default function ProductDetailScreen() {
 
   const colorImages = product?.colorImages || {};
   const colors = Object.keys(colorImages);
-  const images = selectedColor ? colorImages[selectedColor] || [] : [];
-  const currentImage = images[currentImageIndex];
+  
+  // Get ALL images from ALL colors for the gallery
+  const allImages: string[] = [];
+  colors.forEach(color => {
+    const colorImageArray = colorImages[color] || [];
+    allImages.push(...colorImageArray);
+  });
+
+  // Use all images for the gallery
+  const images = allImages;
+  const safeImageIndex = images.length > 0 ? Math.min(Math.max(0, currentImageIndex), images.length - 1) : 0;
+  const currentImage = images[safeImageIndex];
+
+  // Get variant stock for selected color and size
+  const getVariantStock = (color: string, size: string) => {
+    if (!product?.variantStock) return 0;
+    
+    // Parse variantStock if it's a string
+    let variantStockObj = product.variantStock;
+    if (typeof variantStockObj === 'string') {
+      try {
+        variantStockObj = JSON.parse(variantStockObj);
+      } catch (e) {
+        console.error('[ProductDetail] Failed to parse variantStock:', e);
+        return 0;
+      }
+    }
+    
+    const variantKey = size ? `${color}-${size}` : color;
+    const stock = variantStockObj[variantKey] || 0;
+    console.log('[ProductDetail] getVariantStock:', variantKey, '=', stock);
+    return stock;
+  };
+
+  // Get total stock for a color (sum of all sizes)
+  const getColorStock = (color: string) => {
+    if (!product?.variantStock) {
+      console.log('[ProductDetail] No variantStock for product');
+      return 0;
+    }
+    
+    // Parse variantStock if it's a string
+    let variantStockObj = product.variantStock;
+    if (typeof variantStockObj === 'string') {
+      try {
+        variantStockObj = JSON.parse(variantStockObj);
+        console.log('[ProductDetail] Parsed variantStock:', variantStockObj);
+      } catch (e) {
+        console.error('[ProductDetail] Failed to parse variantStock:', e);
+        return 0;
+      }
+    }
+    
+    if (!product.sizes || product.sizes.length === 0) {
+      // No sizes, just check color stock
+      const stock = variantStockObj[color] || 0;
+      console.log('[ProductDetail] Color stock (no sizes):', color, '=', stock);
+      return stock;
+    }
+    
+    // Sum stock across all sizes for this color
+    let total = 0;
+    product.sizes.forEach(size => {
+      const variantKey = `${color}-${size}`;
+      const variantStock = variantStockObj[variantKey] || 0;
+      total += variantStock;
+      console.log('[ProductDetail] Variant stock:', variantKey, '=', variantStock);
+    });
+    console.log('[ProductDetail] Total color stock:', color, '=', total);
+    return total;
+  };
+
+  // Check if current selection is in stock
+  const isCurrentSelectionInStock = () => {
+    if (!selectedColor) {
+      console.log('[ProductDetail] isCurrentSelectionInStock: No color selected');
+      return false;
+    }
+    
+    // If product has sizes, check if size is selected
+    if (product?.sizes && product.sizes.length > 0) {
+      if (!selectedSize) {
+        console.log('[ProductDetail] isCurrentSelectionInStock: Size required but not selected');
+        return false;
+      }
+      const stock = getVariantStock(selectedColor, selectedSize);
+      console.log('[ProductDetail] isCurrentSelectionInStock: Variant stock =', stock);
+      return stock > 0;
+    }
+    
+    // No sizes, just check color stock
+    const stock = getColorStock(selectedColor);
+    console.log('[ProductDetail] isCurrentSelectionInStock: Color stock =', stock);
+    return stock > 0;
+  };
+
+  const getCurrentStock = () => {
+    if (!selectedColor || !product?.variantStock) return 0;
+    
+    // If product has sizes and a size is selected, show variant stock
+    if (product?.sizes && product.sizes.length > 0 && selectedSize) {
+      return getVariantStock(selectedColor, selectedSize);
+    }
+    
+    // Otherwise show total color stock
+    return getColorStock(selectedColor);
+  };
+
+  // Check if we should show availability (color selected, and size selected if needed)
+  const shouldShowAvailability = () => {
+    if (!selectedColor) return false;
+    if (product?.sizes && product.sizes.length > 0 && !selectedSize) return false;
+    return true;
+  };
+
+  console.log('Product detail - Images:', {
+    totalColors: colors.length,
+    totalImages: images.length,
+    currentImageIndex,
+    safeImageIndex,
+    currentImage
+  });
 
   useEffect(() => {
     if (colors.length > 0 && !selectedColor) {
@@ -54,20 +173,6 @@ export default function ProductDetailScreen() {
     // Otherwise, prepend the IMAGE URL
     return URL.ImageUrl + imagePath;
   };
-
-  // Create pan gesture for swiping images
-  const panGesture = Gesture.Pan()
-    .onEnd((event) => {
-      if (images.length === 0) return;
-
-      if (event.translationX < -50) {
-        // Swipe left - next image
-        setCurrentImageIndex((prev) => (prev + 1) % images.length);
-      } else if (event.translationX > 50) {
-        // Swipe right - previous image
-        setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-      }
-    });
 
   const handleAddToCart = async () => {
     if (product) {
@@ -121,44 +226,66 @@ export default function ProductDetailScreen() {
       <StatusBar style="dark" />
       
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Product Image - Swipeable */}
-        <GestureDetector gesture={panGesture}>
-          <View style={styles.imageContainer}>
-            <Image
-              source={currentImage ? { uri: getImageUrl(currentImage) } : product.image}
-              style={styles.image}
-              contentFit="cover"
-            />
-            {images.length > 1 && (
-              <View style={styles.imageIndicator}>
-                {images.map((_, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.indicatorDot,
-                      idx === currentImageIndex && styles.indicatorDotActive
-                    ]}
-                  />
-                ))}
-              </View>
-            )}
-            {product.discount && product.discount > 0 && (
-              <View style={styles.discountBadge}>
-                <ThemedText style={styles.discountText}>
-                  -{product.discount}%
-                </ThemedText>
-              </View>
-            )}
-            {/* Swipe Hint */}
-            {images.length > 1 && (
-              <View style={styles.swipeHint}>
-                <ThemedText style={styles.swipeHintText}>
-                  ← Swipe to view more →
-                </ThemedText>
-              </View>
-            )}
-          </View>
-        </GestureDetector>
+        {/* Product Image - Tappable to navigate */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={currentImage ? { uri: getImageUrl(currentImage) } : product.image}
+            style={styles.image}
+            contentFit="cover"
+          />
+          
+          {/* Navigation arrows */}
+          {images.length > 1 && (
+            <>
+              <TouchableOpacity
+                style={styles.leftArrow}
+                onPress={() => {
+                  setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+                }}
+              >
+                <ThemedText style={styles.arrowText}>‹</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.rightArrow}
+                onPress={() => {
+                  setCurrentImageIndex((prev) => (prev + 1) % images.length);
+                }}
+              >
+                <ThemedText style={styles.arrowText}>›</ThemedText>
+              </TouchableOpacity>
+            </>
+          )}
+          
+          {images.length > 1 && (
+            <View style={styles.imageIndicator}>
+              {images.map((_, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  onPress={() => setCurrentImageIndex(idx)}
+                  style={[
+                    styles.indicatorDot,
+                    idx === safeImageIndex && styles.indicatorDotActive
+                  ]}
+                />
+              ))}
+            </View>
+          )}
+          {product.discount && product.discount > 0 && (
+            <View style={styles.discountBadge}>
+              <ThemedText style={styles.discountText}>
+                -{product.discount}%
+              </ThemedText>
+            </View>
+          )}
+          {/* Navigation hint */}
+          {images.length > 1 && (
+            <View style={styles.swipeHint}>
+              <ThemedText style={styles.swipeHintText}>
+                Tap arrows or dots to view more
+              </ThemedText>
+            </View>
+          )}
+        </View>
 
         {/* Product Info */}
         <View style={styles.content}>
@@ -166,12 +293,12 @@ export default function ProductDetailScreen() {
           {product.discount && product.discount > 0 ? (
             <View style={styles.priceSection}>
               <ThemedText style={styles.originalPriceText}>
-                ${(Number(product.price) / (1 - Number(product.discount) / 100)).toFixed(2)}
+                ETB {(Number(product.price) / (1 - Number(product.discount) / 100)).toFixed(2)}
               </ThemedText>
-              <ThemedText style={styles.price}>{formatPrice(product.price)}</ThemedText>
+              <ThemedText style={styles.price}>ETB {formatPrice(product.price)}</ThemedText>
             </View>
           ) : (
-            <ThemedText style={styles.price}>{formatPrice(product.price)}</ThemedText>
+            <ThemedText style={styles.price}>ETB {formatPrice(product.price)}</ThemedText>
           )}
 
           {/* Color Selector */}
@@ -179,34 +306,76 @@ export default function ProductDetailScreen() {
             <View style={styles.colorSection}>
               <ThemedText style={styles.sectionLabel}>Colors</ThemedText>
               <View style={styles.colorOptions}>
-                {colors.map((color) => (
-                  <TouchableOpacity
-                    key={color}
-                    style={[
-                      styles.colorDot,
-                      { backgroundColor: color },
-                      selectedColor === color && styles.colorDotSelected
-                    ]}
-                    onPress={() => {
-                      setSelectedColor(color);
-                      setCurrentImageIndex(0);
-                    }}
-                  />
-                ))}
+                {colors.map((color) => {
+                  const colorStock = getColorStock(color);
+                  const isColorAvailable = colorStock > 0;
+                  console.log('[ProductDetail] Color availability:', color, 'stock:', colorStock, 'available:', isColorAvailable);
+                  return (
+                    <View key={color} style={styles.colorOptionContainer}>
+                      <TouchableOpacity
+                        style={[
+                          styles.colorDot,
+                          { backgroundColor: color },
+                          selectedColor === color && styles.colorDotSelected,
+                          !isColorAvailable && styles.colorDotOutOfStock
+                        ]}
+                        onPress={() => {
+                          console.log('Product detail - Changing color to:', color);
+                          setSelectedColor(color);
+                          setSelectedSize(''); // Reset size when color changes
+                        }}
+                        disabled={!isColorAvailable}
+                      >
+                        {!isColorAvailable && (
+                          <View style={styles.outOfStockLine} />
+                        )}
+                      </TouchableOpacity>
+                      {selectedColor === color && (
+                        <ThemedText style={styles.colorStockText}>
+                          {colorStock} in stock
+                        </ThemedText>
+                      )}
+                    </View>
+                  );
+                })}
               </View>
             </View>
           )}
 
           {/* Sizes */}
-          {product.sizes && product.sizes.length > 0 && (
+          {product.sizes && product.sizes.length > 0 && selectedColor && (
             <View style={styles.sizeSection}>
               <ThemedText style={styles.sectionLabel}>Sizes</ThemedText>
               <View style={styles.sizeOptions}>
-                {product.sizes.map((size, idx) => (
-                  <View key={idx} style={styles.sizeBadge}>
-                    <ThemedText style={styles.sizeText}>{size}</ThemedText>
-                  </View>
-                ))}
+                {product.sizes.map((size, idx) => {
+                  const sizeStock = getVariantStock(selectedColor, size);
+                  const isSizeAvailable = sizeStock > 0;
+                  return (
+                    <TouchableOpacity
+                      key={idx}
+                      style={[
+                        styles.sizeBadge,
+                        selectedSize === size && styles.sizeBadgeSelected,
+                        !isSizeAvailable && styles.sizeBadgeOutOfStock
+                      ]}
+                      onPress={() => setSelectedSize(size)}
+                      disabled={!isSizeAvailable}
+                    >
+                      <ThemedText style={[
+                        styles.sizeText,
+                        selectedSize === size && styles.sizeTextSelected,
+                        !isSizeAvailable && styles.sizeTextOutOfStock
+                      ]}>
+                        {size}
+                      </ThemedText>
+                      {isSizeAvailable && (
+                        <ThemedText style={styles.sizeStockText}>
+                          ({sizeStock})
+                        </ThemedText>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
           )}
@@ -230,6 +399,39 @@ export default function ProductDetailScreen() {
             <ThemedText style={styles.sectionLabel}>Description</ThemedText>
             <ThemedText style={styles.description}>{product.description}</ThemedText>
           </View>
+
+          {/* Stock Status */}
+          {selectedColor && (
+            <View style={styles.stockSection}>
+              <ThemedText style={styles.sectionLabel}>Availability</ThemedText>
+              {shouldShowAvailability() ? (
+                <>
+                  {isCurrentSelectionInStock() ? (
+                    <View style={styles.stockInfo}>
+                      <View style={[styles.stockDot, { backgroundColor: AppTheme.colors.success }]} />
+                      <ThemedText style={styles.stockText}>
+                        In Stock ({getCurrentStock()} available)
+                      </ThemedText>
+                    </View>
+                  ) : (
+                    <View style={styles.stockInfo}>
+                      <View style={[styles.stockDot, { backgroundColor: AppTheme.colors.error }]} />
+                      <ThemedText style={[styles.stockText, { color: AppTheme.colors.error }]}>
+                        Out of Stock
+                      </ThemedText>
+                    </View>
+                  )}
+                </>
+              ) : (
+                <View style={styles.stockInfo}>
+                  <View style={[styles.stockDot, { backgroundColor: AppTheme.colors.mutedForeground }]} />
+                  <ThemedText style={styles.stockText}>
+                    Select a size to check availability
+                  </ThemedText>
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Reviews */}
           <View style={styles.reviewsSection}>
@@ -284,6 +486,7 @@ export default function ProductDetailScreen() {
             title="Add to Cart"
             onPress={handleOpenAddToCart}
             style={styles.addButton}
+            disabled={!selectedColor || !isCurrentSelectionInStock()}
           />
         </View>
       </View>
@@ -301,7 +504,7 @@ export default function ProductDetailScreen() {
             <View style={styles.modalHeader}>
               <ThemedText style={styles.modalTitle}>Add to Cart</ThemedText>
               <TouchableOpacity onPress={() => setShowAddToCartModal(false)}>
-                <X size={24} color={AppTheme.colors.text} />
+                <X size={24} color={AppTheme.colors.foreground} />
               </TouchableOpacity>
             </View>
 
@@ -310,46 +513,72 @@ export default function ProductDetailScreen() {
               <View style={styles.modalSection}>
                 <ThemedText style={styles.modalSectionTitle}>Color</ThemedText>
                 <View style={styles.modalColorOptions}>
-                  {colors.map((color) => (
-                    <TouchableOpacity
-                      key={color}
-                      style={[
-                        styles.modalColorOption,
-                        selectedColor === color && styles.modalColorOptionSelected,
-                      ]}
-                      onPress={() => setSelectedColor(color)}
-                    >
-                      <View style={[styles.modalColorCircle, { backgroundColor: color }]} />
-                    </TouchableOpacity>
-                  ))}
+                  {colors.map((color) => {
+                    const colorStock = getColorStock(color);
+                    const isColorAvailable = colorStock > 0;
+                    return (
+                      <TouchableOpacity
+                        key={color}
+                        style={[
+                          styles.modalColorOption,
+                          selectedColor === color && styles.modalColorOptionSelected,
+                          !isColorAvailable && styles.modalColorOptionDisabled,
+                        ]}
+                        onPress={() => {
+                          setSelectedColor(color);
+                          setSelectedSize(''); // Reset size when color changes
+                        }}
+                        disabled={!isColorAvailable}
+                      >
+                        <View style={[styles.modalColorCircle, { backgroundColor: color }]}>
+                          {!isColorAvailable && (
+                            <View style={styles.modalOutOfStockLine} />
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
             )}
 
             {/* Size Selection */}
-            {product?.sizes && product.sizes.length > 0 && (
+            {product?.sizes && product.sizes.length > 0 && selectedColor && (
               <View style={styles.modalSection}>
                 <ThemedText style={styles.modalSectionTitle}>Size</ThemedText>
                 <View style={styles.modalSizeOptions}>
-                  {product.sizes.map((size) => (
-                    <TouchableOpacity
-                      key={size}
-                      style={[
-                        styles.modalSizeOption,
-                        selectedSize === size && styles.modalSizeOptionSelected,
-                      ]}
-                      onPress={() => setSelectedSize(size)}
-                    >
-                      <ThemedText
+                  {product.sizes.map((size) => {
+                    const sizeStock = getVariantStock(selectedColor, size);
+                    const isSizeAvailable = sizeStock > 0;
+                    console.log('[ProductDetail Modal] Size:', size, 'stock:', sizeStock, 'available:', isSizeAvailable);
+                    return (
+                      <TouchableOpacity
+                        key={size}
                         style={[
-                          styles.modalSizeText,
-                          selectedSize === size && styles.modalSizeTextSelected,
+                          styles.modalSizeOption,
+                          selectedSize === size && styles.modalSizeOptionSelected,
+                          !isSizeAvailable && styles.modalSizeOptionDisabled,
                         ]}
+                        onPress={() => setSelectedSize(size)}
+                        disabled={!isSizeAvailable}
                       >
-                        {size}
-                      </ThemedText>
-                    </TouchableOpacity>
-                  ))}
+                        <ThemedText
+                          style={[
+                            styles.modalSizeText,
+                            selectedSize === size && styles.modalSizeTextSelected,
+                            !isSizeAvailable && styles.modalSizeTextDisabled,
+                          ]}
+                        >
+                          {size}
+                        </ThemedText>
+                        {isSizeAvailable && (
+                          <ThemedText style={styles.modalSizeStockText}>
+                            {sizeStock} left
+                          </ThemedText>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
             )}
@@ -362,23 +591,24 @@ export default function ProductDetailScreen() {
                   style={styles.quantityButton}
                   onPress={() => setQuantity(Math.max(1, quantity - 1))}
                 >
-                  <Minus size={20} color={AppTheme.colors.text} />
+                  <Minus size={20} color={AppTheme.colors.foreground} />
                 </TouchableOpacity>
                 <ThemedText style={styles.quantityText}>{quantity}</ThemedText>
                 <TouchableOpacity
                   style={styles.quantityButton}
                   onPress={() => setQuantity(quantity + 1)}
                 >
-                  <Plus size={20} color={AppTheme.colors.text} />
+                  <Plus size={20} color={AppTheme.colors.foreground} />
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Add to Cart Button */}
             <PrimaryButton
-              title={`Add ${quantity} to Cart - ${formatPrice(product?.price ? product.price * quantity : 0)}`}
+              title={`Add ${quantity} to Cart - ETB ${formatPrice(Number(product?.price || 0) * quantity)}`}
               onPress={handleAddToCart}
               style={styles.modalAddButton}
+              disabled={!isCurrentSelectionInStock()}
             />
           </View>
         </View>
@@ -396,10 +626,42 @@ const styles = StyleSheet.create({
     width: width,
     height: width,
     backgroundColor: AppTheme.colors.secondary,
+    position: 'relative',
   },
   image: {
     width: '100%',
     height: '100%',
+  },
+  leftArrow: {
+    position: 'absolute',
+    left: 10,
+    top: '50%',
+    transform: [{ translateY: -20 }],
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  rightArrow: {
+    position: 'absolute',
+    right: 10,
+    top: '50%',
+    transform: [{ translateY: -20 }],
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  arrowText: {
+    fontSize: 30,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   content: {
     padding: AppTheme.spacing.md,
@@ -450,17 +712,39 @@ const styles = StyleSheet.create({
   },
   colorOptions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: AppTheme.spacing.md,
   },
+  colorOptionContainer: {
+    alignItems: 'center',
+    gap: 4,
+  },
   colorDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 2,
     borderColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   colorDotSelected: {
     borderColor: AppTheme.colors.primary,
+    borderWidth: 3,
+  },
+  colorDotOutOfStock: {
+    opacity: 0.3,
+  },
+  outOfStockLine: {
+    position: 'absolute',
+    width: 50,
+    height: 2,
+    backgroundColor: AppTheme.colors.error,
+    transform: [{ rotate: '45deg' }],
+  },
+  colorStockText: {
+    fontSize: AppTheme.fontSize.xs,
+    color: AppTheme.colors.mutedForeground,
   },
   descriptionSection: {
     marginBottom: AppTheme.spacing.lg,
@@ -469,6 +753,23 @@ const styles = StyleSheet.create({
     fontSize: AppTheme.fontSize.base,
     lineHeight: 24,
     color: AppTheme.colors.mutedForeground,
+  },
+  stockSection: {
+    marginBottom: AppTheme.spacing.lg,
+  },
+  stockInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: AppTheme.spacing.sm,
+  },
+  stockDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  stockText: {
+    fontSize: AppTheme.fontSize.base,
+    fontWeight: AppTheme.fontWeight.medium,
   },
   footer: {
     padding: AppTheme.spacing.sm,
@@ -594,13 +895,36 @@ const styles = StyleSheet.create({
   },
   sizeBadge: {
     backgroundColor: AppTheme.colors.secondary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  sizeBadgeSelected: {
+    backgroundColor: AppTheme.colors.primary,
+    borderColor: AppTheme.colors.primary,
+  },
+  sizeBadgeOutOfStock: {
+    opacity: 0.3,
+    backgroundColor: AppTheme.colors.muted,
   },
   sizeText: {
     fontSize: AppTheme.fontSize.sm,
     fontWeight: AppTheme.fontWeight.medium,
+  },
+  sizeTextSelected: {
+    color: AppTheme.colors.primaryForeground,
+  },
+  sizeTextOutOfStock: {
+    textDecorationLine: 'line-through',
+  },
+  sizeStockText: {
+    fontSize: AppTheme.fontSize.xs,
+    color: AppTheme.colors.mutedForeground,
   },
   tagSection: {
     marginBottom: AppTheme.spacing.lg,
@@ -679,12 +1003,24 @@ const styles = StyleSheet.create({
   modalColorOptionSelected: {
     borderColor: AppTheme.colors.primary,
   },
+  modalColorOptionDisabled: {
+    opacity: 0.3,
+  },
   modalColorCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: AppTheme.colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalOutOfStockLine: {
+    position: 'absolute',
+    width: 50,
+    height: 2,
+    backgroundColor: AppTheme.colors.error,
+    transform: [{ rotate: '45deg' }],
   },
   modalSizeOptions: {
     flexDirection: 'row',
@@ -698,10 +1034,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: AppTheme.colors.border,
     backgroundColor: AppTheme.colors.background,
+    alignItems: 'center',
   },
   modalSizeOptionSelected: {
     backgroundColor: AppTheme.colors.primary,
     borderColor: AppTheme.colors.primary,
+  },
+  modalSizeOptionDisabled: {
+    opacity: 0.3,
+    backgroundColor: AppTheme.colors.muted,
   },
   modalSizeText: {
     fontSize: AppTheme.fontSize.base,
@@ -709,6 +1050,14 @@ const styles = StyleSheet.create({
   },
   modalSizeTextSelected: {
     color: AppTheme.colors.primaryForeground,
+  },
+  modalSizeTextDisabled: {
+    textDecorationLine: 'line-through',
+  },
+  modalSizeStockText: {
+    fontSize: AppTheme.fontSize.xs,
+    color: AppTheme.colors.mutedForeground,
+    marginTop: 2,
   },
   quantityContainer: {
     flexDirection: 'row',
