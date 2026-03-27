@@ -17,8 +17,8 @@ deployment:
     - /bin/cp backend/package.json $DEPLOYPATH/
     - /bin/cp backend/package-lock.json $DEPLOYPATH/
     
-    # Copy .env file
-    - /bin/cp backend/.env $DEPLOYPATH/
+    # Copy .env file (optional - you'll add this manually on the server)
+    - /bin/cp backend/.env $DEPLOYPATH/ || echo ".env not found - you need to create it on the server"
     
     # Copy drizzle config
     - /bin/cp backend/drizzle.config.ts $DEPLOYPATH/
