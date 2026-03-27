@@ -1,10 +1,10 @@
 ---
 deployment:
   tasks:
-    # Set deployment path
-    - export DEPLOYPATH=/home/$(whoami)/e-com
+    # Set deployment path to domain folder
+    - export DEPLOYPATH=/home/$(whoami)/e-com.solvesphr.com
     
-    # Create e-com directory
+    # Create domain directory
     - /bin/mkdir -p $DEPLOYPATH
     
     # Copy built backend files (must be built locally before push)
