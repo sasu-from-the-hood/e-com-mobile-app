@@ -1,0 +1,114 @@
+export declare const userInteractions: import("drizzle-orm/mysql-core").MySqlTableWithColumns<{
+    name: "user_interactions";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "id";
+            tableName: "user_interactions";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        userId: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "user_id";
+            tableName: "user_interactions";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        productId: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "product_id";
+            tableName: "user_interactions";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        interactionType: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "interaction_type";
+            tableName: "user_interactions";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        score: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "score";
+            tableName: "user_interactions";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        createdAt: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "created_at";
+            tableName: "user_interactions";
+            dataType: "date";
+            columnType: "MySqlTimestamp";
+            data: Date;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+    };
+    dialect: "mysql";
+}>;
+export declare const userInteractionsRelations: import("drizzle-orm").Relations<"user_interactions", {
+    user: import("drizzle-orm").One<"user", true>;
+    product: import("drizzle-orm").One<"products", true>;
+}>;
+//# sourceMappingURL=user-interactions.d.ts.map

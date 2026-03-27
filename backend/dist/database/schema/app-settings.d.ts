@@ -1,0 +1,93 @@
+export declare const appSettings: import("drizzle-orm/mysql-core").MySqlTableWithColumns<{
+    name: "app_settings";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "id";
+            tableName: "app_settings";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        key: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "key";
+            tableName: "app_settings";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        value: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "value";
+            tableName: "app_settings";
+            dataType: "string";
+            columnType: "MySqlText";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        description: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "description";
+            tableName: "app_settings";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        updatedAt: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "updated_at";
+            tableName: "app_settings";
+            dataType: "date";
+            columnType: "MySqlTimestamp";
+            data: Date;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+    };
+    dialect: "mysql";
+}>;
+//# sourceMappingURL=app-settings.d.ts.map

@@ -1,0 +1,430 @@
+import { z } from 'zod';
+export declare const getOrders: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, {
+    request?: Request;
+} & Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        name: string;
+        email: string;
+        phoneNumber: string | null;
+        phoneNumberVerified: boolean | null;
+        image: string | null;
+        role: string | null;
+        banned: false | null;
+    };
+}>, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+    items: {
+        id: string;
+        orderId: string;
+        productId: string;
+        productName: string;
+        productImage: string | null;
+        quantity: number;
+        unitPrice: string;
+        totalPrice: string;
+        size: string | null;
+        color: string | null;
+        variant: string | null;
+        sku: string | null;
+        weight: string | null;
+        customizations: Record<string, any> | null;
+        giftMessage: string | null;
+        isGift: string | null;
+        returnStatus: string | null;
+        returnReason: string | null;
+        createdAt: Date;
+    }[];
+    id: string;
+    userId: string;
+    orderNumber: string;
+    status: string;
+    subtotal: string;
+    tax: string | null;
+    shipping: string | null;
+    discount: string | null;
+    total: string;
+    currency: string | null;
+    shippingAddressId: string | null;
+    billingAddressId: string | null;
+    paymentMethodId: string | null;
+    paymentStatus: string | null;
+    shippingMethod: string | null;
+    trackingNumber: string | null;
+    courierService: string | null;
+    deliveryBoy: boolean | null;
+    deliveryBoyId: string | null;
+    estimatedDelivery: Date | null;
+    shippedAt: Date | null;
+    deliveredAt: Date | null;
+    cancelledAt: Date | null;
+    cancellationReason: string | null;
+    notes: string | null;
+    metadata: Record<string, any> | null;
+    createdAt: Date;
+    updatedAt: Date;
+}[], {
+    items: {
+        id: string;
+        orderId: string;
+        productId: string;
+        productName: string;
+        productImage: string | null;
+        quantity: number;
+        unitPrice: string;
+        totalPrice: string;
+        size: string | null;
+        color: string | null;
+        variant: string | null;
+        sku: string | null;
+        weight: string | null;
+        customizations: Record<string, any> | null;
+        giftMessage: string | null;
+        isGift: string | null;
+        returnStatus: string | null;
+        returnReason: string | null;
+        createdAt: Date;
+    }[];
+    id: string;
+    userId: string;
+    orderNumber: string;
+    status: string;
+    subtotal: string;
+    tax: string | null;
+    shipping: string | null;
+    discount: string | null;
+    total: string;
+    currency: string | null;
+    shippingAddressId: string | null;
+    billingAddressId: string | null;
+    paymentMethodId: string | null;
+    paymentStatus: string | null;
+    shippingMethod: string | null;
+    trackingNumber: string | null;
+    courierService: string | null;
+    deliveryBoy: boolean | null;
+    deliveryBoyId: string | null;
+    estimatedDelivery: Date | null;
+    shippedAt: Date | null;
+    deliveredAt: Date | null;
+    cancelledAt: Date | null;
+    cancellationReason: string | null;
+    notes: string | null;
+    metadata: Record<string, any> | null;
+    createdAt: Date;
+    updatedAt: Date;
+}[]>, Record<never, never>, Record<never, never>>;
+export declare const getOrder: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, {
+    request?: Request;
+} & Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        name: string;
+        email: string;
+        phoneNumber: string | null;
+        phoneNumberVerified: boolean | null;
+        image: string | null;
+        role: string | null;
+        banned: false | null;
+    };
+}>, z.ZodString, import("@orpc/contract").Schema<{
+    items: {
+        id: string;
+        quantity: number;
+        unitPrice: string;
+        product: {
+            id: string;
+            name: string;
+            slug: string;
+            description: string | null;
+            price: string;
+            originalPrice: string | null;
+            colorImages: Record<string, string[]> | null;
+            categoryId: string | null;
+            warehouseId: string | null;
+            sku: string | null;
+            sizes: string[] | null;
+            tags: string[] | null;
+            variantStock: Record<string, number> | null;
+            rating: string | null;
+            reviewCount: number | null;
+            inStock: boolean | null;
+            stockQuantity: number | null;
+            lowStockThreshold: number | null;
+            discount: number | null;
+            weight: string | null;
+            isActive: boolean | null;
+            isFeatured: boolean | null;
+            isDigital: boolean | null;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }[];
+    id: string;
+    userId: string;
+    orderNumber: string;
+    status: string;
+    subtotal: string;
+    tax: string | null;
+    shipping: string | null;
+    discount: string | null;
+    total: string;
+    currency: string | null;
+    shippingAddressId: string | null;
+    billingAddressId: string | null;
+    paymentMethodId: string | null;
+    paymentStatus: string | null;
+    shippingMethod: string | null;
+    trackingNumber: string | null;
+    courierService: string | null;
+    deliveryBoy: boolean | null;
+    deliveryBoyId: string | null;
+    estimatedDelivery: Date | null;
+    shippedAt: Date | null;
+    deliveredAt: Date | null;
+    cancelledAt: Date | null;
+    cancellationReason: string | null;
+    notes: string | null;
+    metadata: Record<string, any> | null;
+    createdAt: Date;
+    updatedAt: Date;
+}, {
+    items: {
+        id: string;
+        quantity: number;
+        unitPrice: string;
+        product: {
+            id: string;
+            name: string;
+            slug: string;
+            description: string | null;
+            price: string;
+            originalPrice: string | null;
+            colorImages: Record<string, string[]> | null;
+            categoryId: string | null;
+            warehouseId: string | null;
+            sku: string | null;
+            sizes: string[] | null;
+            tags: string[] | null;
+            variantStock: Record<string, number> | null;
+            rating: string | null;
+            reviewCount: number | null;
+            inStock: boolean | null;
+            stockQuantity: number | null;
+            lowStockThreshold: number | null;
+            discount: number | null;
+            weight: string | null;
+            isActive: boolean | null;
+            isFeatured: boolean | null;
+            isDigital: boolean | null;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }[];
+    id: string;
+    userId: string;
+    orderNumber: string;
+    status: string;
+    subtotal: string;
+    tax: string | null;
+    shipping: string | null;
+    discount: string | null;
+    total: string;
+    currency: string | null;
+    shippingAddressId: string | null;
+    billingAddressId: string | null;
+    paymentMethodId: string | null;
+    paymentStatus: string | null;
+    shippingMethod: string | null;
+    trackingNumber: string | null;
+    courierService: string | null;
+    deliveryBoy: boolean | null;
+    deliveryBoyId: string | null;
+    estimatedDelivery: Date | null;
+    shippedAt: Date | null;
+    deliveredAt: Date | null;
+    cancelledAt: Date | null;
+    cancellationReason: string | null;
+    notes: string | null;
+    metadata: Record<string, any> | null;
+    createdAt: Date;
+    updatedAt: Date;
+}>, Record<never, never>, Record<never, never>>;
+export declare const createOrder: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, {
+    request?: Request;
+} & Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        name: string;
+        email: string;
+        phoneNumber: string | null;
+        phoneNumberVerified: boolean | null;
+        image: string | null;
+        role: string | null;
+        banned: false | null;
+    };
+}>, z.ZodObject<{
+    shippingAddress: z.ZodString;
+    paymentMethodId: z.ZodString;
+}, z.core.$strip>, import("@orpc/contract").Schema<{
+    id: string;
+    userId: string;
+    orderNumber: string;
+    subtotal: string;
+    total: string;
+    currency: string;
+    status: "pending";
+    shippingAddressId: string;
+    paymentMethodId: null;
+    paymentStatus: string;
+    notes: string;
+}, {
+    id: string;
+    userId: string;
+    orderNumber: string;
+    subtotal: string;
+    total: string;
+    currency: string;
+    status: "pending";
+    shippingAddressId: string;
+    paymentMethodId: null;
+    paymentStatus: string;
+    notes: string;
+}>, Record<never, never>, Record<never, never>>;
+export declare const cancelOrder: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, {
+    request?: Request;
+} & Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        name: string;
+        email: string;
+        phoneNumber: string | null;
+        phoneNumberVerified: boolean | null;
+        image: string | null;
+        role: string | null;
+        banned: false | null;
+    };
+}>, z.ZodString, import("@orpc/contract").Schema<{
+    success: boolean;
+}, {
+    success: boolean;
+}>, Record<never, never>, Record<never, never>>;
+export declare const updateOrderStatus: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        emailVerified: boolean;
+        name: string;
+        image?: string | null | undefined | undefined;
+        banned: boolean | null | undefined;
+        role?: string | null | undefined;
+        banReason?: string | null | undefined;
+        banExpires?: Date | null | undefined;
+    };
+}>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        emailVerified: boolean;
+        name: string;
+        image?: string | null | undefined | undefined;
+        banned: boolean | null | undefined;
+        role?: string | null | undefined;
+        banReason?: string | null | undefined;
+        banExpires?: Date | null | undefined;
+    };
+}>>, import("@orpc/server").MergedCurrentContext<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        emailVerified: boolean;
+        name: string;
+        image?: string | null | undefined | undefined;
+        banned: boolean | null | undefined;
+        role?: string | null | undefined;
+        banReason?: string | null | undefined;
+        banExpires?: Date | null | undefined;
+    };
+}>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        emailVerified: boolean;
+        name: string;
+        image?: string | null | undefined | undefined;
+        banned: boolean | null | undefined;
+        role?: string | null | undefined;
+        banReason?: string | null | undefined;
+        banExpires?: Date | null | undefined;
+    };
+}>>, z.ZodObject<{
+    id: z.ZodString;
+    status: z.ZodEnum<{
+        pending: "pending";
+        delivered: "delivered";
+        processing: "processing";
+        shipped: "shipped";
+        cancelled: "cancelled";
+    }>;
+}, z.core.$strip>, import("@orpc/contract").Schema<{
+    success: boolean;
+}, {
+    success: boolean;
+}>, Record<never, never>, Record<never, never>>;
+export declare const updateDeliveryBoy: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, {
+    request?: Request;
+} & Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        name: string;
+        email: string;
+        phoneNumber: string | null;
+        phoneNumberVerified: boolean | null;
+        image: string | null;
+        role: string | null;
+        banned: false | null;
+    };
+}>, z.ZodObject<{
+    orderId: z.ZodString;
+    deliveryBoy: z.ZodBoolean;
+}, z.core.$strip>, import("@orpc/contract").Schema<{
+    success: boolean;
+}, {
+    success: boolean;
+}>, Record<never, never>, Record<never, never>>;
+export declare const getOrderWarehouse: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, {
+    request?: Request;
+} & Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        name: string;
+        email: string;
+        phoneNumber: string | null;
+        phoneNumberVerified: boolean | null;
+        image: string | null;
+        role: string | null;
+        banned: false | null;
+    };
+}>, z.ZodString, import("@orpc/contract").Schema<{
+    id: string;
+    name: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+    phone: string | null;
+} | null, {
+    id: string;
+    name: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+    phone: string | null;
+} | null>, Record<never, never>, Record<never, never>>;
+//# sourceMappingURL=orders.d.ts.map

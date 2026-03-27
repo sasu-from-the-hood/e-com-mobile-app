@@ -1,0 +1,113 @@
+export declare const searchHistory: import("drizzle-orm/mysql-core").MySqlTableWithColumns<{
+    name: "search_history";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "id";
+            tableName: "search_history";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        userId: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "user_id";
+            tableName: "search_history";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        query: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "query";
+            tableName: "search_history";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        resultCount: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "result_count";
+            tableName: "search_history";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        clickedProductId: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "clicked_product_id";
+            tableName: "search_history";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        createdAt: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "created_at";
+            tableName: "search_history";
+            dataType: "date";
+            columnType: "MySqlTimestamp";
+            data: Date;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+    };
+    dialect: "mysql";
+}>;
+export declare const searchHistoryRelations: import("drizzle-orm").Relations<"search_history", {
+    user: import("drizzle-orm").One<"user", false>;
+}>;
+//# sourceMappingURL=search-history.d.ts.map

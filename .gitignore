@@ -10,7 +10,6 @@ coverage/
 
 # Production builds
 build/
-dist/
 !backend/dist/
 out/
 .next/
@@ -59,7 +58,6 @@ Thumbs.db
 # Expo
 .expo/
 .expo-shared/
-dist/
 web-build/
 
 # React Native
