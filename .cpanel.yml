@@ -7,11 +7,15 @@ deployment:
     # Create e-com directory
     - /bin/mkdir -p $DEPLOYPATH
     
+    # Set up Node.js environment (cPanel uses nvm)
+    - export NVM_DIR="$HOME/.nvm"
+    - '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"'
+    
     # Navigate to backend and install dependencies
-    - cd backend && /usr/bin/npm install
+    - cd backend && npm install
     
     # Build the backend
-    - cd backend && /usr/bin/npm run build
+    - cd backend && npm run build
     
     # Copy built files to deployment directory
     - /bin/cp -r backend/dist/* $DEPLOYPATH/
@@ -31,7 +35,7 @@ deployment:
     - /bin/cp -r backend/src/database/migrations/* $DEPLOYPATH/migrations/
     
     # Install production dependencies
-    - cd $DEPLOYPATH && /usr/bin/npm install --production
+    - cd $DEPLOYPATH && npm install --production
     
     # Run database migrations
-    - cd $DEPLOYPATH && /usr/bin/npm run migrate:run
+    - cd $DEPLOYPATH && npm run migrate:run
