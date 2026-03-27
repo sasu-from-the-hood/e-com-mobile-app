@@ -1,43 +1,37 @@
-version: 1
-
-build:
-  # Create e-com directory in root
-  - command: mkdir -p ../e-com
-    workdir: backend
-  
-  # Install dependencies
-  - command: npm install
-    workdir: backend
-  
-  # Build the backend
-  - command: npm run build
-    workdir: backend
-  
-  # Copy built files to e-com
-  - command: cp -r dist ../e-com/
-    workdir: backend
-  
-  # Copy package files
-  - command: cp package.json package-lock.json ../e-com/
-    workdir: backend
-  
-  # Copy .env file
-  - command: cp .env ../e-com/
-    workdir: backend
-  
-  # Copy drizzle config
-  - command: cp drizzle.config.ts ../e-com/
-    workdir: backend
-  
-  # Copy database migrations
-  - command: cp -r src/database/migrations ../e-com/migrations
-    workdir: backend
-  
-  # Install production dependencies in e-com
-  - command: npm install --production
-    workdir: ../e-com
-
-deploy:
-  # Run database migrations
-  - command: npm run migrate:run
-    workdir: ../e-com
+---
+deployment:
+  tasks:
+    # Set deployment path
+    - export DEPLOYPATH=/home/$(whoami)/e-com
+    
+    # Create e-com directory
+    - /bin/mkdir -p $DEPLOYPATH
+    
+    # Navigate to backend and install dependencies
+    - cd backend && /usr/bin/npm install
+    
+    # Build the backend
+    - cd backend && /usr/bin/npm run build
+    
+    # Copy built files to deployment directory
+    - /bin/cp -r backend/dist/* $DEPLOYPATH/
+    
+    # Copy package files
+    - /bin/cp backend/package.json $DEPLOYPATH/
+    - /bin/cp backend/package-lock.json $DEPLOYPATH/
+    
+    # Copy .env file
+    - /bin/cp backend/.env $DEPLOYPATH/
+    
+    # Copy drizzle config
+    - /bin/cp backend/drizzle.config.ts $DEPLOYPATH/
+    
+    # Copy database migrations
+    - /bin/mkdir -p $DEPLOYPATH/migrations
+    - /bin/cp -r backend/src/database/migrations/* $DEPLOYPATH/migrations/
+    
+    # Install production dependencies
+    - cd $DEPLOYPATH && /usr/bin/npm install --production
+    
+    # Run database migrations
+    - cd $DEPLOYPATH && /usr/bin/npm run migrate:run
