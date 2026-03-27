@@ -23,7 +23,7 @@ async function getAppName(): Promise<string> {
     
     return setting?.value || 'MyApp';
   } catch (error) {
-    logger.error('[SMS] Error fetching app name:', error);
+    logger.error('[SMS] Error fetching app name:', error as Record<string, unknown>);
     return 'MyApp';
   }
 }
@@ -114,7 +114,7 @@ export async function sendSMS(phoneNumber: string, message: string): Promise<Afr
       data,
     };
   } catch (error) {
-    logger.error('[SMS] Error sending SMS:', error);
+    logger.error('[SMS] Error sending SMS:', error as Record<string, unknown>);
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Unknown error',

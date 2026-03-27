@@ -34,9 +34,10 @@ export const getCart = os
           ? JSON.parse(item.productColorImages || '{}')
           : (item.productColorImages as Record<string, string[]> || {});
 
-        const selectedColorImages = item.color && colorImages[item.color] ? colorImages[item.color] : [];
-        const firstColorImages = Object.values(colorImages)[0] || [];
-        const imageUrl = selectedColorImages[0] || firstColorImages[0] || '';
+        const selectedColorImages: string[] = item.color && colorImages[item.color] ? colorImages[item.color] : [];
+        const allColorImages: string[][] = Object.values(colorImages);
+        const firstColorImages: string[] = allColorImages.length > 0 && allColorImages[0] ? allColorImages[0] : [];
+        const imageUrl = (selectedColorImages.length > 0 ? selectedColorImages[0] : undefined) || (firstColorImages.length > 0 ? firstColorImages[0] : undefined) || '';
 
         console.log('Cart item backend:', {
           productName: item.productName,

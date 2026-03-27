@@ -1,6 +1,6 @@
 import { createAuthEndpoint } from 'better-auth/api'
-import { db } from '../database/db.js'
-import { passkey } from '../database/schema/auth-schema.js'
+import { db } from '../../database/db.js'
+import { passkey } from '../../database/schema/auth-schema.js'
 import { eq, and } from 'drizzle-orm'
 import * as crypto from 'crypto'
 import { z } from 'zod'
@@ -167,7 +167,7 @@ export const biometricPlugin = () => {
         }
         
         const userId = result[0].userId
-        const sessionData = await ctx.context.internalAdapter.createSession(userId, ctx)
+        const sessionData = await ctx.context.internalAdapter.createSession(userId, ctx as any)
         
         const user = await ctx.context.internalAdapter.findUserById(userId)
         

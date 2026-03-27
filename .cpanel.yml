@@ -7,18 +7,11 @@ deployment:
     # Create e-com directory
     - /bin/mkdir -p $DEPLOYPATH
     
-    # Set up Node.js environment (cPanel uses nvm)
-    - export NVM_DIR="$HOME/.nvm"
-    - '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"'
+    # Copy built backend files (must be built locally before push)
+    - /bin/cp -r backend/dist $DEPLOYPATH/
     
-    # Navigate to backend and install dependencies
-    - cd backend && npm install
-    
-    # Build the backend
-    - cd backend && npm run build
-    
-    # Copy built files to deployment directory
-    - /bin/cp -r backend/dist/* $DEPLOYPATH/
+    # Copy frontend build
+    - /bin/cp -r backend/front-end-build $DEPLOYPATH/
     
     # Copy package files
     - /bin/cp backend/package.json $DEPLOYPATH/
@@ -30,12 +23,10 @@ deployment:
     # Copy drizzle config
     - /bin/cp backend/drizzle.config.ts $DEPLOYPATH/
     
-    # Copy database migrations
-    - /bin/mkdir -p $DEPLOYPATH/migrations
-    - /bin/cp -r backend/src/database/migrations/* $DEPLOYPATH/migrations/
+    # Copy node_modules (must be installed locally before push)
+    - /bin/cp -r backend/node_modules $DEPLOYPATH/
     
-    # Install production dependencies
-    - cd $DEPLOYPATH && npm install --production
-    
-    # Run database migrations
-    - cd $DEPLOYPATH && npm run migrate:run
+    # Copy database schema and migrations
+    - /bin/mkdir -p $DEPLOYPATH/src/database
+    - /bin/cp -r backend/src/database/migrations $DEPLOYPATH/src/database/
+    - /bin/cp -r backend/src/database/schema $DEPLOYPATH/src/database/

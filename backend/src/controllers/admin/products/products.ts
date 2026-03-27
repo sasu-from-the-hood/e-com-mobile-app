@@ -189,7 +189,8 @@ export const getAdminProducts = os
     if (whereClause) {
       totalQuery.where(whereClause)
     }
-    const [{ count: total }] = await totalQuery
+    const totalResult = await totalQuery
+    const total = totalResult[0]?.count ?? 0
 
     // Enhance each product with variant and media info
     const enhancedProducts = await Promise.all(
@@ -226,7 +227,7 @@ export const getAdminProducts = os
             mediaCount: mediaCount[0]?.count || 0,
             alertCount: alertCount[0]?.count || 0,
             stockStatus: product.inStock 
-              ? (product.stockQuantity <= product.lowStockThreshold ? 'low_stock' : 'in_stock')
+              ? ((product.stockQuantity ?? 0) <= (product.lowStockThreshold ?? 0) ? 'low_stock' : 'in_stock')
               : 'out_of_stock'
           }
         }
@@ -293,7 +294,7 @@ export const createProduct = os
         sku: input.sku || undefined,
         stockQuantity: input.stockQuantity,
         lowStockThreshold: input.lowStockThreshold,
-        discount: input.discount && input.discount !== '' ? input.discount : null,
+        discount: input.discount && typeof input.discount === 'number' && input.discount > 0 ? input.discount : null,
         weight: input.weight && input.weight !== '' ? input.weight : null,
         isActive: input.isActive,
         isFeatured: input.isFeatured,
@@ -389,8 +390,8 @@ export const createProduct = os
       // Get the created product with all relations
       const [createdProduct] = await db.select().from(products).where(eq(products.id, productId))
       console.log('=== CREATED PRODUCT ===')
-      console.log('variantStock saved:', createdProduct.variantStock)
-      return createdProduct
+      console.log('variantStock saved:', createdProduct?.variantStock)
+      return createdProduct!
     } catch (error: any) {
       console.error('Error creating product:', error)
       throw new Error(error.message || 'Failed to create product')
@@ -450,7 +451,7 @@ export const updateProduct = os
 
       fieldsToUpdate.forEach(field => {
         if (input.data[field as keyof typeof input.data] !== undefined) {
-          let value = input.data[field as keyof typeof input.data]
+          let value: any = input.data[field as keyof typeof input.data]
           
           // Handle empty strings for foreign key fields - convert to null
           if ((field === 'categoryId' || field === 'warehouseId') && (value === '' || value === null)) {
@@ -522,8 +523,8 @@ export const updateProduct = os
 
       const [updatedProduct] = await db.select().from(products).where(eq(products.id, input.id))
       console.log('=== UPDATED PRODUCT ===')
-      console.log('variantStock after update:', updatedProduct.variantStock)
-      return updatedProduct
+      console.log('variantStock after update:', updatedProduct?.variantStock)
+      return updatedProduct!
     } catch (error: any) {
       console.error('Error updating product:', error)
       throw new Error(error.message || 'Failed to update product')
@@ -576,7 +577,15 @@ export const getProductAnalytics = os
     const startDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000))
 
     // Get inventory transactions for the period
-    let transactionQuery = db
+    // Build where conditions
+    const transactionWhere = input.productId 
+      ? and(
+          sql`${inventoryTransactions.createdAt} >= ${startDate}`,
+          eq(inventoryTransactions.productId, input.productId)
+        )
+      : sql`${inventoryTransactions.createdAt} >= ${startDate}`
+
+    const transactionQuery = db
       .select({
         date: sql<string>`DATE(${inventoryTransactions.createdAt})`,
         type: inventoryTransactions.type,
@@ -584,28 +593,27 @@ export const getProductAnalytics = os
         count: count()
       })
       .from(inventoryTransactions)
-      .where(sql`${inventoryTransactions.createdAt} >= ${startDate}`)
+      .where(transactionWhere)
       .groupBy(sql`DATE(${inventoryTransactions.createdAt})`, inventoryTransactions.type)
-
-    if (input.productId) {
-      transactionQuery = transactionQuery.where(eq(inventoryTransactions.productId, input.productId))
-    }
 
     const transactions = await transactionQuery
 
     // Get current stock alerts
-    let alertQuery = db
+    const alertWhere = input.productId
+      ? and(
+          eq(stockAlerts.isResolved, false),
+          eq(stockAlerts.productId, input.productId)
+        )
+      : eq(stockAlerts.isResolved, false)
+
+    const alertQuery = db
       .select({
         alertType: stockAlerts.alertType,
         count: count()
       })
       .from(stockAlerts)
-      .where(eq(stockAlerts.isResolved, false))
+      .where(alertWhere)
       .groupBy(stockAlerts.alertType)
-
-    if (input.productId) {
-      alertQuery = alertQuery.where(eq(stockAlerts.productId, input.productId))
-    }
 
     const alerts = await alertQuery
 

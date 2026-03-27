@@ -46,6 +46,34 @@ app.get('/uploads/*', async (c) => {
   return c.notFound()
 })
 
+// Static file serving for frontend assets
+app.get('/assets/*', async (c) => {
+  const filePath = path.join(process.cwd(), 'front-end-build', c.req.path)
+  if (fs.existsSync(filePath)) {
+    const file = fs.readFileSync(filePath)
+    const ext = path.extname(filePath).toLowerCase()
+    const mimeTypes: Record<string, string> = {
+      '.js': 'application/javascript',
+      '.css': 'text/css',
+      '.json': 'application/json',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif',
+      '.svg': 'image/svg+xml',
+      '.ico': 'image/x-icon',
+      '.woff': 'font/woff',
+      '.woff2': 'font/woff2',
+      '.ttf': 'font/ttf',
+      '.eot': 'application/vnd.ms-fontobject'
+    }
+    c.header('Content-Type', mimeTypes[ext] || 'application/octet-stream')
+    c.header('Cache-Control', 'public, max-age=31536000') // Cache for 1 year
+    return c.body(file)
+  }
+  return c.notFound()
+})
+
 // Request logging middleware
 app.use('*', async (c, next) => {
   const startedAt = Date.now()
@@ -106,6 +134,26 @@ app.all('/rpc/*', async (c) => {
       method: c.req.method,
     })
   }
+})
+
+// Catch-all route for SPA - serve index.html for all non-API routes
+app.get('*', async (c) => {
+  const reqPath = c.req.path
+  
+  // Skip API and RPC routes
+  if (reqPath.startsWith('/api/') || reqPath.startsWith('/rpc/') || reqPath.startsWith('/uploads/')) {
+    return c.notFound()
+  }
+  
+  // Serve index.html for all other routes (SPA routing)
+  const indexPath = path.resolve('./front-end-build/index.html')
+  if (!fs.existsSync(indexPath)) {
+    logger.warn('[Frontend] index.html not found at:', { path: indexPath })
+    return c.json({ error: 'Frontend not built' }, 404)
+  }
+  
+  const indexContent = fs.readFileSync(indexPath, 'utf-8')
+  return c.html(indexContent)
 })
 
 // Start server

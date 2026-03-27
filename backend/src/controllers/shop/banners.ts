@@ -13,7 +13,8 @@ const getFirstImage = (colorImages: any): string => {
 
   if (colors.length === 0) return 'https://images.unsplash.com/photo-1441986300917-64674bd600d8';
 
-  const firstColorImages = parsed[colors[0]];
+  const firstColorKey = colors[0];
+  const firstColorImages = firstColorKey ? parsed[firstColorKey] : undefined;
   if (!firstColorImages || firstColorImages.length === 0) {
     return 'https://images.unsplash.com/photo-1441986300917-64674bd600d8';
   }

@@ -6,7 +6,6 @@ import { eq } from 'drizzle-orm'
 import { verifyPassword } from '../../utils/password.js'
 import { generateTokenPair } from '../../utils/jwt.js'
 import { logger } from '../../utils/logger.js'
-import { APIError } from '../../utils/api-error.js'
 
 export const login = os
   .input(z.object({

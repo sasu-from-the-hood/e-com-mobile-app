@@ -96,7 +96,8 @@ export const getInventoryTransactions = os
     if (whereClause) {
       totalQuery.where(whereClause)
     }
-    const [{ count: total }] = await totalQuery
+    const totalResult = await totalQuery
+    const total = totalResult[0]?.count ?? 0
 
     return {
       transactions,
@@ -248,7 +249,8 @@ export const getStockAlerts = os
     if (whereClause) {
       totalQuery.where(whereClause)
     }
-    const [{ count: total }] = await totalQuery
+    const totalResult = await totalQuery
+    const total = totalResult[0]?.count ?? 0
 
     return {
       alerts,
@@ -352,9 +354,9 @@ export const generateStockReport = os
 
     // Calculate totals
     const totalProducts = productsData.length
-    const lowStockProducts = productsData.filter(p => p.stockQuantity <= p.lowStockThreshold).length
-    const outOfStockProducts = productsData.filter(p => !p.inStock || p.stockQuantity === 0).length
-    const totalStockValue = productsData.reduce((sum, p) => sum + (p.stockQuantity * parseFloat(p.price)), 0)
+    const lowStockProducts = productsData.filter(p => (p.stockQuantity ?? 0) <= (p.lowStockThreshold ?? 0)).length
+    const outOfStockProducts = productsData.filter(p => !p.inStock || (p.stockQuantity ?? 0) === 0).length
+    const totalStockValue = productsData.reduce((sum, p) => sum + ((p.stockQuantity ?? 0) * parseFloat(p.price)), 0)
 
     return {
       summary: {

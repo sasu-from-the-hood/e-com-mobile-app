@@ -36,7 +36,8 @@ export const getNewArrivals = publicProcedure
     return newProducts.map(product => {
       const colorImages = typeof product.colorImages === 'string' ? JSON.parse(product.colorImages || '{}') : product.colorImages || {}
       const colors = Object.keys(colorImages)
-      const images = colors.length > 0 ? colorImages[colors[0]] || [] : []
+      const firstColorKey = colors.length > 0 ? colors[0] : undefined
+      const images = firstColorKey && colorImages[firstColorKey] ? colorImages[firstColorKey] : []
       
       return {
         ...product,

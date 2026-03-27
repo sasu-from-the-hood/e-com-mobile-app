@@ -159,7 +159,7 @@ export const verifyRegisterOTP = os
       }
     } catch (error) {
       console.error('[Register] Error during registration:', error)
-      logger.error('[Register] Error during registration:', error)
+      logger.error('[Register] Error during registration:', error as Record<string, unknown>)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Registration failed',
