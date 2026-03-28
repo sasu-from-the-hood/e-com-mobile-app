@@ -5,8 +5,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 export default defineConfig({
   // In production, use compiled dist folder; in development, use src folder
-  schema: isProduction ? './database/schema/' : './src/database/schema/',
-  out: isProduction ? './database/migrations' : './src/database/migrations',
+  schema: isProduction ? './database/schema/*.js' : './src/database/schema/',
+  out: isProduction ? './database/migrations/*.js' : './src/database/migrations',
   dialect: 'mysql',
   dbCredentials: {
     host: process.env.DB_HOST || 'localhost',
