@@ -109,40 +109,60 @@ export default function ShopHomeScreen() {
             }}
           />
 
-          {/* Section Header */}
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleContainer}>
-              <ThemedText style={styles.sectionTitle}>New Arrivals </ThemedText>
-              <ThemedText style={styles.fireEmoji}>🔥</ThemedText>
-            </View>
-          </View>
+          {/* New Arrivals Section - Only show if there are products */}
+          {!newArrivalsLoading && newArrivals.length > 0 && (
+            <>
+              {/* Section Header */}
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionTitleContainer}>
+                  <ThemedText style={styles.sectionTitle}>New Arrivals </ThemedText>
+                  <ThemedText style={styles.fireEmoji}>🔥</ThemedText>
+                </View>
+              </View>
 
-          {/* New Arrivals Horizontal Scroll */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalScrollContent}
-          >
-            {newArrivalsLoading ? (
-              Array.from({ length: 4 }).map((_, index) => (
-                <View key={index} style={styles.productCard}>
-                  <ProductSkeleton />
+              {/* New Arrivals Horizontal Scroll */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalScrollContent}
+              >
+                {newArrivals.map((product: any) => (
+                  <View key={product.id} style={styles.productCard}>
+                    <ProductCard
+                      product={product}
+                      onPress={() => {
+                        trackInteraction(product.id, 'view');
+                        router.push(`/shop/product-detail?id=${product.id}`);
+                      }}
+                    />
+                  </View>
+                ))}
+              </ScrollView>
+            </>
+          )}
+
+          {/* Show skeleton while loading */}
+          {newArrivalsLoading && (
+            <>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionTitleContainer}>
+                  <ThemedText style={styles.sectionTitle}>New Arrivals </ThemedText>
+                  <ThemedText style={styles.fireEmoji}>🔥</ThemedText>
                 </View>
-              ))
-            ) : (
-              newArrivals.map((product: any) => (
-                <View key={product.id} style={styles.productCard}>
-                  <ProductCard
-                    product={product}
-                    onPress={() => {
-                      trackInteraction(product.id, 'view');
-                      router.push(`/shop/product-detail?id=${product.id}`);
-                    }}
-                  />
-                </View>
-              ))
-            )}
-          </ScrollView>
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalScrollContent}
+              >
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <View key={index} style={styles.productCard}>
+                    <ProductSkeleton />
+                  </View>
+                ))}
+              </ScrollView>
+            </>
+          )}
 
           {/* Recommendations Section */}
           <View style={styles.sectionHeader}>

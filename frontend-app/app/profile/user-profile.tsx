@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Avatar } from '@/components/ui/Avatar';
 import { ProfileMenuItem } from '@/components/profile/profile-menu-item';
 import { LogoutModal } from '@/components/profile/logout-modal';
+import HelpTutorial from '@/components/HelpTutorial';
 import { AppTheme } from '@/constants/app-theme';
 import { BottomTabBar } from '@/components/navigation/bottom-tab-bar';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,6 +19,7 @@ import { useCallback } from 'react';
 export default function UserProfileScreen() {
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showHelpTutorial, setShowHelpTutorial] = useState(false);
   const [isTabBarVisible, setIsTabBarVisible] = useState(true);
   const scrollY = useRef(0);
   const { logout, user, checkAuth } = useAuth();
@@ -52,7 +54,13 @@ export default function UserProfileScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
 
-
+      {/* Help Icon Button - Floating */}
+      <TouchableOpacity 
+        style={styles.helpButtonFloating}
+        onPress={() => setShowHelpTutorial(true)}
+      >
+        <HelpCircle size={24} color="#fff" />
+      </TouchableOpacity>
 
       <ScrollView 
         showsVerticalScrollIndicator={false} 
@@ -125,6 +133,12 @@ export default function UserProfileScreen() {
         onConfirm={handleLogout}
         onCancel={() => setShowLogoutModal(false)}
       />
+
+      {/* Help Tutorial Modal */}
+      <HelpTutorial
+        visible={showHelpTutorial}
+        onClose={() => setShowHelpTutorial(false)}
+      />
       
       <BottomTabBar isVisible={isTabBarVisible} />
     </SafeAreaView>
@@ -135,6 +149,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppTheme.colors.background,
+  },
+  helpButtonFloating: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    width: 28,
+    height: 28,
+    borderRadius: 24,
+    backgroundColor: AppTheme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   topHeader: {
     flexDirection: 'row',

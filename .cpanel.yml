@@ -2,13 +2,13 @@
 deployment:
   tasks:
     # Set deployment path to domain folder
-    - export DEPLOYPATH=/home/$(whoami)/e-com.solvesphr.com
+    - export DEPLOYPATH=/home/$(whoami)/one.solvesphr.com
     
     # Create domain directory
     - /bin/mkdir -p $DEPLOYPATH
     
     # Copy built backend files (must be built locally before push)
-    - /bin/cp -r backend/dist $DEPLOYPATH/
+    - /bin/cp -r backend/dist/* $DEPLOYPATH/
     
     # Copy frontend build
     - /bin/cp -r backend/front-end-build $DEPLOYPATH/
@@ -23,8 +23,8 @@ deployment:
     # Copy drizzle config
     - /bin/cp backend/drizzle.config.ts $DEPLOYPATH/
     
-    # Copy node_modules (must be installed locally before push)
-    - /bin/cp -r backend/node_modules $DEPLOYPATH/
+    # Install node_modules on the server (using Node.js from cPanel)
+    - cd $DEPLOYPATH && /usr/bin/npm install --production || echo "npm install failed - check Node.js version"
     
     # Copy database schema and migrations
     - /bin/mkdir -p $DEPLOYPATH/src/database
