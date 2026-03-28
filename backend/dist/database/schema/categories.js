@@ -1,6 +1,6 @@
 import { mysqlTable, varchar, text, timestamp, boolean, } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { products } from "./products.js.js";
+import { products } from "./products.js";
 export const categories = mysqlTable("categories", {
     id: varchar("id", { length: 36 }).primaryKey(),
     name: varchar("name", { length: 100 }).notNull(),

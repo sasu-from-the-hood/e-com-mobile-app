@@ -125,6 +125,6 @@ export declare const categories: import("drizzle-orm/mysql-core").MySqlTableWith
     dialect: "mysql";
 }>;
 export declare const categoriesRelations: import("drizzle-orm").Relations<"categories", {
-    products: import("drizzle-orm").Many<any>;
+    products: import("drizzle-orm").Many<"products">;
 }>;
 //# sourceMappingURL=categories.d.ts.map
