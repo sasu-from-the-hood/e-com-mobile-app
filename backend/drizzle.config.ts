@@ -1,12 +1,12 @@
 import { defineConfig } from 'drizzle-kit';
 import 'dotenv/config';
 
-
-const dbType = process.env.DB_TYPE || 'postgresql';
+const isProduction = process.env.NODE_ENV === 'production';
 
 export default defineConfig({
-  schema: './src/database/schema/',
-  out: './src/database/migrations',
+  // In production, use compiled dist folder; in development, use src folder
+  schema: isProduction ? './database/schema/' : './src/database/schema/',
+  out: isProduction ? './database/migrations' : './src/database/migrations',
   dialect: 'mysql',
   dbCredentials: {
     host: process.env.DB_HOST || 'localhost',
