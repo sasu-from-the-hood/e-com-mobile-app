@@ -9,8 +9,8 @@ import {
   index,
 } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { orders } from "./orders";
-import { products } from "./products";
+import { orders } from "./orders.js";
+import { products } from "./products.js";
 
 export const orderItems = mysqlTable("order_items", {
   id: varchar("id", { length: 36 }).primaryKey(),

@@ -10,9 +10,9 @@ import {
   uniqueIndex,
 } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { user } from "./auth-schema";
-import { addresses } from "./addresses";
-import { paymentMethods } from "./payment-methods";
+import { user } from "./auth-schema.js";
+import { addresses } from "./addresses.js";
+import { paymentMethods } from "./payment-methods.js";
 
 export const orders = mysqlTable("orders", {
   id: varchar("id", { length: 36 }).primaryKey(),

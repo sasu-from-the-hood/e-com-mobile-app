@@ -5,8 +5,8 @@ import {
   int,
 } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { user } from "./auth-schema";
-import { products } from "./products";
+import { user } from "./auth-schema.js";
+import { products } from "./products.js";
 
 export const cartItems = mysqlTable("cart_items", {
   id: varchar("id", { length: 36 }).primaryKey(),

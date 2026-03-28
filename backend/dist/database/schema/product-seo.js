@@ -1,6 +1,6 @@
 import { mysqlTable, varchar, text, timestamp, boolean, int, json, index, } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { products } from "./products";
+import { products } from "./products.js";
 // SEO and marketing enhancements
 export const productSeo = mysqlTable("product_seo", {
     id: varchar("id", { length: 36 }).primaryKey(),

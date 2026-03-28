@@ -9,7 +9,7 @@ import {
   index,
 } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { products } from "./products";
+import { products } from "./products.js";
 
 // Dynamic product attributes system
 export const attributeGroups = mysqlTable("attribute_groups", {

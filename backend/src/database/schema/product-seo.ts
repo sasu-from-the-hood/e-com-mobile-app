@@ -10,7 +10,7 @@ import {
   index,
 } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { products } from "./products";
+import { products } from "./products.js";
 
 // SEO and marketing enhancements
 export const productSeo = mysqlTable("product_seo", {

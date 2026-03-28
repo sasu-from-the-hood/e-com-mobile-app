@@ -1,6 +1,6 @@
 import { mysqlTable, varchar, text, timestamp, decimal, json, index, } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { orders } from "./orders";
+import { orders } from "./orders.js";
 export const orderTracking = mysqlTable("order_tracking", {
     id: varchar("id", { length: 36 }).primaryKey(),
     orderId: varchar("order_id", { length: 36 }).references(() => orders.id, { onDelete: "cascade" }).notNull(),

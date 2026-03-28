@@ -1,7 +1,7 @@
 import { mysqlTable, varchar, timestamp, int, } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { user } from "./auth-schema";
-import { products } from "./products";
+import { user } from "./auth-schema.js";
+import { products } from "./products.js";
 export const userInteractions = mysqlTable("user_interactions", {
     id: varchar("id", { length: 36 }).primaryKey(),
     userId: varchar("user_id", { length: 36 }).notNull(),

@@ -1,6 +1,6 @@
 import { mysqlTable, varchar, timestamp, boolean, int, decimal, json, index, } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { products } from "./products";
+import { products } from "./products.js";
 // Product Variants - for size/color combinations with individual pricing and stock
 export const productVariants = mysqlTable("product_variants", {
     id: varchar("id", { length: 36 }).primaryKey(),

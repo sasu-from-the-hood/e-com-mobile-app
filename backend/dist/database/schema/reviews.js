@@ -1,8 +1,8 @@
 import { mysqlTable, varchar, text, timestamp, boolean, int, json, index, uniqueIndex, } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { user } from "./auth-schema";
-import { products } from "./products";
-import { orders } from "./orders";
+import { user } from "./auth-schema.js";
+import { products } from "./products.js";
+import { orders } from "./orders.js";
 export const reviews = mysqlTable("reviews", {
     id: varchar("id", { length: 36 }).primaryKey(),
     userId: varchar("user_id", { length: 36 }).references(() => user.id, { onDelete: "cascade" }).notNull(),

@@ -10,8 +10,8 @@ import {
   index,
 } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { products } from "./products";
-import { productVariants } from "./product-variants";
+import { products } from "./products.js";
+import { productVariants } from "./product-variants.js";
 
 // Advanced inventory tracking
 export const inventoryTransactions = mysqlTable("inventory_transactions", {

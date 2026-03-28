@@ -1,6 +1,6 @@
 import { mysqlTable, varchar, timestamp, boolean, json, uniqueIndex, } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { user } from "./auth-schema";
+import { user } from "./auth-schema.js";
 export const userSettings = mysqlTable("user_settings", {
     id: varchar("id", { length: 36 }).primaryKey(),
     userId: varchar("user_id", { length: 36 }).references(() => user.id, { onDelete: "cascade" }).notNull(),
