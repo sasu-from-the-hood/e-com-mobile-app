@@ -1,5 +1,5 @@
 const isdev = false 
-    export const URL = (!isdev)? {
+    export const URL = (isdev)? {
 
         BASE: 'http://localhost:3000',
         ORPC : "http://localhost:3000/rpc",
