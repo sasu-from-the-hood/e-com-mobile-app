@@ -23,10 +23,7 @@ deployment:
     # Copy drizzle config
     - /bin/cp backend/drizzle.config.ts $DEPLOYPATH/
     
-    # Install node_modules on the server (using Node.js from cPanel)
-    - cd $DEPLOYPATH && /usr/bin/npm install --production || echo "npm install failed - check Node.js version"
-    
-    # Copy database schema and migrations
-    - /bin/mkdir -p $DEPLOYPATH/src/database
-    - /bin/cp -r backend/src/database/migrations $DEPLOYPATH/src/database/
-    - /bin/cp -r backend/src/database/schema $DEPLOYPATH/src/database/
+    # Copy database migrations and schema from dist (compiled files)
+    - /bin/mkdir -p $DEPLOYPATH/database
+    - /bin/cp -r backend/dist/database/migrations $DEPLOYPATH/database/ || echo "No migrations found"
+    - /bin/cp -r backend/dist/database/schema $DEPLOYPATH/database/ || echo "No schema found"
