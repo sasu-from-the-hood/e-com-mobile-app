@@ -6,6 +6,7 @@ export interface SettingsTable {
   orderUpdates: boolean;
   promotions: boolean;
   language: string;
+  productViewPreference: '3d' | 'image';
 }
 
 const SETTINGS_KEY = 'app_settings';
@@ -16,6 +17,7 @@ const defaultSettings: SettingsTable = {
   orderUpdates: true,
   promotions: true,
   language: 'auto',
+  productViewPreference: '3d',
 };
 
 export const settingsStorage = {

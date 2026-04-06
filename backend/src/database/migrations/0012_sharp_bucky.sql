@@ -1,0 +1,20 @@
+CREATE TABLE `3d_models` (
+	`id` varchar(36) NOT NULL,
+	`name` text NOT NULL,
+	`body_part_type` text NOT NULL,
+	`color_name` text,
+	`color_hex` text,
+	`prompt` text NOT NULL,
+	`left_leg_file` text,
+	`right_leg_file` text,
+	`left_leg_size` int,
+	`right_leg_size` int,
+	`left_leg_original_size` int,
+	`right_leg_original_size` int,
+	`scale` decimal(10,2) DEFAULT '1.0',
+	`inference_steps` int,
+	`guidance_scale` decimal(10,2),
+	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`updated_at` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `3d_models_id` PRIMARY KEY(`id`)
+);

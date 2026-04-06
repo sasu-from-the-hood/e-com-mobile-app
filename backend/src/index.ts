@@ -38,11 +38,30 @@ app.get('/uploads/*', async (c) => {
       '.jpeg': 'image/jpeg',
       '.png': 'image/png',
       '.gif': 'image/gif',
-      '.webp': 'image/webp'
+      '.webp': 'image/webp',
+      '.glb': 'model/gltf-binary'
     }
     c.header('Content-Type', mimeTypes[ext] || 'application/octet-stream')
+    c.header('Cache-Control', 'public, max-age=31536000, immutable')
+    c.header('Access-Control-Allow-Origin', '*')
     return c.body(file)
   }
+  return c.notFound()
+})
+
+// Static file serving for 3D model files
+app.get('/api/admin/3d-models/files/:filename', async (c) => {
+  const filename = c.req.param('filename')
+  const filePath = path.join(process.cwd(), 'uploads', '3d-models', filename)
+  
+  if (fs.existsSync(filePath)) {
+    const file = fs.readFileSync(filePath)
+    c.header('Content-Type', 'model/gltf-binary')
+    c.header('Cache-Control', 'public, max-age=31536000, immutable')
+    c.header('Access-Control-Allow-Origin', '*')
+    return c.body(file)
+  }
+  
   return c.notFound()
 })
 

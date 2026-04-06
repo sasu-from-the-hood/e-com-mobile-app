@@ -5,6 +5,39 @@ import { AppTheme } from '@/constants/app-theme';
 import type { Product } from '@/types/schema';
 import { useEffect, useRef, useState, memo } from 'react';
 import { URL } from '@/config';
+import { settingsStorage } from '@/utils/settings-storage';
+import { Model3DViewer } from './model-3d-viewer';
+
+// Loading dots component
+function LoadingDots() {
+  const dot1 = useRef(new Animated.Value(0)).current;
+  const dot2 = useRef(new Animated.Value(0)).current;
+  const dot3 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animate = () => {
+      Animated.sequence([
+        Animated.timing(dot1, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.timing(dot2, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.timing(dot3, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.parallel([
+          Animated.timing(dot1, { toValue: 0, duration: 400, useNativeDriver: true }),
+          Animated.timing(dot2, { toValue: 0, duration: 400, useNativeDriver: true }),
+          Animated.timing(dot3, { toValue: 0, duration: 400, useNativeDriver: true }),
+        ]),
+      ]).start(() => animate());
+    };
+    animate();
+  }, []);
+
+  return (
+    <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
+      <Animated.View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: AppTheme.colors.primary, opacity: dot1 }} />
+      <Animated.View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: AppTheme.colors.primary, opacity: dot2 }} />
+      <Animated.View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: AppTheme.colors.primary, opacity: dot3 }} />
+    </View>
+  );
+}
 
 export interface ProductCardProps {
   product: Product;
@@ -16,7 +49,50 @@ const ProductCardComponent = ({ product, onPress }: ProductCardProps) => {
   const colors = Object.keys(colorImages);
   const [currentColorIndex, setCurrentColorIndex] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [userPreference, setUserPreference] = useState<'3d' | 'image'>('3d');
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  
+  // Check if product has 3D models
+  const has3DModels = product.mediaType === 'glb' || product.mediaType === 'both';
+  // Parse glbModelIds if it's a string
+  let glbModelIds: string[] = [];
+  try {
+    if (typeof product.glbModelIds === 'string') {
+      glbModelIds = JSON.parse(product.glbModelIds);
+    } else if (Array.isArray(product.glbModelIds)) {
+      glbModelIds = product.glbModelIds;
+    }
+  } catch (error) {
+    console.error(`[ProductCard] ${product.name} - Failed to parse glbModelIds:`, error);
+  }
+  const hasImages = colors.length > 0;
+  
+  // Load user preference
+  useEffect(() => {
+    const loadPreference = async () => {
+      try {
+        const preference = await settingsStorage.getSetting('productViewPreference');
+        console.log(`[ProductCard] ${product.name} - User preference:`, preference);
+        console.log(`[ProductCard] ${product.name} - Has 3D models:`, has3DModels, 'GLB IDs:', glbModelIds);
+        setUserPreference(preference);
+      } catch (error) {
+        console.error(`[ProductCard] ${product.name} - Error loading preference:`, error);
+      }
+    };
+    loadPreference();
+  }, [product.name, has3DModels, glbModelIds.length]);
+  
+  // Determine what to show based on preference and availability
+  const shouldShow3D = userPreference === '3d' && has3DModels && glbModelIds.length > 0;
+  const shouldShowImages = !shouldShow3D && hasImages;
+  
+  console.log(`[ProductCard] ${product.name} - Display decision:`, {
+    userPreference,
+    shouldShow3D,
+    shouldShowImages,
+    has3DModels,
+    glbModelIdsCount: glbModelIds.length
+  });
   
   // Store product data in refs to ensure interval uses correct product
   const productRef = useRef(product);
@@ -41,15 +117,6 @@ const ProductCardComponent = ({ product, onPress }: ProductCardProps) => {
 
   // Calculate total images across all colors
   const totalImages = colors.reduce((sum, color) => sum + (colorImages[color]?.length || 0), 0);
-
-  console.log(`[${product.id}] ${product.name} - Render:`, {
-    totalColors: colors.length,
-    totalImages,
-    currentColorIndex,
-    currentImageIndex,
-    selectedColor,
-    currentImage
-  });
 
   const getImageUrl = (imagePath: string) => {
     if (!imagePath) {
@@ -82,7 +149,6 @@ const ProductCardComponent = ({ product, onPress }: ProductCardProps) => {
       }
     }
     
-    console.log(`[${product.id}] ${product.name} - Image INVALID: ${imagePath} does NOT belong to this product!`);
     return false;
   };
 
@@ -96,19 +162,14 @@ const ProductCardComponent = ({ product, onPress }: ProductCardProps) => {
     
     // Skip animation if only 1 image total or no colors
     if (localColors.length === 0 || localTotalImages <= 1) {
-      console.log(`[${productId}] ${productName} - Skipping animation (totalImages: ${localTotalImages})`);
       return;
     }
-
-    console.log(`[${productId}] ${productName} - Starting animation interval`);
 
     const interval = setInterval(() => {
       const currentProductId = productRef.current.id;
       const currentProductName = productRef.current.name;
       const currentColors = colorsRef.current;
       const currentColorImages = colorImagesRef.current;
-      
-      console.log(`[${currentProductId}] ${currentProductName} - Animation tick`);
       
       Animated.sequence([
         Animated.timing(fadeAnim, {
@@ -134,7 +195,6 @@ const ProductCardComponent = ({ product, onPress }: ProductCardProps) => {
       if (nextImageIdx >= imagesForColor.length) {
         const nextColorIdx = (currentColorIdx + 1) % currentColors.length;
         const nextColor = currentColors[nextColorIdx];
-        console.log(`[${currentProductId}] ${currentProductName} - Switching color: ${currentColor} (${currentColorIdx}) -> ${nextColor} (${nextColorIdx})`);
         
         // Update refs
         colorIndexRef.current = nextColorIdx;
@@ -144,7 +204,6 @@ const ProductCardComponent = ({ product, onPress }: ProductCardProps) => {
         setCurrentColorIndex(nextColorIdx);
         setCurrentImageIndex(0);
       } else {
-        console.log(`[${currentProductId}] ${currentProductName} - Next image: ${currentImageIdx} -> ${nextImageIdx} (color: ${currentColor})`);
         
         // Update refs
         imageIndexRef.current = nextImageIdx;
@@ -155,7 +214,6 @@ const ProductCardComponent = ({ product, onPress }: ProductCardProps) => {
     }, 3000);
 
     return () => {
-      console.log(`[${productId}] ${productName} - Clearing animation interval`);
       clearInterval(interval);
     };
   }, []); // Empty deps - only run once on mount
@@ -170,22 +228,32 @@ const ProductCardComponent = ({ product, onPress }: ProductCardProps) => {
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
       <View style={[
         styles.imageContainer,
-        selectedColor && { borderWidth: 3, borderColor: selectedColor }
+        selectedColor && shouldShowImages && { borderWidth: 3, borderColor: selectedColor }
       ]}>
-        <Animated.View style={{ opacity: fadeAnim, width: '100%', height: '100%' }}>
-          {currentImage && validateImage(currentImage) && getImageUrl(currentImage) ? (
-            <Image
-              key={`${product.id}-${selectedColor}-${currentImageIndex}`}
-              source={{ uri: getImageUrl(currentImage) }}
-              style={styles.image}
-              contentFit="cover"
-            />
-          ) : (
-            <View style={[styles.image, { backgroundColor: AppTheme.colors.muted, justifyContent: 'center', alignItems: 'center' }]}>
-              <ThemedText style={{ color: AppTheme.colors.mutedForeground, fontSize: 10 }}>No Image</ThemedText>
-            </View>
-          )}
-        </Animated.View>
+        {/* Show 3D viewer or images based on preference */}
+        {shouldShow3D ? (
+          <Model3DViewer modelIds={glbModelIds} />
+        ) : shouldShowImages ? (
+          <Animated.View style={{ opacity: fadeAnim, width: '100%', height: '100%' }}>
+            {currentImage && validateImage(currentImage) && getImageUrl(currentImage) ? (
+              <Image
+                key={`${product.id}-${selectedColor}-${currentImageIndex}`}
+                source={{ uri: getImageUrl(currentImage) }}
+                style={styles.image}
+                contentFit="cover"
+              />
+            ) : (
+              <View style={[styles.image, { backgroundColor: AppTheme.colors.muted, justifyContent: 'center', alignItems: 'center' }]}>
+                <ThemedText style={{ color: AppTheme.colors.mutedForeground, fontSize: 10 }}>No Image</ThemedText>
+              </View>
+            )}
+          </Animated.View>
+        ) : (
+          <View style={[styles.image, { backgroundColor: AppTheme.colors.muted, justifyContent: 'center', alignItems: 'center' }]}>
+            <ThemedText style={{ color: AppTheme.colors.mutedForeground, fontSize: 10 }}>No Media</ThemedText>
+          </View>
+        )}
+        
         {/* Badges - All grouped in top-left */}
         <View style={styles.badgesContainer}>
           {product.discount && product.discount > 0 && (
@@ -329,6 +397,18 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     gap: 4,
     zIndex: 1,
+  },
+  toggleButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
   },
   discountBadge: {
     backgroundColor: AppTheme.colors.error,

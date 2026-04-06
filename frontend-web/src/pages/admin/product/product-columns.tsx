@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { IconDots, IconEdit, IconLink, IconShare, IconBrandWhatsapp, IconBrandTwitter, IconTrash } from "@tabler/icons-react"
+import { IconDots, IconEdit, IconLink, IconShare, IconBrandWhatsapp, IconBrandTwitter, IconTrash, IconCube } from "@tabler/icons-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +29,8 @@ interface Product {
   isDigital?: boolean
   inStock?: boolean
   colorImages?: Record<string, string[]>
+  glbModelIds?: string[]
+  mediaType?: string
   colors?: string[]
   sizes?: string[]
   tags?: string[]
@@ -109,37 +111,100 @@ export const createProductColumns = ({ onEdit, onDelete }: ProductColumnProps) =
   },
   {
     accessorKey: "colorImages",
-    header: "Colors & Images",
-    cell: (value: any) => {
-      if (!value) return <span className="text-xs text-gray-500">No colors</span>
-      let colorData = value
-      if (typeof value === 'string') {
-        try {
-          colorData = JSON.parse(value)
-        } catch {
-          return <span className="text-xs text-gray-500">No colors</span>
+    header: "Media",
+    cell: (value: any, row: Product) => {
+      const mediaType = row.mediaType || 'image'
+      
+      // Parse colorImages
+      let colorData: Record<string, string[]> = {}
+      if (value) {
+        if (typeof value === 'string') {
+          try {
+            colorData = JSON.parse(value)
+          } catch {
+            colorData = {}
+          }
+        } else if (typeof value === 'object' && !Array.isArray(value)) {
+          colorData = value
         }
       }
-      if (typeof colorData !== 'object' || Array.isArray(colorData)) return <span className="text-xs text-gray-500">No colors</span>
-      const entries = Object.entries(colorData)
-      if (entries.length === 0) return <span className="text-xs text-gray-500">No colors</span>
+      
+      const hasImages = Object.keys(colorData).length > 0
+      
       return (
-        <div className="space-y-1">
-          {entries.slice(0, 2).map(([color, images]) => {
-            const imageArray = Array.isArray(images) ? images : []
-            return (
-              <div key={color} className="flex gap-1 items-center flex-wrap">
-                <div className="w-4 h-4 rounded border flex-shrink-0" style={{ backgroundColor: color }} title={color} />
-                {imageArray.slice(0, 2).map((img, idx) => (
-                  <img key={idx} src={ URL.IMAGE + img} alt={color} className="w-8 h-8 object-cover rounded border" />
-                ))}
-                {imageArray.length > 2 && <span className="text-xs text-gray-500">+{imageArray.length - 2}</span>}
-              </div>
-            )
-          })}
-          {entries.length > 2 && (
-            <span className="text-xs text-gray-500">+{entries.length - 2} colors</span>
+        <div className="space-y-2">
+          {/* Media Type Badge */}
+          <Badge variant="outline" className="text-xs">
+            {mediaType === 'both' ? 'Images & 3D' : mediaType === 'glb' ? '3D Models' : 'Images'}
+          </Badge>
+          
+          {/* Images */}
+          {hasImages ? (
+            <div className="space-y-1">
+              {Object.entries(colorData).slice(0, 2).map(([color, images]) => {
+                const imageArray = Array.isArray(images) ? images : []
+                return (
+                  <div key={color} className="flex gap-1 items-center flex-wrap">
+                    <div className="w-4 h-4 rounded border flex-shrink-0" style={{ backgroundColor: color }} title={color} />
+                    {imageArray.slice(0, 2).map((img, idx) => (
+                      <img key={idx} src={URL.IMAGE + img} alt={color} className="w-8 h-8 object-cover rounded border" />
+                    ))}
+                    {imageArray.length > 2 && <span className="text-xs text-gray-500">+{imageArray.length - 2}</span>}
+                  </div>
+                )
+              })}
+              {Object.keys(colorData).length > 2 && (
+                <span className="text-xs text-gray-500">+{Object.keys(colorData).length - 2} colors</span>
+              )}
+            </div>
+          ) : (
+            <span className="text-xs text-gray-500">No images</span>
           )}
+        </div>
+      )
+    }
+  },
+  {
+    accessorKey: "glbModelIds",
+    header: "GLB",
+    cell: (value: any, row: Product) => {
+      // Parse glbModelIds - check both value and row.glbModelIds
+      console.log('GLB Column Debug:', {
+        value,
+        valueType: typeof value,
+        rowGlbModelIds: row.glbModelIds,
+        rowGlbModelIdsType: typeof row.glbModelIds,
+        productId: row.id,
+        productName: row.name
+      })
+      
+      let glbIds: string[] = []
+      const rawValue = value || row.glbModelIds
+      
+      if (rawValue) {
+        if (typeof rawValue === 'string') {
+          try {
+            glbIds = JSON.parse(rawValue)
+            console.log('Parsed glbIds:', glbIds)
+          } catch (e) {
+            console.error('Failed to parse glbModelIds:', rawValue, e)
+            glbIds = []
+          }
+        } else if (Array.isArray(rawValue)) {
+          glbIds = rawValue
+          console.log('glbIds is already array:', glbIds)
+        }
+      }
+      
+      const count = glbIds.length
+      console.log('Final count:', count)
+      
+      return (
+        <div className="flex items-center gap-2">
+          <IconCube className={`w-5 h-5 ${count > 0 ? 'text-blue-500' : 'text-gray-400'}`} />
+          <span className={`font-medium ${count > 0 ? 'text-blue-600' : 'text-gray-500'}`}>
+            {count}
+          </span>
         </div>
       )
     }

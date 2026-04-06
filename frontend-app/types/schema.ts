@@ -12,6 +12,8 @@ export interface Product {
   image: string;
   images?: string[];
   colorImages?: { [color: string]: string[] };
+  mediaType?: 'image' | 'glb' | 'both';
+  glbModelIds?: string[];
   categoryId?: string;
   brand?: string;
   sku?: string;

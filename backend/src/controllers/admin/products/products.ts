@@ -43,6 +43,8 @@ const createProductSchema = z.object({
   variantStock: z.record(z.string(), z.number()).optional(),
   reviewCount: z.number().default(0),
   colorImages: z.record(z.string(), z.array(z.union([z.string(), z.instanceof(File)]))).optional(),
+  mediaType: z.enum(['image', 'glb', 'both']).default('image'),
+  glbModelIds: z.array(z.string()).optional(),
   
   // Enhanced fields
   variants: z.array(z.object({
@@ -160,6 +162,8 @@ export const getAdminProducts = os
       tags: products.tags,
       colorImages: products.colorImages,
       variantStock: products.variantStock,
+      mediaType: products.mediaType,
+      glbModelIds: products.glbModelIds,
       categoryId: products.categoryId,
       categoryName: categories.name,
       warehouseId: products.warehouseId,
@@ -304,7 +308,9 @@ export const createProduct = os
         tags: input.tags && input.tags.length > 0 ? input.tags : undefined,
         variantStock: input.variantStock || undefined,
         reviewCount: input.reviewCount || 0,
-        colorImages: Object.keys(colorImagesUrls).length > 0 ? colorImagesUrls : undefined
+        colorImages: Object.keys(colorImagesUrls).length > 0 ? colorImagesUrls : undefined,
+        mediaType: input.mediaType || 'image',
+        glbModelIds: input.glbModelIds && input.glbModelIds.length > 0 ? input.glbModelIds : undefined
       })
 
       // Create product variants if provided
@@ -446,7 +452,7 @@ export const updateProduct = os
         'name', 'slug', 'description', 'price', 'originalPrice', 'categoryId', 'warehouseId',
         'sku', 'stockQuantity', 'lowStockThreshold', 'discount', 'weight',
         'isActive', 'isFeatured', 'isDigital', 'inStock', 'sizes', 'tags',
-        'variantStock', 'reviewCount'
+        'variantStock', 'reviewCount', 'mediaType', 'glbModelIds'
       ]
 
       fieldsToUpdate.forEach(field => {

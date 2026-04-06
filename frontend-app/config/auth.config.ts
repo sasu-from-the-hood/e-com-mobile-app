@@ -1,7 +1,7 @@
-
+const isDev = true 
 export const authConfig = {
-  baseURL: 'http://10.208.123.100:3001',
-  ImageUrl : 'http://10.208.123.100:3001s',
+  baseURL: isDev ? 'http://10.150.154.100:3000' : "https://one.solvesphr.com",
+  ImageUrl : isDev ?  'http://10.150.154.100:3000' : "https://one.solvesphr.com/",
 
   otp: {
     length: 6,

@@ -13,6 +13,7 @@ import { Package, Palette, Settings, BarChart3 } from "lucide-react"
 import { orpc } from "@/lib/oprc"
 import { z } from "zod"
 import { VariantManager } from "@/components/variant-manager"
+import { GLBModelSelector } from "@/components/glb-model-selector"
 
 const enhancedProductSchema = z.object({
   // Basic product information
@@ -206,11 +207,10 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
     // Variant-based inventory
     variantStock: (() => {
       const variantStock = product?.variantStock
-      console.log('Loading variantStock from product:', variantStock, 'Type:', typeof variantStock)
+      if (!product) return {}
       if (typeof variantStock === 'string') {
         try {
           const parsed = JSON.parse(variantStock)
-          console.log('Parsed variantStock:', parsed)
           return parsed
         } catch (e) {
           console.error('Failed to parse variantStock:', e)
@@ -253,6 +253,20 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
         }
       }
       return colorImages || {}
+    })(),
+    
+    // Media type (image or glb)
+    mediaType: product?.mediaType || 'image',
+    glbModelIds: (() => {
+      const glbModelIds = product?.glbModelIds
+      if (typeof glbModelIds === 'string') {
+        try {
+          return JSON.parse(glbModelIds)
+        } catch {
+          return []
+        }
+      }
+      return Array.isArray(glbModelIds) ? glbModelIds : []
     })(),
     
     // Enhanced fields
@@ -361,7 +375,17 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
         categoryId: formData.categoryId === "none" || formData.categoryId === "" ? undefined : formData.categoryId,
         warehouseId: formData.warehouseId === "none" || formData.warehouseId === "" ? undefined : formData.warehouseId,
         colorImages: formData.colorImages || {},
-        variantStock: formData.variantStock || {}
+        variantStock: formData.variantStock || {},
+        glbModelIds: formData.glbModelIds || [],
+        // Auto-determine mediaType based on what's present
+        mediaType: (() => {
+          const hasImages = formData.colorImages && Object.keys(formData.colorImages).length > 0
+          const hasGlb = formData.glbModelIds && formData.glbModelIds.length > 0
+          
+          if (hasImages && hasGlb) return 'both'
+          if (hasGlb) return 'glb'
+          return 'image'
+        })()
       }
       
       console.log('Saving product with variantStock:', dataToSend.variantStock)
@@ -727,13 +751,52 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
             <Card>
               <CardHeader>
                 <CardTitle>Product Media</CardTitle>
-                <CardDescription>Images and media files for this product</CardDescription>
+                <CardDescription>Images and 3D models for this product</CardDescription>
               </CardHeader>
-              <CardContent>
-                <VariantManager
-                  colorImages={formData.colorImages || {}}
-                  onChange={(colorImages) => setFormData({ ...formData, colorImages })}
-                />
+              <CardContent className="space-y-4">
+                {/* Media Type Switch */}
+                <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
+                  <Label htmlFor="mediaType" className="text-sm font-medium">Media Type:</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant={formData.mediaType === 'image' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, mediaType: 'image' })}
+                    >
+                      Images
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={formData.mediaType === 'glb' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, mediaType: 'glb' })}
+                    >
+                      3D Models (GLB)
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Image Mode */}
+                {formData.mediaType === 'image' && (
+                  <VariantManager
+                    colorImages={formData.colorImages || {}}
+                    onChange={(colorImages) => setFormData({ ...formData, colorImages })}
+                  />
+                )}
+
+                {/* GLB Mode */}
+                {formData.mediaType === 'glb' && (
+                  <div className="space-y-4">
+                    <div className="text-sm text-muted-foreground">
+                      Select one or more 3D models from your saved models library
+                    </div>
+                    <GLBModelSelector
+                      selectedModelIds={formData.glbModelIds || []}
+                      onChange={(modelIds) => setFormData({ ...formData, glbModelIds: modelIds })}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

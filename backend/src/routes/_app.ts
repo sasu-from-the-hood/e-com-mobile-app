@@ -30,6 +30,8 @@ import * as appAuthResendOTP from '../controllers/app-auth/resend-otp.js'
 import * as appAuthProfile from '../controllers/app-auth/profile.js'
 import * as appAuthOrders from '../controllers/app-auth/orders.js'
 import * as appAuthNotifications from '../controllers/app-auth/notifications.js'
+import * as threeDModels from '../controllers/admin/3d-models-orpc.js'
+import * as threeDProxy from '../controllers/admin/3d-proxy.js'
 import { handshake } from '../utils/handshake.js'
 
 export const router = os.router({
@@ -198,6 +200,13 @@ export const router = os.router({
   appGetUnreadCount: appAuthNotifications.getUnreadCount,
   appMarkAsRead: appAuthNotifications.markAsRead,
   appMarkAllAsRead: appAuthNotifications.markAllAsRead,
+
+  // 3D Models (Admin only)
+  save3DModel: threeDModels.save3DModel,
+  list3DModels: threeDModels.list3DModels,
+  delete3DModel: threeDModels.delete3DModel,
+  checkModelSaved: threeDModels.checkModelSaved,
+  proxyGLB: threeDProxy.proxyGLB,
 
   //  handshake
   handshake,

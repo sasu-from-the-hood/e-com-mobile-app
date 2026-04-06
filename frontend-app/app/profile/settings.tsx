@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Switch, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Globe, Shield, Bell, Trash2, Eye, EyeOff } from 'lucide-react-native';
+import { Globe, Shield, Bell, Trash2, Eye, EyeOff, Box } from 'lucide-react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
@@ -10,6 +10,7 @@ import { ProfileMenuItem } from '@/components/profile/profile-menu-item';
 import { AppTheme } from '@/constants/app-theme';
 import { settingsStorage, SettingsTable } from '@/utils/settings-storage';
 import { LanguageBottomSheet } from '@/components/ui/LanguageBottomSheet';
+import { ProductViewPreferenceBottomSheet } from '@/components/ui/ProductViewPreferenceBottomSheet';
 import { useTranslation } from '@/hooks/useTranslation';
 import { appAuthClient } from '@/lib/app-auth-client';
 import { showToast } from '@/utils/toast';
@@ -25,8 +26,10 @@ export default function SettingsScreen() {
     orderUpdates: true,
     promotions: true,
     language: 'auto',
+    productViewPreference: '3d',
   });
   const [showLanguageSheet, setShowLanguageSheet] = useState(false);
+  const [showProductViewSheet, setShowProductViewSheet] = useState(false);
   const [showDeleteSheet, setShowDeleteSheet] = useState(false);
   const [touchIdSupported, setTouchIdSupported] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
@@ -109,13 +112,19 @@ export default function SettingsScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* Language */}
+          {/* General */}
           <View style={styles.section}>
             <ThemedText style={styles.sectionTitle}>{t('general')}</ThemedText>
             <ProfileMenuItem
               title={t('language')}
               icon={<Globe size={24} color={AppTheme.colors.primary} />}
               onPress={() => setShowLanguageSheet(true)}
+            />
+            <ProfileMenuItem
+              title="Product View Preference"
+              subtitle={settings.productViewPreference === '3d' ? '3D First' : 'Images First'}
+              icon={<Box size={24} color={AppTheme.colors.primary} />}
+              onPress={() => setShowProductViewSheet(true)}
             />
           </View>
 
@@ -183,6 +192,13 @@ export default function SettingsScreen() {
         onClose={() => setShowLanguageSheet(false)}
         selectedLanguage={settings.language}
         onSelectLanguage={(language) => updateSetting('language', language)}
+      />
+
+      <ProductViewPreferenceBottomSheet
+        visible={showProductViewSheet}
+        onClose={() => setShowProductViewSheet(false)}
+        selectedPreference={settings.productViewPreference}
+        onSelectPreference={(preference) => updateSetting('productViewPreference', preference)}
       />
 
       {/* Delete Account Bottom Sheet */}

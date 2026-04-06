@@ -26,7 +26,8 @@ export function useTranslation() {
   };
 
   const t = (key: keyof typeof translations.en): string => {
-    return translations[language]?.[key] || translations.en[key] || key;
+    const translation = translations[language]?.[key] || translations.en[key] || key;
+    return typeof translation === 'string' ? translation : String(key);
   };
 
   const changeLanguage = async (lang: string) => {

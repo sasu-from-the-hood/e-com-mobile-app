@@ -21,6 +21,8 @@ export const products = mysqlTable("products", {
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   originalPrice: decimal("original_price", { precision: 10, scale: 2 }),
   colorImages: json("color_images").$type<Record<string, string[]>>().default({}), // Images per color
+  mediaType: varchar("media_type", { length: 20 }).default("image"), // 'image', 'glb', or 'both'
+  glbModelIds: json("glb_model_ids").$type<string[]>().default([]), // Array of 3D model IDs
   categoryId: varchar("category_id", { length: 36 }).references(() => categories.id),
   warehouseId: varchar("warehouse_id", { length: 36 }).references(() => warehouses.id),
   sku: varchar("sku", { length: 100 }).unique(),

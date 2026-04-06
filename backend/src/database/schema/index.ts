@@ -1,4 +1,5 @@
 // Export all schemas
+export * from './3d-models.js';
 export * from './auth-schema.js';
 export * from './categories.js';
 export * from './products.js';
