@@ -800,6 +800,24 @@ export declare const router: {
     }, {
         success: boolean;
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    completeOrder: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     updateOrderStatus: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
         user: {
             id: string;
@@ -4791,6 +4809,24 @@ export declare const router: {
         paymentStatus: string;
         notes: string;
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    appCompleteOrder: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     appGetNotifications: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
     } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
@@ -6039,13 +6075,41 @@ export declare const router: {
         };
         error?: never;
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    deliveryBoyRefreshToken: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, Record<never, never>, import("zod").ZodObject<{
+        refreshToken: import("zod").ZodString;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        success: boolean;
+        error: string;
+    } | {
+        accessToken: string;
+        refreshToken: string;
+        success: boolean;
+        error?: never;
+    }, {
+        success: boolean;
+        error: string;
+    } | {
+        accessToken: string;
+        refreshToken: string;
+        success: boolean;
+        error?: never;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     getMyAssignedOrders: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
         deliveryBoy: {
-            id: string;
+            id: {};
             name: string;
             phone: string;
         };
     }, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+        items: {
+            id: string;
+            productName: string;
+            productImage: string | null;
+            quantity: number;
+            unitPrice: string;
+            color: string | null;
+            size: string | null;
+        }[];
         id: string;
         orderNumber: string;
         status: string;
@@ -6057,6 +6121,15 @@ export declare const router: {
         deliveredAt: Date | null;
         customerName: string | null;
     }[], {
+        items: {
+            id: string;
+            productName: string;
+            productImage: string | null;
+            quantity: number;
+            unitPrice: string;
+            color: string | null;
+            size: string | null;
+        }[];
         id: string;
         orderNumber: string;
         status: string;
@@ -6070,7 +6143,7 @@ export declare const router: {
     }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     getClaimableOrders: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
         deliveryBoy: {
-            id: string;
+            id: {};
             name: string;
             phone: string;
         };
@@ -6093,7 +6166,7 @@ export declare const router: {
     }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     claimOrder: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
         deliveryBoy: {
-            id: string;
+            id: {};
             name: string;
             phone: string;
         };
@@ -6104,7 +6177,7 @@ export declare const router: {
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     updateDeliveryStatus: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
         deliveryBoy: {
-            id: string;
+            id: {};
             name: string;
             phone: string;
         };
@@ -6112,7 +6185,9 @@ export declare const router: {
         orderId: import("zod").ZodString;
         status: import("zod").ZodEnum<{
             returned: "returned";
+            pending: "pending";
             delivered: "delivered";
+            confirmed: "confirmed";
             out_for_delivery: "out_for_delivery";
         }>;
         notes: import("zod").ZodOptional<import("zod").ZodString>;
@@ -6123,7 +6198,7 @@ export declare const router: {
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     deliveryGetStats: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
         deliveryBoy: {
-            id: string;
+            id: {};
             name: string;
             phone: string;
         };

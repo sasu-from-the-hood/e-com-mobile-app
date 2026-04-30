@@ -34,13 +34,41 @@ export declare const deliveryBoyLogin: import("@orpc/server").DecoratedProcedure
     };
     error?: never;
 }>, Record<never, never>, Record<never, never>>;
+export declare const deliveryBoyRefreshToken: import("@orpc/server").DecoratedProcedure<Record<never, never>, Record<never, never>, z.ZodObject<{
+    refreshToken: z.ZodString;
+}, z.core.$strip>, import("@orpc/contract").Schema<{
+    success: boolean;
+    error: string;
+} | {
+    accessToken: string;
+    refreshToken: string;
+    success: boolean;
+    error?: never;
+}, {
+    success: boolean;
+    error: string;
+} | {
+    accessToken: string;
+    refreshToken: string;
+    success: boolean;
+    error?: never;
+}>, Record<never, never>, Record<never, never>>;
 export declare const getMyAssignedOrders: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
     deliveryBoy: {
-        id: string;
+        id: {};
         name: string;
         phone: string;
     };
 }>, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+    items: {
+        id: string;
+        productName: string;
+        productImage: string | null;
+        quantity: number;
+        unitPrice: string;
+        color: string | null;
+        size: string | null;
+    }[];
     id: string;
     orderNumber: string;
     status: string;
@@ -52,6 +80,15 @@ export declare const getMyAssignedOrders: import("@orpc/server").DecoratedProced
     deliveredAt: Date | null;
     customerName: string | null;
 }[], {
+    items: {
+        id: string;
+        productName: string;
+        productImage: string | null;
+        quantity: number;
+        unitPrice: string;
+        color: string | null;
+        size: string | null;
+    }[];
     id: string;
     orderNumber: string;
     status: string;
@@ -65,7 +102,7 @@ export declare const getMyAssignedOrders: import("@orpc/server").DecoratedProced
 }[]>, Record<never, never>, Record<never, never>>;
 export declare const getClaimableOrders: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
     deliveryBoy: {
-        id: string;
+        id: {};
         name: string;
         phone: string;
     };
@@ -88,7 +125,7 @@ export declare const getClaimableOrders: import("@orpc/server").DecoratedProcedu
 }[]>, Record<never, never>, Record<never, never>>;
 export declare const claimOrder: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
     deliveryBoy: {
-        id: string;
+        id: {};
         name: string;
         phone: string;
     };
@@ -99,7 +136,7 @@ export declare const claimOrder: import("@orpc/server").DecoratedProcedure<impor
 }>, Record<never, never>, Record<never, never>>;
 export declare const updateDeliveryStatus: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
     deliveryBoy: {
-        id: string;
+        id: {};
         name: string;
         phone: string;
     };
@@ -107,7 +144,9 @@ export declare const updateDeliveryStatus: import("@orpc/server").DecoratedProce
     orderId: z.ZodString;
     status: z.ZodEnum<{
         returned: "returned";
+        pending: "pending";
         delivered: "delivered";
+        confirmed: "confirmed";
         out_for_delivery: "out_for_delivery";
     }>;
     notes: z.ZodOptional<z.ZodString>;
@@ -118,7 +157,7 @@ export declare const updateDeliveryStatus: import("@orpc/server").DecoratedProce
 }>, Record<never, never>, Record<never, never>>;
 export declare const getDeliveryBoyStats: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
     deliveryBoy: {
-        id: string;
+        id: {};
         name: string;
         phone: string;
     };

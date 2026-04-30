@@ -25,15 +25,33 @@ export const vendorProcedure = protectedProcedure.use(async ({ context, next }) 
 });
 // Delivery boy procedure — uses JWT from Authorization header (own auth system)
 export const deliveryBoyProcedure = os.use(async ({ context, next }) => {
-    const request = context.request;
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer '))
-        throw new Error('Unauthorized');
-    const { verifyToken } = await import('../utils/jwt.js');
-    const token = authHeader.slice(7);
-    const payload = await verifyToken(token);
-    if (!payload || payload.role !== 'delivery_boy')
-        throw new Error('Unauthorized');
-    return next({ context: { ...context, deliveryBoy: { id: payload.userId, name: payload.name, phone: payload.phoneNumber } } });
+    try {
+        const request = context.request;
+        const authHeader = request.headers.get('authorization');
+        console.log('[deliveryBoyProcedure] Auth header:', authHeader ? 'Present' : 'Missing');
+        if (!authHeader?.startsWith('Bearer ')) {
+            console.log('[deliveryBoyProcedure] Invalid auth header format');
+            throw new Error('Unauthorized');
+        }
+        const { verifyToken } = await import('../utils/jwt.js');
+        const token = authHeader.slice(7);
+        const payload = await verifyToken(token);
+        console.log('[deliveryBoyProcedure] Token payload:', payload);
+        if (!payload || payload.role !== 'delivery_boy') {
+            console.log('[deliveryBoyProcedure] Invalid payload or role');
+            throw new Error('Unauthorized');
+        }
+        const deliveryBoyContext = {
+            id: payload.id || payload.userId,
+            name: payload.name,
+            phone: payload.phoneNumber
+        };
+        console.log('[deliveryBoyProcedure] Delivery boy context:', deliveryBoyContext);
+        return next({ context: { ...context, deliveryBoy: deliveryBoyContext } });
+    }
+    catch (error) {
+        console.error('[deliveryBoyProcedure] Error:', error);
+        throw error;
+    }
 });
 //# sourceMappingURL=orpc.js.map

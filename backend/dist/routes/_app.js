@@ -69,6 +69,7 @@ export const router = os.router({
     getOrder: orders.getOrder,
     createOrder: orders.createOrder,
     cancelOrder: orders.cancelOrder,
+    completeOrder: orders.completeOrder,
     updateOrderStatus: orders.updateOrderStatus,
     updateOrderDeliveryBoy: orders.updateDeliveryBoy,
     getOrderWarehouse: orders.getOrderWarehouse,
@@ -176,6 +177,7 @@ export const router = os.router({
     appGetOrders: appAuthOrders.getOrders,
     appGetOrder: appAuthOrders.getOrder,
     appCreateOrder: appAuthOrders.createOrder,
+    appCompleteOrder: appAuthOrders.completeOrder,
     // App Notifications (JWT-protected for mobile app)
     appGetNotifications: appAuthNotifications.getNotifications,
     appGetUnreadCount: appAuthNotifications.getUnreadCount,
@@ -203,6 +205,7 @@ export const router = os.router({
     getVendorOrders: vendor.getVendorOrders,
     // Delivery Boy
     deliveryBoyLogin: delivery.deliveryBoyLogin,
+    deliveryBoyRefreshToken: delivery.deliveryBoyRefreshToken,
     getMyAssignedOrders: delivery.getMyAssignedOrders,
     getClaimableOrders: delivery.getClaimableOrders,
     claimOrder: delivery.claimOrder,

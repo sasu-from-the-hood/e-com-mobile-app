@@ -130,7 +130,7 @@ export declare const vendorProcedure: import("@orpc/server").BuilderWithMiddlewa
 }>>, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<unknown, unknown>, Record<never, never>, Record<never, never>>;
 export declare const deliveryBoyProcedure: import("@orpc/server").BuilderWithMiddlewares<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
     deliveryBoy: {
-        id: string;
+        id: {};
         name: string;
         phone: string;
     };

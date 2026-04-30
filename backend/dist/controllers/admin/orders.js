@@ -81,6 +81,18 @@ export const adminAssignDeliveryBoy = adminProcedure
     deliveryBoyId: z.string().nullable(),
 }))
     .handler(async ({ input }) => {
+    // Check order status before assignment
+    const [order] = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.id, input.orderId));
+    if (!order) {
+        throw new Error('Order not found');
+    }
+    // Only allow assignment if order is pending
+    if (input.deliveryBoyId && order.status !== 'pending') {
+        throw new Error('Can only assign delivery boy to pending orders');
+    }
     // Update order with delivery boy
     await db
         .update(orders)
@@ -101,10 +113,6 @@ export const adminAssignDeliveryBoy = adminProcedure
         WHERE ${deliveryBoys.id} = ${input.deliveryBoyId}
       `);
         // Get order details for notification
-        const [order] = await db
-            .select()
-            .from(orders)
-            .where(eq(orders.id, input.orderId));
         if (order) {
             // Send notification to customer
             await createNotification({

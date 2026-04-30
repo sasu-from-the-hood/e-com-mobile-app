@@ -159,4 +159,45 @@ export const createOrder = jwtProtectedProcedure
     console.log('[CreateOrder] Order created successfully:', order.id);
     return order;
 });
+export const completeOrder = jwtProtectedProcedure
+    .input(z.string())
+    .handler(async ({ input, context }) => {
+    console.log('[CompleteOrder] Completing order');
+    console.log('[CompleteOrder] Order ID:', input);
+    console.log('[CompleteOrder] User ID:', context.user.id);
+    const [order] = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.id, input));
+    if (!order) {
+        console.log('[CompleteOrder] Order not found');
+        throw new Error('Order not found');
+    }
+    if (order.userId !== context.user.id) {
+        console.log('[CompleteOrder] Unauthorized');
+        throw new Error('Unauthorized');
+    }
+    // Only allow completing if order is confirmed
+    if (order.status !== 'confirmed') {
+        console.log('[CompleteOrder] Cannot complete - order status:', order.status);
+        throw new Error('Order can only be completed when it is confirmed as delivered');
+    }
+    await db
+        .update(orders)
+        .set({
+        status: 'delivered',
+        deliveredAt: new Date()
+    })
+        .where(eq(orders.id, input));
+    // Send completion notification
+    await createNotification({
+        userId: order.userId,
+        title: 'Order Completed',
+        message: 'Your order has been completed. Thank you for shopping with us!',
+        type: 'order_update',
+        category: 'order'
+    });
+    console.log('[CompleteOrder] Order completed successfully');
+    return { success: true };
+});
 //# sourceMappingURL=orders.js.map

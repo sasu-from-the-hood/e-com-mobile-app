@@ -150,7 +150,7 @@ app.get('/delivery/events', async (c) => {
     return c.json({ error: 'Unauthorized' }, 401)
   }
 
-  const deliveryBoyId = payload.id || payload.userId
+  const deliveryBoyId = (payload.id || payload.userId) as string
   console.log('[SSE] Delivery boy ID:', deliveryBoyId)
   
   const { sseClients } = await import('./controllers/delivery/delivery.js')

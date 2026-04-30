@@ -298,4 +298,22 @@ export declare const createOrder: import("@orpc/server").DecoratedProcedure<impo
     paymentStatus: string;
     notes: string;
 }>, Record<never, never>, Record<never, never>>;
+export declare const completeOrder: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, {
+    request?: Request;
+} & Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        name: string;
+        email: string;
+        phoneNumber: string | null;
+        phoneNumberVerified: boolean | null;
+        image: string | null;
+        role: string | null;
+        banned: false | null;
+    };
+}>, z.ZodString, import("@orpc/contract").Schema<{
+    success: boolean;
+}, {
+    success: boolean;
+}>, Record<never, never>, Record<never, never>>;
 //# sourceMappingURL=orders.d.ts.map

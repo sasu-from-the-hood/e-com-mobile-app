@@ -121,14 +121,21 @@ app.use("/rpc/*", betterAuthRateLimitMiddleware);
 // SSE endpoint for delivery boy real-time updates
 app.get('/delivery/events', async (c) => {
     const authHeader = c.req.header('authorization');
-    if (!authHeader?.startsWith('Bearer '))
+    console.log('[SSE] Auth header:', authHeader ? 'Present' : 'Missing');
+    if (!authHeader?.startsWith('Bearer ')) {
+        console.log('[SSE] Invalid auth header format');
         return c.json({ error: 'Unauthorized' }, 401);
+    }
     const { verifyToken } = await import('./utils/jwt.js');
     const token = authHeader.slice(7);
     const payload = await verifyToken(token);
-    if (!payload || payload.role !== 'delivery_boy')
+    console.log('[SSE] Token payload:', payload ? 'Valid' : 'Invalid');
+    if (!payload || payload.role !== 'delivery_boy') {
+        console.log('[SSE] Invalid payload or role');
         return c.json({ error: 'Unauthorized' }, 401);
+    }
     const deliveryBoyId = payload.id || payload.userId;
+    console.log('[SSE] Delivery boy ID:', deliveryBoyId);
     const { sseClients } = await import('./controllers/delivery/delivery.js');
     const stream = new ReadableStream({
         start(controller) {

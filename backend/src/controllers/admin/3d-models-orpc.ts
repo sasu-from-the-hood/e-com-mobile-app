@@ -11,8 +11,15 @@ import crypto from 'crypto'
 // Upload directory
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads', '3d-models')
 
-// Ensure uploads directory exists
-await fs.mkdir(UPLOADS_DIR, { recursive: true })
+// Ensure uploads directory exists (async initialization)
+const ensureUploadsDir = async () => {
+  await fs.mkdir(UPLOADS_DIR, { recursive: true })
+}
+
+// Initialize directory on module load
+ensureUploadsDir().catch(err => {
+  console.error('Failed to create uploads directory:', err)
+})
 
 /**
  * Save and compress 3D model GLB files
