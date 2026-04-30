@@ -197,9 +197,22 @@ export const getAdminProducts = os
       query = query.where(whereClause)
     }
 
-    console.log('[getAdminProducts] Executing main query...')
-    const result = await query.orderBy(orderFn).limit(limit).offset(offset)
-    logger.info('[getAdminProducts] Query returned products', { count: result.length })
+    logger.info('[getAdminProducts] Executing main query')
+    let result
+    try {
+      result = await query.orderBy(orderFn).limit(limit).offset(offset)
+      logger.info('[getAdminProducts] Query returned products', { count: result.length })
+    } catch (queryError: any) {
+      logger.error('[getAdminProducts] Query execution failed', {
+        error: queryError.message,
+        code: queryError.code,
+        errno: queryError.errno,
+        sql: queryError.sql,
+        sqlMessage: queryError.sqlMessage,
+        sqlState: queryError.sqlState
+      })
+      throw queryError
+    }
     
     if (result.length > 0 && result[0]) {
       logger.info('[getAdminProducts] First product sample', {
