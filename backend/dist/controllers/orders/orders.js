@@ -291,8 +291,7 @@ export const updateOrderStatus = adminProcedure
         .from(orders)
         .where(eq(orders.id, input.id));
     if (!order) {
-        throw new ORPCError({
-            code: 'NOT_FOUND',
+        throw new ORPCError('NOT_FOUND', {
             message: 'Order not found'
         });
     }
@@ -332,23 +331,20 @@ export const completeOrder = jwtProtectedProcedure
         .where(eq(orders.id, input));
     if (!order) {
         console.log('[CompleteOrder] Order not found');
-        throw new ORPCError({
-            code: 'NOT_FOUND',
+        throw new ORPCError('NOT_FOUND', {
             message: 'Order not found'
         });
     }
     if (order.userId !== context.user.id) {
         console.log('[CompleteOrder] Unauthorized');
-        throw new ORPCError({
-            code: 'FORBIDDEN',
+        throw new ORPCError('FORBIDDEN', {
             message: 'Unauthorized'
         });
     }
     // Only allow completing if order is confirmed
     if (order.status !== 'confirmed') {
         console.log('[CompleteOrder] Cannot complete - order status:', order.status);
-        throw new ORPCError({
-            code: 'BAD_REQUEST',
+        throw new ORPCError('BAD_REQUEST', {
             message: 'Order can only be completed when it is confirmed as delivered'
         });
     }
@@ -385,23 +381,20 @@ export const updateDeliveryBoy = jwtProtectedProcedure
         .where(eq(orders.id, input.orderId));
     if (!order) {
         console.log('[UpdateDeliveryBoy] Order not found');
-        throw new ORPCError({
-            code: 'NOT_FOUND',
+        throw new ORPCError('NOT_FOUND', {
             message: 'Order not found'
         });
     }
     if (order.userId !== context.user.id) {
         console.log('[UpdateDeliveryBoy] Unauthorized');
-        throw new ORPCError({
-            code: 'FORBIDDEN',
+        throw new ORPCError('FORBIDDEN', {
             message: 'Unauthorized'
         });
     }
     // Only allow changing delivery boy setting when order is pending
     if (order.status !== 'pending') {
         console.log('[UpdateDeliveryBoy] Cannot change - order status:', order.status);
-        throw new ORPCError({
-            code: 'BAD_REQUEST',
+        throw new ORPCError('BAD_REQUEST', {
             message: 'Cannot change delivery boy status - the delivery has already started'
         });
     }

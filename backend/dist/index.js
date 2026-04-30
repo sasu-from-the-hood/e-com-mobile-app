@@ -134,7 +134,7 @@ app.get('/delivery/events', async (c) => {
         console.log('[SSE] Invalid payload or role');
         return c.json({ error: 'Unauthorized' }, 401);
     }
-    const deliveryBoyId = payload.id || payload.userId;
+    const deliveryBoyId = (payload.id || payload.userId);
     console.log('[SSE] Delivery boy ID:', deliveryBoyId);
     const { sseClients } = await import('./controllers/delivery/delivery.js');
     const stream = new ReadableStream({
