@@ -15,7 +15,7 @@ export function ProductsView() {
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
   const [limit] = useState(20)
-  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [statusFilter, setStatusFilter] = useState<string>("active") // Changed from "all" to "active"
   const [featuredFilter, setFeaturedFilter] = useState<string>("all")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [stockFilter, setStockFilter] = useState<string>("all")
@@ -196,6 +196,7 @@ export function ProductsView() {
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
             </SelectContent>
           </Select>
 

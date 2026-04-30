@@ -1,0 +1,1 @@
+{"version":3,"file":"glb-compressor.d.ts","sourceRoot":"","sources":["../../src/utils/glb-compressor.ts"],"names":[],"mappings":"AAMA,MAAM,WAAW,iBAAiB;IAChC,cAAc,EAAE,MAAM,CAAA;IACtB,YAAY,EAAE,MAAM,CAAA;IACpB,cAAc,EAAE,MAAM,CAAA;IACtB,gBAAgB,EAAE,MAAM,CAAA;CACzB;AAED,wBAAsB,WAAW,CAC/B,WAAW,EAAE,MAAM,EACnB,UAAU,EAAE,MAAM,GACjB,OAAO,CAAC,iBAAiB,CAAC,CA0C5B"}

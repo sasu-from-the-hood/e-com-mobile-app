@@ -13,9 +13,13 @@ export declare const getNewArrivals: import("@orpc/server").DecoratedProcedure<R
     name: string;
     slug: string;
     description: string | null;
+    type: string | null;
     originalPrice: string | null;
+    mediaType: string | null;
+    glbModelIds: string[] | null;
     categoryId: string | null;
     warehouseId: string | null;
+    vendorId: string | null;
     sku: string | null;
     variantStock: Record<string, number> | null;
     reviewCount: number | null;
@@ -41,9 +45,13 @@ export declare const getNewArrivals: import("@orpc/server").DecoratedProcedure<R
     name: string;
     slug: string;
     description: string | null;
+    type: string | null;
     originalPrice: string | null;
+    mediaType: string | null;
+    glbModelIds: string[] | null;
     categoryId: string | null;
     warehouseId: string | null;
+    vendorId: string | null;
     sku: string | null;
     variantStock: Record<string, number> | null;
     reviewCount: number | null;

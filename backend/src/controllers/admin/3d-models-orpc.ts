@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { adminProcedure } from '../../middleware/orpc.js'
+import { adminProcedure, publicProcedure } from '../../middleware/orpc.js'
 import { db } from '../../database/db.js'
 import { threeDModels } from '../../database/schema/index.js'
 import { compressGLB } from '../../utils/glb-compressor.js'
@@ -159,6 +159,11 @@ export const save3DModel = adminProcedure
 
     return {
       ...modelData,
+      scale: parseFloat(modelData.scale),
+      positionX: parseFloat(modelData.positionX),
+      positionY: parseFloat(modelData.positionY),
+      positionZ: parseFloat(modelData.positionZ),
+      guidanceScale: modelData.guidanceScale ? parseFloat(modelData.guidanceScale) : null,
       leftLegUrl: leftLegFile ? `/api/admin/3d-models/files/${leftLegFile}` : null,
       rightLegUrl: rightLegFile ? `/api/admin/3d-models/files/${rightLegFile}` : null
     }
@@ -174,12 +179,39 @@ export const list3DModels = adminProcedure
       .from(threeDModels)
       .orderBy(desc(threeDModels.createdAt))
 
-    // Add file URLs
+    console.log('📦 Raw models from DB:', models.map(m => ({
+      id: m.id,
+      scale: m.scale,
+      positionX: m.positionX,
+      positionY: m.positionY,
+      positionZ: m.positionZ,
+      types: {
+        scale: typeof m.scale,
+        positionX: typeof m.positionX,
+        positionY: typeof m.positionY,
+        positionZ: typeof m.positionZ
+      }
+    })))
+
+    // Add file URLs and convert decimal strings to numbers
     const modelsWithUrls = models.map(model => ({
       ...model,
+      scale: model.scale ? parseFloat(model.scale) : 1.0,
+      positionX: model.positionX ? parseFloat(model.positionX) : 0.0,
+      positionY: model.positionY ? parseFloat(model.positionY) : 0.0,
+      positionZ: model.positionZ ? parseFloat(model.positionZ) : 0.0,
+      guidanceScale: model.guidanceScale ? parseFloat(model.guidanceScale) : null,
       leftLegUrl: model.leftLegFile ? `/api/admin/3d-models/files/${model.leftLegFile}` : null,
       rightLegUrl: model.rightLegFile ? `/api/admin/3d-models/files/${model.rightLegFile}` : null
     }))
+
+    console.log('📦 Processed models:', modelsWithUrls.map(m => ({
+      id: m.id,
+      scale: m.scale,
+      positionX: m.positionX,
+      positionY: m.positionY,
+      positionZ: m.positionZ
+    })))
 
     return modelsWithUrls
   })
@@ -222,6 +254,56 @@ export const delete3DModel = adminProcedure
   })
 
 /**
+ * Get a single 3D model by ID (publicly accessible)
+ */
+export const get3DModel = publicProcedure
+  .input(z.string())
+  .handler(async ({ input }) => {
+    try {
+      console.log('📦 [get3DModel] Fetching model with ID:', input)
+      
+      const [model] = await db
+        .select()
+        .from(threeDModels)
+        .where(eq(threeDModels.id, input))
+
+      if (!model) {
+        console.log('❌ [get3DModel] Model not found:', input)
+        throw new Error('Model not found')
+      }
+
+      console.log('✅ [get3DModel] Model found:', {
+        id: model.id,
+        bodyPartType: model.bodyPartType,
+        scale: model.scale,
+        positionX: model.positionX,
+        positionY: model.positionY,
+        positionZ: model.positionZ
+      })
+
+      // Return only the model data with converted decimals
+      const result = {
+        id: model.id,
+        bodyPartType: model.bodyPartType,
+        leftLegFile: model.leftLegFile,
+        rightLegFile: model.rightLegFile,
+        scale: model.scale ? parseFloat(model.scale) : 1.0,
+        positionX: model.positionX ? parseFloat(model.positionX) : 0.0,
+        positionY: model.positionY ? parseFloat(model.positionY) : 0.0,
+        positionZ: model.positionZ ? parseFloat(model.positionZ) : 0.0,
+        leftLegUrl: model.leftLegFile ? `/api/admin/3d-models/files/${model.leftLegFile}` : null,
+        rightLegUrl: model.rightLegFile ? `/api/admin/3d-models/files/${model.rightLegFile}` : null
+      }
+      
+      console.log('📤 [get3DModel] Returning:', result)
+      return result
+    } catch (error) {
+      console.error('❌ [get3DModel] Error:', error)
+      throw error
+    }
+  })
+
+/**
  * Check if a model is saved by its prompt and body part type
  */
 export const checkModelSaved = adminProcedure
@@ -243,6 +325,13 @@ export const checkModelSaved = adminProcedure
     return {
       isSaved: !!model,
       modelId: model?.id || null,
-      model: model || null
+      model: model ? {
+        ...model,
+        scale: model.scale ? parseFloat(model.scale) : 1.0,
+        positionX: model.positionX ? parseFloat(model.positionX) : 0.0,
+        positionY: model.positionY ? parseFloat(model.positionY) : 0.0,
+        positionZ: model.positionZ ? parseFloat(model.positionZ) : 0.0,
+        guidanceScale: model.guidanceScale ? parseFloat(model.guidanceScale) : null
+      } : null
     }
   })

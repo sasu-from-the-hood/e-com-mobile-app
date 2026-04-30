@@ -7,7 +7,7 @@ import { GenerationForm } from './generation-form'
 import { GenerationHistory } from './generation-history'
 import { GenerationQueue } from './generation-queue'
 import { ModelViewer } from './model-viewer'
-import { CharacterViewer } from './character-viewer'
+import { CharacterViewer } from '../../../components/character-viewer'
 import { AGENT_3D_CONFIG, type GenerationJob } from '@/config/3d-agent.config'
 import { Client } from '@gradio/client'
 import { toast } from 'sonner'
@@ -64,55 +64,80 @@ export function Agent3DView() {
   const isProcessingRef = useRef(false) // Use ref to prevent duplicate processing
   const previousQueueLengthRef = useRef(0) // Track previous queue length
 
-  // Load saved models from backend
+  // Load saved models from backend and merge with local jobs
   const loadSavedModels = async () => {
     try {
       setIsLoadingSavedModels(true)
       const models = await orpc.list3DModels()
       setSavedModels(models)
       console.log('✅ Loaded saved models from backend:', models.length)
+      console.log('📦 First model sample:', models[0])
       
-      // Convert saved models to GenerationJob format and add to jobs if not already present
-      const savedJobsFromBackend: GenerationJob[] = models.map(model => ({
-        id: model.id,
-        apiUrl: apiUrl || 'http://localhost:3000', // Use current API URL or default
-        prompt: model.prompt,
-        bodyPartType: model.bodyPartType as any,
-        colorVariants: [{
-          id: `${model.id}-color`,
-          colorName: model.colorName || undefined,
-          colorHex: model.colorHex || '#000000',
-          images: { front: null, back: null, left: null, right: null }
-        }],
-        parameters: {
-          inferenceSteps: model.inferenceSteps || 50,
-          guidanceScale: parseFloat(model.guidanceScale || '7.5'),
-          seed: 0,
-          octreeResolution: 256,
-          removeBackground: true,
-          numberOfChunks: 1,
-          randomizeSeed: false
-        },
-        status: 'completed' as const,
-        progress: 100,
-        createdAt: new Date(model.createdAt),
-        completedAt: new Date(model.updatedAt),
-        result: {
-          fileUrl: model.leftLegUrl ? `http://localhost:3000${model.leftLegUrl}` : '',
-          fileUrl2: model.rightLegUrl ? `http://localhost:3000${model.rightLegUrl}` : undefined,
-          outputHtml: '',
-          meshStats: {}
+      // Get base URL for constructing full URLs
+      const baseUrl = window.location.origin
+      
+      // Convert database models to GenerationJob format and merge with existing jobs
+      const dbJobs: GenerationJob[] = models.map((model: any) => {
+        // Construct absolute URLs for model files
+        const leftUrl = model.leftLegUrl 
+          ? (model.leftLegUrl.startsWith('http') ? model.leftLegUrl : `${baseUrl}${model.leftLegUrl}`)
+          : ''
+        const rightUrl = model.rightLegUrl 
+          ? (model.rightLegUrl.startsWith('http') ? model.rightLegUrl : `${baseUrl}${model.rightLegUrl}`)
+          : undefined
+        
+        console.log('📦 Database model URLs:', {
+          id: model.id,
+          baseUrl,
+          leftLegUrl: model.leftLegUrl,
+          rightLegUrl: model.rightLegUrl,
+          constructedLeftUrl: leftUrl,
+          constructedRightUrl: rightUrl
+        })
+        
+        return {
+          id: model.id,
+          apiUrl: apiUrl || baseUrl, // Use baseUrl as fallback if apiUrl is not set
+          prompt: model.prompt || 'Saved model',
+          bodyPartType: model.bodyPartType,
+          colorVariants: [{
+            id: 'db-variant',
+            colorName: model.colorName || 'default',
+            colorHex: model.colorHex || '#000000',
+            images: { front: null, back: null, left: null, right: null }
+          }],
+          parameters: {
+            inferenceSteps: model.inferenceSteps || 50,
+            guidanceScale: Number(model.guidanceScale) || 7.5,
+            seed: 0,
+            octreeResolution: 128,
+            removeBackground: true,
+            numberOfChunks: 100000,
+            randomizeSeed: true
+          },
+          status: 'completed' as const,
+          progress: 100,
+          createdAt: new Date(model.createdAt),
+          completedAt: new Date(model.updatedAt),
+          result: {
+            fileUrl: leftUrl,
+            fileUrl2: rightUrl,
+            meshStats: {},
+            outputHtml: ''
+          }
         }
-      }))
+      })
       
-      // Merge with existing jobs, avoiding duplicates
+      // Merge with existing local jobs (avoid duplicates by ID)
       setJobs(prevJobs => {
-        const existingIds = new Set(prevJobs.map(j => j.id))
-        const newJobs = savedJobsFromBackend.filter(j => !existingIds.has(j.id))
-        return [...prevJobs, ...newJobs].sort((a, b) => 
-          b.createdAt.getTime() - a.createdAt.getTime()
+        const localJobIds = new Set(prevJobs.map(j => j.id))
+        const newDbJobs = dbJobs.filter(dbJob => !localJobIds.has(dbJob.id))
+        return [...prevJobs, ...newDbJobs].sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         )
       })
+      
+      console.log('✅ Merged database models into generation history')
     } catch (error) {
       console.error('Failed to load saved models:', error)
     } finally {
@@ -198,14 +223,54 @@ export function Agent3DView() {
       loadSavedModels()
     }
     
+    const handleGenerationHistoryUpdated = () => {
+      console.log('🔄 Generation history updated, reloading jobs from localStorage...')
+      try {
+        const saved = localStorage.getItem('3d-agent-jobs')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          // Update jobs state with localStorage data
+          setJobs(prevJobs => {
+            // Keep database models, update local jobs
+            const dbJobIds = new Set(savedModels.map(m => m.id))
+            const dbJobs = prevJobs.filter(j => dbJobIds.has(j.id))
+            const localJobs = parsed
+              .filter((job: any) => {
+                if (job.status !== 'completed' && job.status !== 'failed') return false
+                if (job.result?.fileUrl?.includes('white_mesh.glb')) return false
+                return true
+              })
+              .map((job: any) => ({
+                ...job,
+                createdAt: new Date(job.createdAt),
+                completedAt: job.completedAt ? new Date(job.completedAt) : undefined,
+                colorVariants: job.colorVariants.map((v: any) => ({
+                  ...v,
+                  images: { front: null, back: null, left: null, right: null },
+                  rightLegImages: v.rightLegImages ? { front: null, back: null, left: null, right: null } : undefined
+                }))
+              }))
+            
+            return [...dbJobs, ...localJobs].sort((a, b) => 
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            )
+          })
+        }
+      } catch (error) {
+        console.error('Failed to reload jobs from localStorage:', error)
+      }
+    }
+    
     window.addEventListener('show-character-viewer', handleCharacterViewerEvent)
     window.addEventListener('model-saved', handleModelSavedEvent)
+    window.addEventListener('generation-history-updated', handleGenerationHistoryUpdated)
     
     return () => {
       window.removeEventListener('show-character-viewer', handleCharacterViewerEvent)
       window.removeEventListener('model-saved', handleModelSavedEvent)
+      window.removeEventListener('generation-history-updated', handleGenerationHistoryUpdated)
     }
-  }, [])
+  }, [savedModels])
 
   const handleEditJob = (job: GenerationJob) => {
     setEditingJob(job)
@@ -565,12 +630,14 @@ export function Agent3DView() {
                     </div>
                   )}
                   <Button 
-                    onClick={() => {
-                      if (confirm('Are you sure you want to clear all generation history? This will remove all locally stored jobs.')) {
+                    onClick={async () => {
+                      if (confirm('Are you sure you want to clear all generation history? This will remove all locally stored jobs and reload from the database.')) {
                         localStorage.removeItem('3d-agent-jobs')
                         setJobs([])
                         setQueue([])
                         toast.success('Generation history cleared')
+                        // Refetch from backend
+                        await loadSavedModels()
                       }
                     }} 
                     variant="outline"
@@ -656,6 +723,26 @@ export function Agent3DView() {
           onView={handleViewJob}
           onRetry={handleRetryJob}
           onEdit={handleEditJob}
+          onDelete={async (jobId) => {
+            try {
+              // Delete from backend database if it exists
+              await orpc.delete3DModel(jobId).catch((err) => {
+                // If model doesn't exist in DB, that's okay - it might be a local-only job
+                console.log('Model not in database or already deleted:', err.message)
+              })
+              
+              // Remove from local state
+              setJobs(prev => prev.filter(j => j.id !== jobId))
+              
+              // Reload saved models to update the list
+              await loadSavedModels()
+              
+              toast.success('Model deleted successfully')
+            } catch (error) {
+              console.error('Failed to delete model:', error)
+              toast.error('Failed to delete model')
+            }
+          }}
         />
       )}
 

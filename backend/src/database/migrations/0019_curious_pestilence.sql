@@ -1,0 +1,1 @@
+ALTER TABLE `post_items` ADD `left_leg_file` varchar(255);

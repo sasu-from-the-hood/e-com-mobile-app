@@ -4,12 +4,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
-import { IconPlus, IconEdit, IconTrash, IconBike, IconPhone, IconMail } from "@tabler/icons-react"
+import { IconPlus, IconEdit, IconTrash, IconBike, IconPhone, IconMail, IconX, IconChevronDown } from "@tabler/icons-react"
 import { orpc } from "@/lib/oprc"
 import { toast } from "sonner"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface DeliveryBoy {
   id: string
@@ -21,6 +23,7 @@ interface DeliveryBoy {
   vehiclePlateNumber?: string | null
   warehouseId?: string | null
   warehouseName?: string | null
+  assignedWarehouses?: Array<{ id: string; name: string }>
   isActive: boolean | null
   isAvailable: boolean | null
   totalDeliveries: number | null
@@ -32,6 +35,7 @@ interface DeliveryBoy {
 export function DeliveryBoysView() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingDeliveryBoy, setEditingDeliveryBoy] = useState<DeliveryBoy | null>(null)
+  const [warehouseSearch, setWarehouseSearch] = useState("")
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -40,6 +44,7 @@ export function DeliveryBoysView() {
     vehicleType: "",
     vehiclePlateNumber: "",
     warehouseId: "",
+    warehouseIds: [] as string[], // New: multiple warehouses
     isActive: true,
     isAvailable: true,
     notes: "",
@@ -97,6 +102,9 @@ export function DeliveryBoysView() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
+    console.log('Submitting form data:', formData)
+    console.log('Warehouse IDs:', formData.warehouseIds)
+    
     if (editingDeliveryBoy) {
       updateMutation.mutate({ id: editingDeliveryBoy.id, data: formData })
     } else {
@@ -106,6 +114,8 @@ export function DeliveryBoysView() {
 
   const handleEdit = (deliveryBoy: DeliveryBoy) => {
     setEditingDeliveryBoy(deliveryBoy)
+    const assignedIds = deliveryBoy.assignedWarehouses?.map(w => w.id) || []
+    console.log('Editing delivery boy, assigned warehouses:', assignedIds)
     setFormData({
       name: deliveryBoy.name,
       phone: deliveryBoy.phone,
@@ -114,6 +124,7 @@ export function DeliveryBoysView() {
       vehicleType: deliveryBoy.vehicleType || "",
       vehiclePlateNumber: deliveryBoy.vehiclePlateNumber || "",
       warehouseId: deliveryBoy.warehouseId || "",
+      warehouseIds: assignedIds,
       isActive: deliveryBoy.isActive ?? true,
       isAvailable: deliveryBoy.isAvailable ?? true,
       notes: deliveryBoy.notes || "",
@@ -137,6 +148,7 @@ export function DeliveryBoysView() {
       vehicleType: "",
       vehiclePlateNumber: "",
       warehouseId: "",
+      warehouseIds: [],
       isActive: true,
       isAvailable: true,
       notes: "",
@@ -147,6 +159,7 @@ export function DeliveryBoysView() {
   const handleClose = () => {
     setIsDialogOpen(false)
     setEditingDeliveryBoy(null)
+    setWarehouseSearch("")
   }
 
   const isLoading = createMutation.isPending || updateMutation.isPending
@@ -242,8 +255,10 @@ export function DeliveryBoysView() {
                 </p>
               )}
               
-              {deliveryBoy.warehouseName && (
-                <p className="text-gray-600">📍 {deliveryBoy.warehouseName}</p>
+              {deliveryBoy.assignedWarehouses && deliveryBoy.assignedWarehouses.length > 0 && (
+                <p className="text-gray-600">
+                  📍 {deliveryBoy.assignedWarehouses.length} warehouse{deliveryBoy.assignedWarehouses.length > 1 ? 's' : ''} assigned
+                </p>
               )}
               
               <div className="flex justify-between pt-2 border-t">
@@ -273,7 +288,11 @@ export function DeliveryBoysView() {
       </div>
 
       {/* Add/Edit Dialog */}
-      <Sheet open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Sheet open={isDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          handleClose()
+        }
+      }}>
         <SheetContent className="overflow-y-auto">
           <SheetHeader className="px-6">
             <SheetTitle>{editingDeliveryBoy ? "Edit Delivery Boy" : "Add Delivery Boy"}</SheetTitle>
@@ -346,24 +365,75 @@ export function DeliveryBoysView() {
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="warehouseId">Assigned Warehouse</Label>
-              <Select 
-                value={formData.warehouseId || "none"} 
-                onValueChange={(value) => setFormData({ ...formData, warehouseId: value === "none" ? "" : value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select warehouse" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Warehouse</SelectItem>
-                  {warehouses.filter((w: any) => w.isActive).map((warehouse: any) => (
-                    <SelectItem key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name}
-                    </SelectItem>
+            <div className="space-y-3">
+              <Label>Assigned Warehouses</Label>
+              <p className="text-xs text-muted-foreground">
+                Select all warehouses this delivery boy can operate from
+              </p>
+              
+              {/* Search */}
+              <Input
+                placeholder="Search warehouses..."
+                value={warehouseSearch}
+                onChange={(e) => setWarehouseSearch(e.target.value)}
+              />
+              
+              {/* Simple checkbox list */}
+              <div className="border rounded-lg p-3 space-y-2 max-h-60 overflow-y-auto">
+                {(warehouses as any[])
+                  .filter((w: any) => 
+                    w.name.toLowerCase().includes(warehouseSearch.toLowerCase()) ||
+                    w.address.toLowerCase().includes(warehouseSearch.toLowerCase())
+                  )
+                  .map((warehouse: any) => (
+                    <label
+                      key={warehouse.id}
+                      className="flex items-start gap-3 p-2 hover:bg-muted rounded cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.warehouseIds.includes(warehouse.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({
+                              ...formData,
+                              warehouseIds: [...formData.warehouseIds, warehouse.id]
+                            })
+                          } else {
+                            setFormData({
+                              ...formData,
+                              warehouseIds: formData.warehouseIds.filter(id => id !== warehouse.id)
+                            })
+                          }
+                        }}
+                        className="mt-1"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{warehouse.name}</span>
+                          {!warehouse.isActive && (
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">Inactive</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">{warehouse.address}</p>
+                      </div>
+                    </label>
                   ))}
-                </SelectContent>
-              </Select>
+                
+                {(warehouses as any[]).filter((w: any) => 
+                  w.name.toLowerCase().includes(warehouseSearch.toLowerCase()) ||
+                  w.address.toLowerCase().includes(warehouseSearch.toLowerCase())
+                ).length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">No warehouses found</p>
+                )}
+              </div>
+              
+              {/* Selected count */}
+              {formData.warehouseIds.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {formData.warehouseIds.length} warehouse{formData.warehouseIds.length > 1 ? 's' : ''} selected
+                </p>
+              )}
             </div>
             
             <div className="space-y-2">

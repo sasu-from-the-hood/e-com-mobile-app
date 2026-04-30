@@ -34,8 +34,8 @@ export const getBanners = publicProcedure
 })))
     .handler(async () => {
     const banners = [];
-    // 1. High Discount Featured Products Banner
-    const highDiscountProduct = await db
+    // 1. High Discount Featured Products Banner - Get top 2 products with highest discount
+    const highDiscountProducts = await db
         .select({
         id: products.id,
         discount: products.discount,
@@ -43,22 +43,26 @@ export const getBanners = publicProcedure
         name: products.name
     })
         .from(products)
-        .where(and(gte(products.discount, 20), products.isActive, products.inStock, products.isFeatured))
+        .where(and(gte(products.discount, 15), // Lowered threshold to 15% to catch more products
+    products.isActive, products.inStock, products.isFeatured))
         .orderBy(desc(products.discount))
-        .limit(1);
-    if (highDiscountProduct[0]?.discount && Number(highDiscountProduct[0].discount) > 0) {
-        banners.push({
-            id: '1',
-            title: `${Math.round(Number(highDiscountProduct[0].discount))}% off`,
-            subtitle: highDiscountProduct[0].name || 'Product',
-            imageUrl: getFirstImage(highDiscountProduct[0].colorImages),
-            imageAlt: 'Discount product',
-            type: 'discount',
-            discount: Math.round(Number(highDiscountProduct[0].discount)),
-            productId: highDiscountProduct[0].id,
-            isActive: true
-        });
-    }
+        .limit(2); // Get top 2 instead of 1
+    // Add each high discount product as a banner
+    highDiscountProducts.forEach((product, index) => {
+        if (product.discount && Number(product.discount) > 0) {
+            banners.push({
+                id: `discount-${index + 1}`,
+                title: `${Math.round(Number(product.discount))}% off`,
+                subtitle: product.name || 'Product',
+                imageUrl: getFirstImage(product.colorImages),
+                imageAlt: 'Discount product',
+                type: 'discount',
+                discount: Math.round(Number(product.discount)),
+                productId: product.id,
+                isActive: true
+            });
+        }
+    });
     // 2. Low Stock Alert Banner (creates urgency) - Featured only
     const lowStockProduct = await db
         .select({
@@ -73,7 +77,7 @@ export const getBanners = publicProcedure
         .limit(1);
     if (lowStockProduct[0]) {
         banners.push({
-            id: '2',
+            id: 'urgency-1',
             title: 'Only few left',
             subtitle: lowStockProduct[0].name,
             imageUrl: getFirstImage(lowStockProduct[0].colorImages),
@@ -83,8 +87,8 @@ export const getBanners = publicProcedure
             isActive: true
         });
     }
-    // 3. Low Price Banner - Featured only
-    const lowPriceProduct = await db
+    // 3. Low Price Banner - Featured only - Get 2 products
+    const lowPriceProducts = await db
         .select({
         id: products.id,
         name: products.name,
@@ -92,44 +96,46 @@ export const getBanners = publicProcedure
         colorImages: products.colorImages
     })
         .from(products)
-        .where(and(sql `${products.price} <= 25`, products.isActive, products.inStock, products.isFeatured))
+        .where(and(sql `${products.price} <= 150`, // Increased threshold to catch more products
+    products.isActive, products.inStock, products.isFeatured))
         .orderBy(asc(products.price))
-        .limit(1);
-    if (lowPriceProduct[0]) {
+        .limit(2); // Get 2 instead of 1
+    lowPriceProducts.forEach((product, index) => {
         banners.push({
-            id: '3',
-            title: `Only ETB ${Math.round(Number(lowPriceProduct[0].price))}`,
-            subtitle: lowPriceProduct[0].name,
-            imageUrl: getFirstImage(lowPriceProduct[0].colorImages),
+            id: `low-price-${index + 1}`,
+            title: `Only ETB ${Math.round(Number(product.price))}`,
+            subtitle: product.name,
+            imageUrl: getFirstImage(product.colorImages),
             imageAlt: 'Low price product',
             type: 'low_price',
-            productId: lowPriceProduct[0].id,
+            productId: product.id,
             isActive: true
         });
-    }
-    // 4. New Arrivals Banner (recent products) - Featured only
-    const newProduct = await db
+    });
+    // 4. New Arrivals Banner (recent products) - Featured only - Get 2 products
+    const newProducts = await db
         .select({
         id: products.id,
         name: products.name,
         colorImages: products.colorImages
     })
         .from(products)
-        .where(and(gte(products.createdAt, sql `DATE_SUB(NOW(), INTERVAL 7 DAY)`), products.isActive, products.inStock, products.isFeatured))
+        .where(and(gte(products.createdAt, sql `DATE_SUB(NOW(), INTERVAL 30 DAY)`), // Extended to 30 days
+    products.isActive, products.inStock, products.isFeatured))
         .orderBy(desc(products.createdAt))
-        .limit(1);
-    if (newProduct[0]) {
+        .limit(2); // Get 2 instead of 1
+    newProducts.forEach((product, index) => {
         banners.push({
-            id: '4',
+            id: `new-arrival-${index + 1}`,
             title: 'New arrival',
-            subtitle: newProduct[0].name,
-            imageUrl: getFirstImage(newProduct[0].colorImages),
+            subtitle: product.name,
+            imageUrl: getFirstImage(product.colorImages),
             imageAlt: 'New arrival product',
             type: 'new_arrivals',
-            productId: newProduct[0].id,
+            productId: product.id,
             isActive: true
         });
-    }
+    });
     // Fallback banners if no featured products
     if (banners.length === 0) {
         return [
@@ -144,6 +150,14 @@ export const getBanners = publicProcedure
             }
         ];
     }
-    return banners.slice(0, 4); // Limit to 4 banners
+    // Remove duplicates (same product appearing in multiple banner types)
+    const uniqueBanners = banners.reduce((acc, current) => {
+        const exists = acc.find(banner => banner.productId === current.productId);
+        if (!exists) {
+            acc.push(current);
+        }
+        return acc;
+    }, []);
+    return uniqueBanners.slice(0, 6); // Increased limit to 6 banners
 });
 //# sourceMappingURL=banners.js.map

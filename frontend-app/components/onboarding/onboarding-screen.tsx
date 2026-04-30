@@ -1,22 +1,22 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   FlatList,
   Animated,
-  type NativeSyntheticEvent,
-  type NativeScrollEvent,
   Dimensions,
+  TouchableOpacity,
+  Text,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { OnboardingSlide } from './onboarding-slide';
-import { PaginationDots } from './pagination-dots';
-import { PrimaryButton } from './primary-button';
-import { TextLink } from './text-link';
 import type { OnboardingData } from './onboarding-mock-data';
+import { AppTheme } from '@/constants/app-theme';
 
 const { width } = Dimensions.get('window');
+const PRIMARY = AppTheme.colors.primary;
+const AUTO_SCROLL_INTERVAL = 3500;
 
 export interface OnboardingScreenProps {
   data: OnboardingData[];
@@ -25,64 +25,118 @@ export interface OnboardingScreenProps {
 }
 
 export function OnboardingScreen({ data, onCreateAccount, onLogin }: OnboardingScreenProps) {
-  const [, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   const slidesRef = useRef<FlatList>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const currentIndexRef = useRef(0);
 
   const viewableItemsChanged = useRef(({ viewableItems }: any) => {
     if (viewableItems[0]) {
-      setCurrentIndex(viewableItems[0].index);
+      const idx = viewableItems[0].index;
+      setCurrentIndex(idx);
+      currentIndexRef.current = idx;
     }
   }).current;
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-    { useNativeDriver: false }
-  );
+  const isLast = currentIndex === data.length - 1;
+
+  const goToNext = () => {
+    const next = (currentIndexRef.current + 1) % data.length;
+    slidesRef.current?.scrollToIndex({ index: next, animated: true });
+  };
+
+  // Auto-scroll
+  useEffect(() => {
+    timerRef.current = setInterval(goToNext, AUTO_SCROLL_INTERVAL);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  // Reset timer on manual scroll
+  const resetTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(goToNext, AUTO_SCROLL_INTERVAL);
+  };
+
+  const handleNext = () => {
+    resetTimer();
+    if (isLast) {
+      onCreateAccount();
+    } else {
+      slidesRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
+    }
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      <View style={styles.content}>
+    <SafeAreaView style={[styles.container, { backgroundColor: data[currentIndex].bgColor }]} edges={['top']}>
+      <SafeAreaView style={styles.inner} edges={['bottom']}>
+        <StatusBar style="light" />
+
+      <View style={styles.slidesWrap}>
         <FlatList
           data={data}
-          renderItem={({ item }) => (
-            <OnboardingSlide
-              image={item.image}
-              title={item.title}
-              description={item.description}
-            />
-          )}
+          renderItem={({ item }) => <OnboardingSlide item={item} />}
           horizontal
           showsHorizontalScrollIndicator={false}
           pagingEnabled
           bounces={false}
           keyExtractor={(item) => item.id}
-          onScroll={handleScroll}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: false }
+          )}
           scrollEventThrottle={32}
           onViewableItemsChanged={viewableItemsChanged}
           viewabilityConfig={viewConfig}
+          onScrollBeginDrag={resetTimer}
           ref={slidesRef}
         />
-      </View>
 
-      <View style={styles.footer}>
-        <PaginationDots data={data} scrollX={scrollX} />
-        
-        <View style={styles.buttonContainer}>
-          <PrimaryButton
-            title="Create Account"
-            onPress={onCreateAccount}
-          />
-          <TextLink
-            title="Already Have an Account"
-            onPress={onLogin}
-            style={styles.linkContainer}
-          />
+        {/* Dots — bottom-right of slide area */}
+        <View style={styles.dotsWrap}>
+          {data.map((_, i) => {
+            const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
+            const dotWidth = scrollX.interpolate({
+              inputRange,
+              outputRange: [6, 22, 6],
+              extrapolate: 'clamp',
+            });
+            const opacity = scrollX.interpolate({
+              inputRange,
+              outputRange: [0.3, 1, 0.3],
+              extrapolate: 'clamp',
+            });
+            return (
+              <Animated.View
+                key={i}
+                style={[styles.dot, { width: dotWidth, opacity, backgroundColor: PRIMARY }]}
+              />
+            );
+          })}
         </View>
       </View>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[styles.btn, { backgroundColor: PRIMARY }]}
+          onPress={handleNext}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.btnText}>{isLast ? 'Get Started' : 'Next'}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={onLogin} style={styles.link} activeOpacity={0.7}>
+          <Text style={[styles.linkText, { color: PRIMARY }]}>
+            Already Have an Account
+          </Text>
+        </TouchableOpacity>
+      </View>
+      </SafeAreaView>
     </SafeAreaView>
   );
 }
@@ -90,19 +144,52 @@ export function OnboardingScreen({ data, onCreateAccount, onLogin }: OnboardingS
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
   },
-  content: {
+  inner: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  slidesWrap: {
     flex: 1,
   },
+  dotsWrap: {
+    position: 'absolute',
+    bottom: 36,
+    right: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  dot: {
+    height: 6,
+    borderRadius: 3,
+  },
   footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
+    paddingHorizontal: 28,
+    paddingTop: 12,
+    paddingBottom: 16,
+    backgroundColor: '#fff',
+    gap: 10,
   },
-  buttonContainer: {
-    gap: 16,
+  btn: {
+    width: '100%',
+    paddingVertical: 15,
+    borderRadius: 16,
+    alignItems: 'center',
   },
-  linkContainer: {
-    marginTop: 8,
+  btnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  link: {
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  linkText: {
+    fontSize: 13,
+    fontWeight: '500',
   },
 });

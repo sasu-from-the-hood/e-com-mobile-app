@@ -1,0 +1,1 @@
+ALTER TABLE `fashion_posts` ADD `background_color` varchar(10) DEFAULT 'light';

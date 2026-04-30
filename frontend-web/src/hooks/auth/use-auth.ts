@@ -23,7 +23,10 @@ export function useAuth() {
         toast.error(res.error?.message || 'Login failed')
       } else {
         toast.success('Login successful')
-        navigate('/')
+        const role = (res.data?.user as any)?.role
+        if (role === 'admin') navigate('/dashboard')
+        else if (role === 'vendor') navigate('/vendor')
+        else navigate('/')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')

@@ -70,6 +70,23 @@ export declare const products: import("drizzle-orm/mysql-core").MySqlTableWithCo
             identity: undefined;
             generated: undefined;
         }, {}, {}>;
+        type: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "type";
+            tableName: "products";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
         price: import("drizzle-orm/mysql-core").MySqlColumn<{
             name: "price";
             tableName: "products";
@@ -123,6 +140,42 @@ export declare const products: import("drizzle-orm/mysql-core").MySqlTableWithCo
         }, {}, {
             $type: Record<string, string[]>;
         }>;
+        mediaType: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "media_type";
+            tableName: "products";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        glbModelIds: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "glb_model_ids";
+            tableName: "products";
+            dataType: "json";
+            columnType: "MySqlJson";
+            data: string[];
+            driverParam: string;
+            notNull: false;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {
+            $type: string[];
+        }>;
         categoryId: import("drizzle-orm/mysql-core").MySqlColumn<{
             name: "category_id";
             tableName: "products";
@@ -142,6 +195,23 @@ export declare const products: import("drizzle-orm/mysql-core").MySqlTableWithCo
         }, {}, {}>;
         warehouseId: import("drizzle-orm/mysql-core").MySqlColumn<{
             name: "warehouse_id";
+            tableName: "products";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        vendorId: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "vendor_id";
             tableName: "products";
             dataType: "string";
             columnType: "MySqlVarChar";

@@ -38,13 +38,13 @@ export declare const getSession: import("@orpc/server").DecoratedProcedure<Recor
 }>, Record<never, never>, Record<never, never>>;
 export declare const refreshToken: import("@orpc/server").DecoratedProcedure<Record<never, never>, Record<never, never>, z.ZodObject<{
     refreshToken: z.ZodString;
-}, z.core.$strip>, import("@orpc/contract").Schema<import("../../utils/jwt.js").TokenPair | {
-    success: boolean;
-    error: string;
-}, import("../../utils/jwt.js").TokenPair | {
-    success: boolean;
-    error: string;
-}>, Record<never, never>, Record<never, never>>;
+}, z.core.$strip>, z.ZodUnion<readonly [z.ZodObject<{
+    success: z.ZodLiteral<false>;
+    error: z.ZodString;
+}, z.core.$strip>, z.ZodObject<{
+    accessToken: z.ZodString;
+    refreshToken: z.ZodString;
+}, z.core.$strip>]>, Record<never, never>, Record<never, never>>;
 export declare const logout: import("@orpc/server").DecoratedProcedure<Record<never, never>, Record<never, never>, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
     success: boolean;
     message: string;

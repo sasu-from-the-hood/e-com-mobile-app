@@ -57,6 +57,16 @@ export const refreshToken = os
     .input(z.object({
     refreshToken: z.string(),
 }))
+    .output(z.union([
+    z.object({
+        success: z.literal(false),
+        error: z.string(),
+    }),
+    z.object({
+        accessToken: z.string(),
+        refreshToken: z.string(),
+    }),
+]))
     .handler(async ({ input }) => {
     const { refreshToken } = input;
     logger.info('[Session] Refresh token request');
@@ -101,7 +111,12 @@ export const refreshToken = os
         banned: currentUser.banned || false,
     });
     logger.info(`[Session] Tokens refreshed for user: ${currentUser.id}`);
-    return tokens;
+    logger.info(`[Session] New access token length: ${tokens.accessToken.length}`);
+    logger.info(`[Session] New refresh token length: ${tokens.refreshToken.length}`);
+    return {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+    };
 });
 // Logout (client-side token deletion, no server action needed)
 export const logout = os

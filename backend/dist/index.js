@@ -34,9 +34,25 @@ app.get('/uploads/*', async (c) => {
             '.jpeg': 'image/jpeg',
             '.png': 'image/png',
             '.gif': 'image/gif',
-            '.webp': 'image/webp'
+            '.webp': 'image/webp',
+            '.glb': 'model/gltf-binary'
         };
         c.header('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+        c.header('Cache-Control', 'public, max-age=31536000, immutable');
+        c.header('Access-Control-Allow-Origin', '*');
+        return c.body(file);
+    }
+    return c.notFound();
+});
+// Static file serving for 3D model files
+app.get('/api/admin/3d-models/files/:filename', async (c) => {
+    const filename = c.req.param('filename');
+    const filePath = path.join(process.cwd(), 'uploads', '3d-models', filename);
+    if (fs.existsSync(filePath)) {
+        const file = fs.readFileSync(filePath);
+        c.header('Content-Type', 'model/gltf-binary');
+        c.header('Cache-Control', 'public, max-age=31536000, immutable');
+        c.header('Access-Control-Allow-Origin', '*');
         return c.body(file);
     }
     return c.notFound();
@@ -102,6 +118,46 @@ app.on(['GET', 'POST'], '/api/auth/*', async (c) => {
     }
 });
 app.use("/rpc/*", betterAuthRateLimitMiddleware);
+// SSE endpoint for delivery boy real-time updates
+app.get('/delivery/events', async (c) => {
+    const authHeader = c.req.header('authorization');
+    if (!authHeader?.startsWith('Bearer '))
+        return c.json({ error: 'Unauthorized' }, 401);
+    const { verifyToken } = await import('./utils/jwt.js');
+    const token = authHeader.slice(7);
+    const payload = await verifyToken(token);
+    if (!payload || payload.role !== 'delivery_boy')
+        return c.json({ error: 'Unauthorized' }, 401);
+    const deliveryBoyId = payload.id || payload.userId;
+    const { sseClients } = await import('./controllers/delivery/delivery.js');
+    const stream = new ReadableStream({
+        start(controller) {
+            if (!sseClients.has(deliveryBoyId))
+                sseClients.set(deliveryBoyId, new Set());
+            sseClients.get(deliveryBoyId).add(controller);
+            // Send initial ping
+            controller.enqueue(new TextEncoder().encode('event: connected\ndata: {}\n\n'));
+            console.log('[SSE] Client connected:', deliveryBoyId);
+        },
+        cancel() {
+            const set = sseClients.get(deliveryBoyId);
+            if (set) {
+                set.delete(this);
+                if (set.size === 0)
+                    sseClients.delete(deliveryBoyId);
+            }
+            console.log('[SSE] Client disconnected:', deliveryBoyId);
+        }
+    });
+    return new Response(stream, {
+        headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': c.req.header('origin') || '*',
+        }
+    });
+});
 // ORPC via Fetch adapter
 const rpcHandler = new RPCHandler(router);
 app.all('/rpc/*', async (c) => {
@@ -118,13 +174,18 @@ app.all('/rpc/*', async (c) => {
         return c.notFound();
     }
     catch (error) {
+        console.error('❌ RPC handler error:', error);
+        console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack');
+        console.error('❌ Error message:', error instanceof Error ? error.message : String(error));
         logger.error('RPC handler error:', {
-            error,
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
             version: config.version,
             env: config.nodeEnv,
             path: c.req.path,
             method: c.req.method,
         });
+        throw error;
     }
 });
 // Catch-all route for SPA - serve index.html for all non-API routes

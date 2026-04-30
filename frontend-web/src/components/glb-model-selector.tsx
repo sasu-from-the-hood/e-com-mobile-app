@@ -8,6 +8,7 @@ import { orpc } from '@/lib/oprc'
 import { Canvas } from '@react-three/fiber'
 import { useGLTF, Center } from '@react-three/drei'
 import { Suspense } from 'react'
+import { URL as AppURL } from '@/config'
 import { AGENT_3D_CONFIG } from '@/config/3d-agent.config'
 import { ErrorBoundary } from 'react-error-boundary'
 
@@ -50,6 +51,18 @@ export function GLBModelSelector({ selectedModelIds, onChange }: GLBModelSelecto
   // Load models from backend
   useEffect(() => {
     loadModels()
+    
+    // Listen for model-saved event to reload models
+    const handleModelSaved = () => {
+      console.log('🔄 Model saved event received, reloading models...')
+      loadModels()
+    }
+    
+    window.addEventListener('model-saved', handleModelSaved)
+    
+    return () => {
+      window.removeEventListener('model-saved', handleModelSaved)
+    }
   }, [])
 
   // Filter and sort models
@@ -168,7 +181,7 @@ export function GLBModelSelector({ selectedModelIds, onChange }: GLBModelSelecto
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {currentModels.map((model) => {
               const isSelected = selectedModelIds.includes(model.id)
               const isHovered = hoveredModel === model.id
@@ -183,9 +196,8 @@ export function GLBModelSelector({ selectedModelIds, onChange }: GLBModelSelecto
                   onMouseEnter={() => setHoveredModel(model.id)}
                   onMouseLeave={() => setHoveredModel(null)}
                 >
-                  {/* 3D Preview in card - only load on hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-800">
-                    {model.leftLegFile && isHovered ? (
+                    {model.leftLegFile ? (
                       <ErrorBoundary fallback={<CanvasFallback />}>
                         <Canvas 
                           camera={{ position: [0, 0, 2], fov: 50 }} 
@@ -200,27 +212,28 @@ export function GLBModelSelector({ selectedModelIds, onChange }: GLBModelSelecto
                             <ambientLight intensity={0.5} />
                             <directionalLight position={[3, 3, 3]} intensity={0.8} />
                             <ModelPreview
-                              url={`http://localhost:3000/api/admin/3d-models/files/${model.leftLegFile}`}
+                              url={`${AppURL.BASE}/api/admin/3d-models/files/${model.leftLegFile}`}
                             />
                           </Suspense>
                         </Canvas>
                       </ErrorBoundary>
                     ) : (
                       <div className="flex items-center justify-center h-full">
-                        <IconCube className="w-12 h-12 text-slate-600" />
+                        <IconCube className="w-20 h-20 text-slate-600" />
                       </div>
                     )}
                   </div>
 
-                  {/* Model info overlay at bottom */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-2 space-y-0.5">
-                    <p className="text-[10px] font-medium truncate text-white" title={model.name}>
-                      {model.name}
-                    </p>
-                    <p className="text-[9px] text-gray-300 truncate">
-                      {AGENT_3D_CONFIG.bodyPartTypes.find(t => t.value === model.bodyPartType)?.label || model.bodyPartType}
-                    </p>
-                  </div>
+                  {isHovered && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-4 space-y-1">
+                      <p className="text-sm font-medium truncate text-white" title={model.name}>
+                        {model.name}
+                      </p>
+                      <p className="text-xs text-gray-300 truncate">
+                        {AGENT_3D_CONFIG.bodyPartTypes.find(t => t.value === model.bodyPartType)?.label || model.bodyPartType}
+                      </p>
+                    </div>
+                  )}
                 </Card>
               )
             })}

@@ -4,7 +4,7 @@ import { orpc } from "@/lib/oprc"
 interface AdminProductsParams {
   search?: string
   category?: string
-  status?: 'active' | 'inactive' | 'all'
+  status?: 'active' | 'inactive' | 'pending' | 'all'
   stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock' | 'all'
   page?: number
   limit?: number

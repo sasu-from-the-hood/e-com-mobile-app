@@ -12,6 +12,7 @@ const createProductSchema = z.object({
     name: z.string().min(1),
     slug: z.string().optional(),
     description: z.string().optional(),
+    type: z.enum(['single', 'collection']).default('single'),
     price: z.string(),
     originalPrice: z.string().optional(),
     categoryId: z.string().optional(),
@@ -30,6 +31,8 @@ const createProductSchema = z.object({
     variantStock: z.record(z.string(), z.number()).optional(),
     reviewCount: z.number().default(0),
     colorImages: z.record(z.string(), z.array(z.union([z.string(), z.instanceof(File)]))).optional(),
+    mediaType: z.enum(['image', 'glb', 'both']).default('image'),
+    glbModelIds: z.array(z.string()).optional(),
     // Enhanced fields
     variants: z.array(z.object({
         color: z.string().optional(),
@@ -56,7 +59,7 @@ export const getAdminProducts = os
     .input(z.object({
     search: z.string().optional(),
     category: z.string().optional(),
-    status: z.enum(['active', 'inactive', 'all']).default('all'),
+    status: z.enum(['active', 'inactive', 'pending', 'all']).default('all'),
     stockStatus: z.enum(['in_stock', 'low_stock', 'out_of_stock', 'all']).default('all'),
     page: z.number().default(1),
     limit: z.number().default(10),
@@ -72,14 +75,24 @@ export const getAdminProducts = os
     const offset = (page - 1) * limit;
     // Build conditions
     const conditions = [];
+    // Status filter
+    if (status === 'active') {
+        conditions.push(eq(products.isActive, true));
+    }
+    else if (status === 'inactive') {
+        conditions.push(eq(products.isActive, false));
+        conditions.push(sql `${products.vendorId} IS NULL`); // Only admin-created inactive products
+    }
+    else if (status === 'pending') {
+        conditions.push(eq(products.isActive, false));
+        conditions.push(sql `${products.vendorId} IS NOT NULL`); // Only vendor-created pending products
+    }
+    // For 'all', show everything
     if (search) {
         conditions.push(sql `(${products.name} LIKE ${`%${search}%`} OR ${products.description} LIKE ${`%${search}%`} OR ${products.sku} LIKE ${`%${search}%`})`);
     }
     if (category) {
         conditions.push(eq(products.categoryId, category));
-    }
-    if (status !== 'all') {
-        conditions.push(eq(products.isActive, status === 'active'));
     }
     if (stockStatus !== 'all') {
         switch (stockStatus) {
@@ -117,6 +130,7 @@ export const getAdminProducts = os
         name: products.name,
         slug: products.slug,
         description: products.description,
+        type: products.type,
         sku: products.sku,
         price: products.price,
         originalPrice: products.originalPrice,
@@ -132,10 +146,13 @@ export const getAdminProducts = os
         tags: products.tags,
         colorImages: products.colorImages,
         variantStock: products.variantStock,
+        mediaType: products.mediaType,
+        glbModelIds: products.glbModelIds,
         categoryId: products.categoryId,
         categoryName: categories.name,
         warehouseId: products.warehouseId,
         warehouseName: warehouses.name,
+        vendorId: products.vendorId,
         rating: products.rating,
         reviewCount: products.reviewCount,
         createdAt: products.createdAt,
@@ -240,6 +257,7 @@ export const createProduct = os
             slug,
             name: input.name,
             description: input.description || undefined,
+            type: input.type || 'single',
             price: input.price,
             originalPrice: input.originalPrice && input.originalPrice !== '' ? input.originalPrice : null,
             categoryId: input.categoryId && input.categoryId !== '' ? input.categoryId : null,
@@ -257,7 +275,9 @@ export const createProduct = os
             tags: input.tags && input.tags.length > 0 ? input.tags : undefined,
             variantStock: input.variantStock || undefined,
             reviewCount: input.reviewCount || 0,
-            colorImages: Object.keys(colorImagesUrls).length > 0 ? colorImagesUrls : undefined
+            colorImages: Object.keys(colorImagesUrls).length > 0 ? colorImagesUrls : undefined,
+            mediaType: input.mediaType || 'image',
+            glbModelIds: input.glbModelIds && input.glbModelIds.length > 0 ? input.glbModelIds : undefined
         });
         // Create product variants if provided
         if (input.variants && input.variants.length > 0) {
@@ -387,10 +407,10 @@ export const updateProduct = os
         }
         // Update basic fields
         const fieldsToUpdate = [
-            'name', 'slug', 'description', 'price', 'originalPrice', 'categoryId', 'warehouseId',
+            'name', 'slug', 'description', 'type', 'price', 'originalPrice', 'categoryId', 'warehouseId',
             'sku', 'stockQuantity', 'lowStockThreshold', 'discount', 'weight',
             'isActive', 'isFeatured', 'isDigital', 'inStock', 'sizes', 'tags',
-            'variantStock', 'reviewCount'
+            'variantStock', 'reviewCount', 'mediaType', 'glbModelIds'
         ];
         fieldsToUpdate.forEach(field => {
             if (input.data[field] !== undefined) {

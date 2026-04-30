@@ -4,8 +4,8 @@ import { SiteHeader } from "../site-header"
 import { AppSidebar } from "../app-sidebar"
 
 type SidebarData = {
-  primary: Array<{ title: string; url: string; icon?: React.ComponentType }>
-  secondary: Array<{ title: string; url: string; icon?: React.ComponentType }>
+  primary: Array<{ title: string; url: string; icon?: React.ComponentType; onClick?: () => void; badge?: number }>
+  secondary: Array<{ title: string; url: string; icon?: React.ComponentType; onClick?: () => void; badge?: number }>
 }
 
 type UserData = {

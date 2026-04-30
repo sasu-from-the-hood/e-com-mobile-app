@@ -8,6 +8,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/lib/oprc";
+
 interface UserFormData {
   id?: string;
   name: string;
@@ -22,6 +25,27 @@ interface UserColumnProps {
   onBanToggle: (data: UserFormData) => void;
 }
 
+function VendorWarehousesCell({ userId }: { userId: string }) {
+  const { data: warehouses = [] } = useQuery({
+    queryKey: ["vendorWarehouses", userId],
+    queryFn: () => orpc.getVendorWarehouses(userId),
+  });
+
+  if ((warehouses as any[]).length === 0) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {(warehouses as any[]).map((w: any) => (
+        <span key={w.id} className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+          {w.name}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export const createUserColumns = ({ onEdit, onDelete, onBanToggle }: UserColumnProps) => [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "phoneNumber", header: "Phone Number" },
@@ -31,6 +55,14 @@ export const createUserColumns = ({ onEdit, onDelete, onBanToggle }: UserColumnP
     cell: (value: boolean) => value ? "Yes" : "No"
   },
   { accessorKey: "role", header: "Role" },
+  {
+    accessorKey: "warehouses",
+    header: "Warehouses",
+    cell: (_value: any, row: UserFormData) =>
+      row.role === "vendor" && row.id
+        ? <VendorWarehousesCell userId={row.id} />
+        : <span className="text-xs text-muted-foreground">—</span>,
+  },
   {
     accessorKey: "actions",
     header: "Actions",

@@ -129,6 +129,60 @@ app.on(['GET', 'POST'], '/api/auth/*', async (c) => {
 
 app.use("/rpc/*", betterAuthRateLimitMiddleware)
 
+// SSE endpoint for delivery boy real-time updates
+app.get('/delivery/events', async (c) => {
+  const authHeader = c.req.header('authorization')
+  console.log('[SSE] Auth header:', authHeader ? 'Present' : 'Missing')
+  
+  if (!authHeader?.startsWith('Bearer ')) {
+    console.log('[SSE] Invalid auth header format')
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  const { verifyToken } = await import('./utils/jwt.js')
+  const token = authHeader.slice(7)
+  const payload = await verifyToken(token)
+  
+  console.log('[SSE] Token payload:', payload ? 'Valid' : 'Invalid')
+  
+  if (!payload || payload.role !== 'delivery_boy') {
+    console.log('[SSE] Invalid payload or role')
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  const deliveryBoyId = payload.id || payload.userId
+  console.log('[SSE] Delivery boy ID:', deliveryBoyId)
+  
+  const { sseClients } = await import('./controllers/delivery/delivery.js')
+
+  const stream = new ReadableStream({
+    start(controller) {
+      if (!sseClients.has(deliveryBoyId)) sseClients.set(deliveryBoyId, new Set())
+      sseClients.get(deliveryBoyId)!.add(controller)
+      // Send initial ping
+      controller.enqueue(new TextEncoder().encode('event: connected\ndata: {}\n\n'))
+      console.log('[SSE] Client connected:', deliveryBoyId)
+    },
+    cancel() {
+      const set = sseClients.get(deliveryBoyId)
+      if (set) { 
+        set.delete(this as any)
+        if (set.size === 0) sseClients.delete(deliveryBoyId)
+      }
+      console.log('[SSE] Client disconnected:', deliveryBoyId)
+    }
+  })
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': c.req.header('origin') || '*',
+    }
+  })
+})
+
 // ORPC via Fetch adapter
 const rpcHandler = new RPCHandler(router)
 
@@ -145,13 +199,18 @@ app.all('/rpc/*', async (c) => {
     }
     return c.notFound()
   } catch (error) {
+    console.error('❌ RPC handler error:', error)
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack')
+    console.error('❌ Error message:', error instanceof Error ? error.message : String(error))
     logger.error('RPC handler error:', {
-      error,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
       version: config.version,
       env: config.nodeEnv,
       path: c.req.path,
       method: c.req.method,
     })
+    throw error
   }
 })
 

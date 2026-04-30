@@ -1,10 +1,10 @@
 const isdev = true 
     export const URL = (isdev)? {
 
-        BASE: 'http://localhost:3000',
-        ORPC : "http://localhost:3000/rpc",
-        BETTER_AUTH: "http://localhost:3000/api/auth",
-        IMAGE : "http://localhost:3000"
+        BASE: 'http://localhost:3001',
+        ORPC : "http://localhost:3001/rpc",
+        BETTER_AUTH: "http://localhost:3001/api/auth",
+        IMAGE : "http://localhost:3001"
     } : {
 
         BASE: 'https://one.solvesphr.com',

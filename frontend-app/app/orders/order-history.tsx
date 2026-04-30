@@ -58,6 +58,32 @@ export default function OrderHistoryScreen() {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    const statusLower = status?.toLowerCase() || '';
+    switch (statusLower) {
+      case 'out_for_delivery':
+        return 'On the way';
+      case 'pending':
+        return 'Pending';
+      case 'packed':
+        return 'Packed';
+      case 'shipped':
+        return 'Shipped';
+      case 'confirmed':
+        return 'Confirmed';
+      case 'delivered':
+        return 'Completed';
+      case 'cancelled':
+        return 'Cancelled';
+      case 'returned':
+        return 'Returned';
+      case 'processing':
+        return 'Processing';
+      default:
+        return status.replace(/_/g, ' ');
+    }
+  };
+
   const getImageUrl = (imagePath: string | null) => {
     if (!imagePath) {
       console.log('[OrderHistory] No image path provided');
@@ -105,7 +131,7 @@ export default function OrderHistoryScreen() {
               {formatDate(item.createdAt)}
             </ThemedText>
             <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-              <ThemedText style={styles.statusText}>{item.status}</ThemedText>
+              <ThemedText style={styles.statusText}>{getStatusLabel(item.status)}</ThemedText>
             </View>
           </View>
         </View>

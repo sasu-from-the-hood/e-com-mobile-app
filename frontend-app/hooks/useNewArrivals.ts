@@ -10,7 +10,9 @@ export function useNewArrivals(limit: number = 10) {
     try {
       setLoading(true);
       const result = await orpcClient.getNewArrivals({ limit });
-      setProducts(result);
+      // Filter out collections - only show single products
+      const singleProducts = result.filter((p: any) => p.type !== 'collection');
+      setProducts(singleProducts);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch new arrivals');

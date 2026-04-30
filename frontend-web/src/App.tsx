@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import  LoginPage from './pages/login'
 import ProtectedRoute from './components/ProtectedRoute'
 import Register from './pages/register'
@@ -7,6 +7,9 @@ import ForgotPage from './pages/forgot'
 import { HandshakeGuard } from './hooks'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AdminPage from './pages/admin'
+import VendorPage from './pages/vendor'
+import DeliveryLoginPage from './pages/delivery/delivery-login'
+import DeliveryDashboard from './pages/delivery/delivery-dashboard'
 import HomePage from './pages/home'
 import NotFoundPage from './pages/not-found'
 import { Toaster } from "@/components/ui/sonner"
@@ -23,7 +26,10 @@ function App() {
           <Route path="/login" element={<HandshakeGuard fallback={<FeatureDisabled feature="Login" />}><LoginPage /></HandshakeGuard>} />
           <Route path="/register" element={<HandshakeGuard fallback={<FeatureDisabled feature="Registration" />}><Register /></HandshakeGuard>} />
           <Route path="/forgot-password" element={<HandshakeGuard  fallback={<FeatureDisabled feature="Password Reset" />}><ForgotPage /></HandshakeGuard>} />
-          <Route path="/dashboard" element={<ProtectedRoute requiredRole='admin'><AdminPage /> </ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute requiredRole='admin'><AdminPage /></ProtectedRoute>} />
+          <Route path="/vendor" element={<ProtectedRoute requiredRole='vendor'><VendorPage /></ProtectedRoute>} />
+          <Route path="/delivery/login" element={<DeliveryLoginPage />} />
+          <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
           <Route path="/" element={<HomePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

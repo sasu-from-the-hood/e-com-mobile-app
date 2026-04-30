@@ -19,6 +19,7 @@ export declare const getAdminProducts: import("@orpc/server").DecoratedProcedure
     search: z.ZodOptional<z.ZodString>;
     category: z.ZodOptional<z.ZodString>;
     status: z.ZodDefault<z.ZodEnum<{
+        pending: "pending";
         active: "active";
         inactive: "inactive";
         all: "all";
@@ -54,6 +55,7 @@ export declare const getAdminProducts: import("@orpc/server").DecoratedProcedure
         name: string;
         slug: string;
         description: string | null;
+        type: string | null;
         sku: string | null;
         price: string;
         originalPrice: string | null;
@@ -69,10 +71,13 @@ export declare const getAdminProducts: import("@orpc/server").DecoratedProcedure
         tags: string[] | null;
         colorImages: Record<string, string[]> | null;
         variantStock: Record<string, number> | null;
+        mediaType: string | null;
+        glbModelIds: string[] | null;
         categoryId: string | null;
         categoryName: string | null;
         warehouseId: string | null;
         warehouseName: string | null;
+        vendorId: string | null;
         rating: string | null;
         reviewCount: number | null;
         createdAt: Date;
@@ -97,6 +102,7 @@ export declare const getAdminProducts: import("@orpc/server").DecoratedProcedure
         name: string;
         slug: string;
         description: string | null;
+        type: string | null;
         sku: string | null;
         price: string;
         originalPrice: string | null;
@@ -112,10 +118,13 @@ export declare const getAdminProducts: import("@orpc/server").DecoratedProcedure
         tags: string[] | null;
         colorImages: Record<string, string[]> | null;
         variantStock: Record<string, number> | null;
+        mediaType: string | null;
+        glbModelIds: string[] | null;
         categoryId: string | null;
         categoryName: string | null;
         warehouseId: string | null;
         warehouseName: string | null;
+        vendorId: string | null;
         rating: string | null;
         reviewCount: number | null;
         createdAt: Date;
@@ -148,6 +157,10 @@ export declare const createProduct: import("@orpc/server").DecoratedProcedure<im
     name: z.ZodString;
     slug: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
+    type: z.ZodDefault<z.ZodEnum<{
+        single: "single";
+        collection: "collection";
+    }>>;
     price: z.ZodString;
     originalPrice: z.ZodOptional<z.ZodString>;
     categoryId: z.ZodOptional<z.ZodString>;
@@ -166,6 +179,12 @@ export declare const createProduct: import("@orpc/server").DecoratedProcedure<im
     variantStock: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodNumber>>;
     reviewCount: z.ZodDefault<z.ZodNumber>;
     colorImages: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodCustom<import("buffer").File, import("buffer").File>]>>>>;
+    mediaType: z.ZodDefault<z.ZodEnum<{
+        image: "image";
+        glb: "glb";
+        both: "both";
+    }>>;
+    glbModelIds: z.ZodOptional<z.ZodArray<z.ZodString>>;
     variants: z.ZodOptional<z.ZodArray<z.ZodObject<{
         color: z.ZodOptional<z.ZodString>;
         size: z.ZodOptional<z.ZodString>;
@@ -188,11 +207,15 @@ export declare const createProduct: import("@orpc/server").DecoratedProcedure<im
     name: string;
     slug: string;
     description: string | null;
+    type: string | null;
     price: string;
     originalPrice: string | null;
     colorImages: Record<string, string[]> | null;
+    mediaType: string | null;
+    glbModelIds: string[] | null;
     categoryId: string | null;
     warehouseId: string | null;
+    vendorId: string | null;
     sku: string | null;
     sizes: string[] | null;
     tags: string[] | null;
@@ -214,11 +237,15 @@ export declare const createProduct: import("@orpc/server").DecoratedProcedure<im
     name: string;
     slug: string;
     description: string | null;
+    type: string | null;
     price: string;
     originalPrice: string | null;
     colorImages: Record<string, string[]> | null;
+    mediaType: string | null;
+    glbModelIds: string[] | null;
     categoryId: string | null;
     warehouseId: string | null;
+    vendorId: string | null;
     sku: string | null;
     sizes: string[] | null;
     tags: string[] | null;
@@ -258,6 +285,10 @@ export declare const updateProduct: import("@orpc/server").DecoratedProcedure<im
         name: z.ZodOptional<z.ZodString>;
         slug: z.ZodOptional<z.ZodOptional<z.ZodString>>;
         description: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+        type: z.ZodOptional<z.ZodDefault<z.ZodEnum<{
+            single: "single";
+            collection: "collection";
+        }>>>;
         price: z.ZodOptional<z.ZodString>;
         originalPrice: z.ZodOptional<z.ZodOptional<z.ZodString>>;
         categoryId: z.ZodOptional<z.ZodOptional<z.ZodString>>;
@@ -276,6 +307,12 @@ export declare const updateProduct: import("@orpc/server").DecoratedProcedure<im
         variantStock: z.ZodOptional<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodNumber>>>;
         reviewCount: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
         colorImages: z.ZodOptional<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodCustom<import("buffer").File, import("buffer").File>]>>>>>;
+        mediaType: z.ZodOptional<z.ZodDefault<z.ZodEnum<{
+            image: "image";
+            glb: "glb";
+            both: "both";
+        }>>>;
+        glbModelIds: z.ZodOptional<z.ZodOptional<z.ZodArray<z.ZodString>>>;
         variants: z.ZodOptional<z.ZodOptional<z.ZodArray<z.ZodObject<{
             color: z.ZodOptional<z.ZodString>;
             size: z.ZodOptional<z.ZodString>;
@@ -299,11 +336,15 @@ export declare const updateProduct: import("@orpc/server").DecoratedProcedure<im
     name: string;
     slug: string;
     description: string | null;
+    type: string | null;
     price: string;
     originalPrice: string | null;
     colorImages: Record<string, string[]> | null;
+    mediaType: string | null;
+    glbModelIds: string[] | null;
     categoryId: string | null;
     warehouseId: string | null;
+    vendorId: string | null;
     sku: string | null;
     sizes: string[] | null;
     tags: string[] | null;
@@ -325,11 +366,15 @@ export declare const updateProduct: import("@orpc/server").DecoratedProcedure<im
     name: string;
     slug: string;
     description: string | null;
+    type: string | null;
     price: string;
     originalPrice: string | null;
     colorImages: Record<string, string[]> | null;
+    mediaType: string | null;
+    glbModelIds: string[] | null;
     categoryId: string | null;
     warehouseId: string | null;
+    vendorId: string | null;
     sku: string | null;
     sizes: string[] | null;
     tags: string[] | null;

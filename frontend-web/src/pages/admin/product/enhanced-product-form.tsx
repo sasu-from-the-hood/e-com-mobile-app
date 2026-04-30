@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -7,19 +7,24 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useCreateProduct, useUpdateProduct } from "@/hooks/useAdminProducts"
 import { toast } from "sonner"
-import { Package, Palette, Settings, BarChart3 } from "lucide-react"
+import { Package, Palette, Settings, BarChart3, Loader2, Edit } from "lucide-react"
 import { orpc } from "@/lib/oprc"
 import { z } from "zod"
 import { VariantManager } from "@/components/variant-manager"
 import { GLBModelSelector } from "@/components/glb-model-selector"
+import { CollectionPreview } from "@/components/collection-preview"
+import { Client } from "@gradio/client"
+import { URL as AppURL } from "@/config"
 
 const enhancedProductSchema = z.object({
   // Basic product information
   name: z.string().min(1, "Product name is required"),
   slug: z.string().optional(),
   description: z.string().optional(),
+  type: z.enum(['single', 'collection']).default('single'),
   price: z.string().min(1, "Price is required").refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Price must be a positive number"),
   originalPrice: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), "Original price must be a valid number"),
   categoryId: z.string().optional().transform((val) => val === "" || val === "none" ? undefined : val),
@@ -166,9 +171,11 @@ const enhancedProductSchema = z.object({
 interface EnhancedProductFormProps {
   product?: any
   onSuccess: () => void
+  defaultType?: 'single' | 'collection'
+  isVendor?: boolean
 }
 
-export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormProps) {
+export function EnhancedProductForm({ product, onSuccess, defaultType = 'single', isVendor = false }: EnhancedProductFormProps) {
   const generateSKU = (name: string) => {
     const prefix = name.substring(0, 3).toUpperCase()
     const timestamp = Date.now().toString().slice(-6)
@@ -177,7 +184,10 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
   }
 
   const generateSlug = (name: string) => {
-    return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+    const baseSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+    // Add timestamp to make it unique
+    const timestamp = Date.now().toString().slice(-6)
+    return `${baseSlug}-${timestamp}`
   }
 
   const [formData, setFormData] = useState({
@@ -185,6 +195,7 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
     name: product?.name || "",
     slug: product?.slug || "",
     description: product?.description || "",
+    type: product?.type || defaultType,
     price: product?.price?.toString() || "",
     originalPrice: product?.originalPrice?.toString() || "",
     categoryId: product?.categoryId || "",
@@ -329,9 +340,54 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
 
   const [categories, setCategories] = useState<any[]>([])
   const [warehouses, setWarehouses] = useState<any[]>([])
+  const [allModels, setAllModels] = useState<any[]>([])
+  const [generatingGLB, setGeneratingGLB] = useState<{color: string, status: string, progress: number} | null>(null)
+  const [apiUrl] = useState(() => localStorage.getItem('3d-agent-api-url') || '')
+  const isGeneratingRef = useRef(false)
+  
+  // Warehouse editing state
+  const [editingWarehouse, setEditingWarehouse] = useState<any>(null)
+  const [warehouseForm, setWarehouseForm] = useState({ name: '', phone: '' })
+  const [isWarehouseDialogOpen, setIsWarehouseDialogOpen] = useState(false)
   
   const createProduct = useCreateProduct()
   const updateProduct = useUpdateProduct()
+  
+  // Auto-fill SEO fields when product name or description changes
+  useEffect(() => {
+    if (formData.name) {
+      const productUrl = `${AppURL.BASE}/shop/product/${formData.slug}`
+      
+      setFormData(prev => ({
+        ...prev,
+        seo: {
+          ...prev.seo,
+          metaTitle: `${formData.name} - Buy Online | E-Commerce Store`,
+          metaDescription: formData.description 
+            ? formData.description.substring(0, 160) 
+            : `Shop ${formData.name} online. High quality products at great prices. Fast delivery available.`,
+          metaKeywords: [
+            formData.name.toLowerCase(),
+            ...(formData.tags || []),
+            'online shopping',
+            'buy online'
+          ].join(', '),
+          canonicalUrl: productUrl,
+          ogTitle: formData.name,
+          ogDescription: formData.description || `Shop ${formData.name} online`,
+          twitterTitle: formData.name,
+          twitterDescription: formData.description || `Shop ${formData.name} online`,
+        }
+      }))
+    }
+  }, [formData.name, formData.description, formData.slug, formData.tags])
+  
+  // Auto-set mediaType to 'glb' when type is 'collection'
+  useEffect(() => {
+    if (formData.type === 'collection' && formData.mediaType !== 'glb') {
+      setFormData(prev => ({ ...prev, mediaType: 'glb' }))
+    }
+  }, [formData.type])
   
   useEffect(() => {
     const fetchCategories = async () => {
@@ -345,16 +401,173 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
     
     const fetchWarehouses = async () => {
       try {
-        const response = await orpc.getWarehouses()
+        // Use vendor-specific API if isVendor is true
+        const response = isVendor 
+          ? await orpc.getVendorOwnWarehouses()
+          : await orpc.getWarehouses()
+        console.log('Fetched warehouses:', response)
         setWarehouses(response || [])
       } catch (error) {
         console.error('Failed to fetch warehouses:', error)
+        toast.error('Failed to load warehouses')
+      }
+    }
+    
+    const fetch3DModels = async () => {
+      try {
+        const response = await orpc.list3DModels()
+        setAllModels(response || [])
+      } catch (error) {
+        console.error('Failed to fetch 3D models:', error)
       }
     }
     
     fetchCategories()
     fetchWarehouses()
-  }, [])
+    fetch3DModels()
+  }, [isVendor])
+
+  const handleGenerateGLB = async (color: string, images: (string | File)[], bodyPartType: string) => {
+    if (isGeneratingRef.current) {
+      toast.error('Already generating a model. Please wait.')
+      return
+    }
+
+    if (!apiUrl) {
+      toast.error('Please set the 3D Agent API URL first in the 3D Agent page')
+      return
+    }
+
+    if (images.length !== 4) {
+      toast.error('Please upload exactly 4 images (front, back, left, right)')
+      return
+    }
+
+    isGeneratingRef.current = true
+    setGeneratingGLB({ color, status: 'Starting...', progress: 0 })
+
+    try {
+      // Convert images to File objects if they're strings (URLs)
+      const imageFiles = await Promise.all(
+        images.map(async (img) => {
+          if (typeof img === 'string') {
+            // Fetch the image and convert to File
+            const response = await fetch(AppURL.IMAGE + img)
+            const blob = await response.blob()
+            return new File([blob], `image-${Date.now()}.jpg`, { type: 'image/jpeg' })
+          }
+          return img
+        })
+      )
+
+      setGeneratingGLB({ color, status: 'Connecting to 3D Agent...', progress: 10 })
+
+      // Connect to Gradio client
+      const client = await Client.connect(apiUrl, {
+        headers: { 'bypass-tunnel-reminder': 'true' }
+      } as any)
+
+      setGeneratingGLB({ color, status: 'Generating 3D model...', progress: 30 })
+
+      // Use the first image as main, and all 4 for multi-view
+      const [front, back, left, right] = imageFiles
+      const prompt = `${formData.name} - ${color} variant`
+
+      // Call the generation endpoint
+      const result = await client.predict("/generation_all", {
+        caption: prompt,
+        image: front,
+        mv_image_front: front,
+        mv_image_back: back,
+        mv_image_left: left,
+        mv_image_right: right,
+        steps: 50,
+        guidance_scale: 7.5,
+        seed: 0,
+        octree_resolution: 128,
+        check_box_rembg: true,
+        num_chunks: 100000,
+        randomize_seed: true,
+      })
+
+      setGeneratingGLB({ color, status: 'Saving model...', progress: 80 })
+
+      // Extract the textured GLB URL (index 1)
+      const resultData = result.data as any[]
+      const texturedGlbUrl = resultData[1]?.value?.url || resultData[1]?.url || ''
+
+      if (!texturedGlbUrl) {
+        throw new Error('No GLB file generated')
+      }
+
+      // Save the model to database
+      const savedModel = await orpc.save3DModel({
+        name: `${formData.name} - ${color}`,
+        bodyPartType: bodyPartType, // Use the selected body part type
+        colorName: color,
+        colorHex: color,
+        prompt: prompt,
+        leftLegUrl: texturedGlbUrl,
+        scale: 10, // Default scale for 1-100 range
+        positionX: 0,
+        positionY: 0,
+        positionZ: 0,
+        inferenceSteps: 50,
+        guidanceScale: 7.5,
+      })
+
+      setGeneratingGLB({ color, status: 'Complete!', progress: 100 })
+
+      // Auto-select the generated GLB
+      if (savedModel.id) {
+        setFormData(prev => ({
+          ...prev,
+          glbModelIds: [...(prev.glbModelIds || []), savedModel.id],
+          mediaType: 'glb'
+        }))
+
+        // Reload models list
+        const models = await orpc.list3DModels()
+        setAllModels(models || [])
+      }
+
+      toast.success(`GLB model generated for ${color}!`)
+      
+      setTimeout(() => {
+        setGeneratingGLB(null)
+        isGeneratingRef.current = false
+      }, 2000)
+
+    } catch (error: any) {
+      console.error('GLB generation failed:', error)
+      toast.error(`Failed to generate GLB: ${error.message || 'Unknown error'}`)
+      setGeneratingGLB(null)
+      isGeneratingRef.current = false
+    }
+  }
+
+  const handleWarehouseUpdate = async () => {
+    if (!editingWarehouse) return
+    
+    try {
+      await orpc.updateWarehouse({
+        id: editingWarehouse.id,
+        name: warehouseForm.name,
+        phone: warehouseForm.phone
+      })
+      
+      toast.success('Warehouse updated successfully')
+      setIsWarehouseDialogOpen(false)
+      
+      // Refresh warehouses list
+      const response = isVendor 
+        ? await orpc.getVendorOwnWarehouses()
+        : await orpc.getWarehouses()
+      setWarehouses(response || [])
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to update warehouse')
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -402,7 +615,15 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
       }
       onSuccess()
     } catch (error: any) {
-      toast.error(error?.message || (product ? "Failed to update product" : "Failed to create product"))
+      console.error('Product save error:', error)
+      const errorMessage = error?.message || (product ? "Failed to update product" : "Failed to create product")
+      
+      // Check for duplicate slug error
+      if (errorMessage.includes('slug') || errorMessage.includes('Duplicate entry')) {
+        toast.error("A product with this name already exists. Please use a different name or modify the slug.")
+      } else {
+        toast.error(errorMessage)
+      }
     }
   }
 
@@ -421,7 +642,7 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
 
       <form onSubmit={handleSubmit}>
         <Tabs defaultValue="basic" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className={`grid w-full ${isVendor ? 'grid-cols-4' : 'grid-cols-6'}`}>
             <TabsTrigger value="basic" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
               Basic
@@ -434,18 +655,25 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
               <Palette className="w-4 h-4" />
               Media
             </TabsTrigger>
-            <TabsTrigger value="seo" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              SEO
-            </TabsTrigger>
-            <TabsTrigger value="attributes" className="flex items-center gap-2">
-              <Package className="w-4 h-4" />
-              Attributes
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Settings
-            </TabsTrigger>
+            {!isVendor && (
+              <>
+                <TabsTrigger value="seo" className="flex items-center gap-2 relative">
+                  <Settings className="w-4 h-4" />
+                  SEO
+                  {formData.seo.metaTitle && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="attributes" className="flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  Attributes
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </TabsTrigger>
+              </>
+            )}
           </TabsList>
 
           {/* Basic Information */}
@@ -476,13 +704,15 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="slug">URL Slug</Label>
+                    <Label htmlFor="slug">URL Slug (Auto-generated)</Label>
                     <Input
                       id="slug"
                       value={formData.slug}
-                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                      readOnly
+                      className="bg-muted"
                       placeholder="auto-generated-from-name"
                     />
+                    <p className="text-xs text-muted-foreground">Automatically generated from product name</p>
                   </div>
                 </div>
                 
@@ -521,7 +751,31 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="warehouseId">Warehouse Location</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="warehouseId">Warehouse Location</Label>
+                    {isVendor && formData.warehouseId && formData.warehouseId !== "none" && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const warehouse = warehouses.find((w: any) => w.id === formData.warehouseId)
+                          if (warehouse) {
+                            setEditingWarehouse(warehouse)
+                            setWarehouseForm({
+                              name: warehouse.name || '',
+                              phone: warehouse.phone || ''
+                            })
+                            setIsWarehouseDialogOpen(true)
+                          }
+                        }}
+                        className="h-8 gap-1"
+                      >
+                        <Edit className="w-3 h-3" />
+                        Edit
+                      </Button>
+                    )}
+                  </div>
                   <Select 
                     value={formData.warehouseId || "none"} 
                     onValueChange={(value) => setFormData({ 
@@ -534,9 +788,10 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">No Warehouse</SelectItem>
-                      {warehouses.filter((w: any) => w.isActive).map((warehouse: any) => (
+                      {warehouses.map((warehouse: any) => (
                         <SelectItem key={warehouse.id} value={warehouse.id}>
                           {warehouse.name} - {warehouse.address}
+                          {!warehouse.isActive && ' (Inactive)'}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -565,7 +820,22 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
                       type="number"
                       step="0.01"
                       value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      onChange={(e) => {
+                        const newPrice = e.target.value
+                        setFormData({ ...formData, price: newPrice })
+                        
+                        // Auto-calculate discount if originalPrice exists
+                        if (formData.originalPrice && parseFloat(formData.originalPrice) > 0 && parseFloat(newPrice) > 0) {
+                          const original = parseFloat(formData.originalPrice)
+                          const sale = parseFloat(newPrice)
+                          if (sale < original) {
+                            const discountPercent = Math.round(((original - sale) / original) * 100)
+                            setFormData(prev => ({ ...prev, price: newPrice, discount: discountPercent }))
+                          } else {
+                            setFormData(prev => ({ ...prev, price: newPrice, discount: 0 }))
+                          }
+                        }
+                      }}
                       required
                     />
                   </div>
@@ -576,11 +846,26 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
                       type="number"
                       step="0.01"
                       value={formData.originalPrice}
-                      onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })}
+                      onChange={(e) => {
+                        const newOriginalPrice = e.target.value
+                        setFormData({ ...formData, originalPrice: newOriginalPrice })
+                        
+                        // Auto-calculate discount if price exists
+                        if (formData.price && parseFloat(formData.price) > 0 && parseFloat(newOriginalPrice) > 0) {
+                          const original = parseFloat(newOriginalPrice)
+                          const sale = parseFloat(formData.price)
+                          if (sale < original) {
+                            const discountPercent = Math.round(((original - sale) / original) * 100)
+                            setFormData(prev => ({ ...prev, originalPrice: newOriginalPrice, discount: discountPercent }))
+                          } else {
+                            setFormData(prev => ({ ...prev, originalPrice: newOriginalPrice, discount: 0 }))
+                          }
+                        }
+                      }}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="discount">Discount (%)</Label>
+                    <Label htmlFor="discount">Discount (%) - Auto</Label>
                     <Input
                       id="discount"
                       type="number"
@@ -588,6 +873,8 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
                       max="100"
                       value={formData.discount}
                       onChange={(e) => setFormData({ ...formData, discount: parseInt(e.target.value) || 0 })}
+                      className="bg-muted"
+                      title="Automatically calculated from Original Price and Sale Price"
                     />
                   </div>
                 </div>
@@ -637,6 +924,26 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
                   />
                   <p className="text-xs text-muted-foreground">Total number of customer reviews</p>
                 </div>
+
+                {/* SEO Auto-fill Notice */}
+                {formData.seo.metaTitle && (
+                  <div className="rounded-lg bg-green-50 dark:bg-green-950 p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                      <h4 className="font-medium text-green-900 dark:text-green-100 text-sm">SEO Auto-Generated</h4>
+                    </div>
+                    <p className="text-xs text-green-700 dark:text-green-300">
+                      Meta tags and SEO settings have been automatically generated based on your product information. 
+                      You can review and customize them in the SEO tab.
+                    </p>
+                    <div className="text-xs text-green-600 dark:text-green-400 space-y-1 mt-2">
+                      <div>✓ Meta Title: {formData.seo.metaTitle}</div>
+                      <div>✓ Meta Description: {formData.seo.metaDescription?.substring(0, 80)}...</div>
+                      <div>✓ Open Graph Tags</div>
+                      <div>✓ Twitter Card Tags</div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -645,78 +952,116 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
           <TabsContent value="inventory" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Variant Inventory Management</CardTitle>
-                <CardDescription>Manage stock for each color and size combination</CardDescription>
+                <CardTitle>{formData.type === 'collection' ? 'Collection Inventory' : 'Variant Inventory Management'}</CardTitle>
+                <CardDescription>
+                  {formData.type === 'collection' 
+                    ? 'Manage stock for the entire collection as one item'
+                    : 'Manage stock for each color and size combination'}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Show variant inventory if sizes and colors are defined */}
-                {formData.sizes && formData.sizes.length > 0 && formData.colorImages && Object.keys(formData.colorImages).length > 0 ? (
+                {/* Collection Inventory - Simple stock quantity */}
+                {formData.type === 'collection' ? (
                   <div className="space-y-4">
-                    <div className="rounded-lg border p-4">
-                      <h4 className="font-medium mb-4">Stock by Variant (Color × Size)</h4>
-                      <div className="space-y-4">
-                        {Object.keys(formData.colorImages).map((color) => (
-                          <div key={color} className="space-y-2">
-                            <div className="flex items-center gap-2 mb-2">
-                              <div 
-                                className="w-6 h-6 rounded border" 
-                                style={{ backgroundColor: color }}
-                              />
-                              <span className="font-medium">{color}</span>
-                            </div>
-                            <div className="grid grid-cols-4 gap-3 ml-8">
-                              {formData.sizes.map((size) => {
-                                const variantKey = `${color}-${size}`
-                                const currentStock = formData.variantStock?.[variantKey] || 0
-                                return (
-                                  <div key={variantKey} className="space-y-1">
-                                    <Label className="text-xs">{size}</Label>
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      value={currentStock}
-                                      onChange={(e) => {
-                                        const newStock = parseInt(e.target.value) || 0
-                                        const updatedVariantStock = {
-                                          ...(formData.variantStock || {}),
-                                          [variantKey]: newStock
-                                        }
-                                        // Calculate total stock
-                                        const totalStock = Object.values(updatedVariantStock).reduce((sum: number, qty) => sum + (qty as number), 0)
-                                        setFormData({
-                                          ...formData,
-                                          variantStock: updatedVariantStock,
-                                          stockQuantity: totalStock,
-                                          inStock: totalStock > 0
-                                        })
-                                      }}
-                                      className="h-8"
-                                    />
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="collectionStock">Stock Quantity</Label>
+                      <Input
+                        id="collectionStock"
+                        type="number"
+                        min="0"
+                        value={formData.stockQuantity}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          stockQuantity: parseInt(e.target.value) || 0,
+                          inStock: (parseInt(e.target.value) || 0) > 0
+                        })}
+                      />
+                      <p className="text-xs text-muted-foreground">Total number of complete collection sets available</p>
                     </div>
 
-                    {/* Total Stock Summary */}
                     <div className="rounded-lg bg-muted p-4">
                       <div className="flex justify-between items-center">
-                        <span className="font-medium">Total Stock Quantity:</span>
+                        <span className="font-medium">Total Stock:</span>
                         <span className="text-2xl font-bold">{formData.stockQuantity}</span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Automatically calculated from all variants
+                        Each unit represents one complete collection outfit
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>Please add sizes and colors in the Basic Information and Media tabs first</p>
-                    <p className="text-sm mt-2">Variant inventory will appear once you define product variants</p>
-                  </div>
+                  /* Variant Inventory for single products */
+                  <>
+                    {/* Show variant inventory if sizes and colors are defined */}
+                    {formData.sizes && formData.sizes.length > 0 && formData.colorImages && Object.keys(formData.colorImages).length > 0 ? (
+                      <div className="space-y-4">
+                        <div className="rounded-lg border p-4">
+                          <h4 className="font-medium mb-4">Stock by Variant (Color × Size)</h4>
+                          <div className="space-y-4">
+                            {Object.keys(formData.colorImages).map((color) => (
+                              <div key={color} className="space-y-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div 
+                                    className="w-6 h-6 rounded border" 
+                                    style={{ backgroundColor: color }}
+                                  />
+                                  <span className="font-medium">{color}</span>
+                                </div>
+                                <div className="grid grid-cols-4 gap-3 ml-8">
+                                  {formData.sizes.map((size: string) => {
+                                    const variantKey = `${color}-${size}`
+                                    const currentStock = formData.variantStock?.[variantKey] || 0
+                                    return (
+                                      <div key={variantKey} className="space-y-1">
+                                        <Label className="text-xs">{size}</Label>
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          value={currentStock}
+                                          onChange={(e) => {
+                                            const newStock = parseInt(e.target.value) || 0
+                                            const updatedVariantStock = {
+                                              ...(formData.variantStock || {}),
+                                              [variantKey]: newStock
+                                            }
+                                            // Calculate total stock
+                                            const totalStock = Object.values(updatedVariantStock).reduce((sum: number, qty) => sum + (qty as number), 0)
+                                            setFormData({
+                                              ...formData,
+                                              variantStock: updatedVariantStock,
+                                              stockQuantity: totalStock,
+                                              inStock: totalStock > 0
+                                            })
+                                          }}
+                                          className="h-8"
+                                        />
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Total Stock Summary */}
+                        <div className="rounded-lg bg-muted p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Total Stock Quantity:</span>
+                            <span className="text-2xl font-bold">{formData.stockQuantity}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Automatically calculated from all variants
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>Please add sizes and colors in the Basic Information and Media tabs first</p>
+                        <p className="text-sm mt-2">Variant inventory will appear once you define product variants</p>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Low Stock Threshold */}
@@ -754,7 +1099,17 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
                 <CardDescription>Images and 3D models for this product</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Media Type Switch */}
+                {/* Show collection info if type is collection */}
+                {formData.type === 'collection' && (
+                  <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-3 mb-4">
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100 text-sm">Collection - Select Multiple 3D Models</h4>
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                      Select models for each body part (hat, shirt, pants, shoes). Preview shows on the right.
+                    </p>
+                  </div>
+                )}
+
+                {/* Media Type Switch - Auto-set to GLB for collections */}
                 <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
                   <Label htmlFor="mediaType" className="text-sm font-medium">Media Type:</Label>
                   <div className="flex items-center gap-2">
@@ -763,38 +1118,69 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
                       variant={formData.mediaType === 'image' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setFormData({ ...formData, mediaType: 'image' })}
+                      disabled={formData.type === 'collection'}
                     >
                       Images
                     </Button>
-                    <Button
-                      type="button"
-                      variant={formData.mediaType === 'glb' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setFormData({ ...formData, mediaType: 'glb' })}
-                    >
-                      3D Models (GLB)
-                    </Button>
+                    {!isVendor && (
+                      <Button
+                        type="button"
+                        variant={formData.mediaType === 'glb' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setFormData({ ...formData, mediaType: 'glb' })}
+                      >
+                        3D Models (GLB)
+                      </Button>
+                    )}
                   </div>
+                  {formData.type === 'collection' && (
+                    <p className="text-xs text-muted-foreground">
+                      Collections require 3D models
+                    </p>
+                  )}
                 </div>
 
                 {/* Image Mode */}
-                {formData.mediaType === 'image' && (
+                {formData.mediaType === 'image' && formData.type !== 'collection' && (
                   <VariantManager
                     colorImages={formData.colorImages || {}}
                     onChange={(colorImages) => setFormData({ ...formData, colorImages })}
+                    onGenerateGLB={handleGenerateGLB}
+                    hideGLBGeneration={isVendor}
                   />
                 )}
 
                 {/* GLB Mode */}
-                {formData.mediaType === 'glb' && (
+                {(formData.mediaType === 'glb' || formData.type === 'collection') && (
                   <div className="space-y-4">
                     <div className="text-sm text-muted-foreground">
-                      Select one or more 3D models from your saved models library
+                      {formData.type === 'collection' 
+                        ? 'Select multiple 3D models (one per body part) to create a complete outfit collection'
+                        : 'Select one or more 3D models from your saved models library'}
                     </div>
-                    <GLBModelSelector
-                      selectedModelIds={formData.glbModelIds || []}
-                      onChange={(modelIds) => setFormData({ ...formData, glbModelIds: modelIds })}
-                    />
+                    
+                    {/* Show preview side-by-side for collections */}
+                    {formData.type === 'collection' ? (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <GLBModelSelector
+                            selectedModelIds={formData.glbModelIds || []}
+                            onChange={(modelIds) => setFormData({ ...formData, glbModelIds: modelIds })}
+                          />
+                        </div>
+                        <div>
+                          <CollectionPreview
+                            selectedModelIds={formData.glbModelIds || []}
+                            models={allModels}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <GLBModelSelector
+                        selectedModelIds={formData.glbModelIds || []}
+                        onChange={(modelIds) => setFormData({ ...formData, glbModelIds: modelIds })}
+                      />
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -803,10 +1189,26 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
 
           {/* SEO & Marketing */}
           <TabsContent value="seo" className="space-y-6">
+            {/* Auto-fill Notice */}
+            {formData.seo.metaTitle && (
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-4 border border-blue-200 dark:border-blue-800">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mt-1.5" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100 text-sm">SEO Fields Auto-Generated</h4>
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                      All SEO fields below have been automatically generated from your product information. 
+                      You can customize any field as needed.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>Search Engine Optimization</CardTitle>
-                <CardDescription>Meta tags and search engine settings</CardDescription>
+                <CardDescription>Meta tags and search engine settings (Auto-generated from product info)</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -1123,6 +1525,42 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
                 <CardDescription>Status, visibility, and product type settings</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Product Type Selector */}
+                <div className="space-y-2">
+                  <Label htmlFor="type">Product Type</Label>
+                  <Select 
+                    value={formData.type} 
+                    onValueChange={(value: 'single' | 'collection') => setFormData({ ...formData, type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select product type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single">Single Product</SelectItem>
+                      <SelectItem value="collection">Product Collection (Outfit)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {formData.type === 'single' 
+                      ? 'A single product item' 
+                      : 'A complete outfit collection with multiple 3D models (hat, shirt, pants, shoes, etc.)'}
+                  </p>
+                </div>
+
+                {/* Show collection-specific info when type is collection */}
+                {formData.type === 'collection' && (
+                  <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-4 space-y-2">
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100">Collection Product</h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      This product will be displayed as a complete outfit on the Xbot model. 
+                      Make sure to select multiple 3D models (one for each body part) in the Media tab.
+                    </p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Inventory is tracked for the entire collection as one item.
+                    </p>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -1187,6 +1625,67 @@ export function EnhancedProductForm({ product, onSuccess }: EnhancedProductFormP
           </Button>
         </div>
       </form>
+
+      {/* GLB Generation Progress Popup */}
+      {generatingGLB && (
+        <div className="fixed bottom-4 right-4 bg-background border rounded-lg shadow-lg p-4 w-80 z-50">
+          <div className="flex items-start gap-3">
+            <Loader2 className="w-5 h-5 animate-spin text-primary mt-0.5" />
+            <div className="flex-1">
+              <h4 className="font-medium">Generating 3D Model</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Color: {generatingGLB.color}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {generatingGLB.status}
+              </p>
+              <div className="mt-2 w-full bg-secondary rounded-full h-2">
+                <div 
+                  className="bg-primary h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${generatingGLB.progress}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Warehouse Edit Dialog */}
+      <Dialog open={isWarehouseDialogOpen} onOpenChange={setIsWarehouseDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Warehouse</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="warehouse-name">Warehouse Name</Label>
+              <Input
+                id="warehouse-name"
+                value={warehouseForm.name}
+                onChange={(e) => setWarehouseForm({ ...warehouseForm, name: e.target.value })}
+                placeholder="Enter warehouse name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="warehouse-phone">Phone Number</Label>
+              <Input
+                id="warehouse-phone"
+                value={warehouseForm.phone}
+                onChange={(e) => setWarehouseForm({ ...warehouseForm, phone: e.target.value })}
+                placeholder="Enter phone number"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsWarehouseDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleWarehouseUpdate}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

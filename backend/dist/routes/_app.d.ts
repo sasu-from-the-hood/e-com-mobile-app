@@ -173,9 +173,13 @@ export declare const router: {
         name: string;
         slug: string;
         description: string | null;
+        type: string | null;
         originalPrice: string | null;
+        mediaType: string | null;
+        glbModelIds: string[] | null;
         categoryId: string | null;
         warehouseId: string | null;
+        vendorId: string | null;
         sku: string | null;
         variantStock: Record<string, number> | null;
         reviewCount: number | null;
@@ -201,9 +205,13 @@ export declare const router: {
         name: string;
         slug: string;
         description: string | null;
+        type: string | null;
         originalPrice: string | null;
+        mediaType: string | null;
+        glbModelIds: string[] | null;
         categoryId: string | null;
         warehouseId: string | null;
+        vendorId: string | null;
         sku: string | null;
         variantStock: Record<string, number> | null;
         reviewCount: number | null;
@@ -612,11 +620,15 @@ export declare const router: {
                 name: string;
                 slug: string;
                 description: string | null;
+                type: string | null;
                 price: string;
                 originalPrice: string | null;
                 colorImages: Record<string, string[]> | null;
+                mediaType: string | null;
+                glbModelIds: string[] | null;
                 categoryId: string | null;
                 warehouseId: string | null;
+                vendorId: string | null;
                 sku: string | null;
                 sizes: string[] | null;
                 tags: string[] | null;
@@ -673,11 +685,15 @@ export declare const router: {
                 name: string;
                 slug: string;
                 description: string | null;
+                type: string | null;
                 price: string;
                 originalPrice: string | null;
                 colorImages: Record<string, string[]> | null;
+                mediaType: string | null;
+                glbModelIds: string[] | null;
                 categoryId: string | null;
                 warehouseId: string | null;
+                vendorId: string | null;
                 sku: string | null;
                 sizes: string[] | null;
                 tags: string[] | null;
@@ -1426,6 +1442,7 @@ export declare const router: {
         search: import("zod").ZodOptional<import("zod").ZodString>;
         category: import("zod").ZodOptional<import("zod").ZodString>;
         status: import("zod").ZodDefault<import("zod").ZodEnum<{
+            pending: "pending";
             active: "active";
             inactive: "inactive";
             all: "all";
@@ -1461,6 +1478,7 @@ export declare const router: {
             name: string;
             slug: string;
             description: string | null;
+            type: string | null;
             sku: string | null;
             price: string;
             originalPrice: string | null;
@@ -1476,10 +1494,13 @@ export declare const router: {
             tags: string[] | null;
             colorImages: Record<string, string[]> | null;
             variantStock: Record<string, number> | null;
+            mediaType: string | null;
+            glbModelIds: string[] | null;
             categoryId: string | null;
             categoryName: string | null;
             warehouseId: string | null;
             warehouseName: string | null;
+            vendorId: string | null;
             rating: string | null;
             reviewCount: number | null;
             createdAt: Date;
@@ -1504,6 +1525,7 @@ export declare const router: {
             name: string;
             slug: string;
             description: string | null;
+            type: string | null;
             sku: string | null;
             price: string;
             originalPrice: string | null;
@@ -1519,10 +1541,13 @@ export declare const router: {
             tags: string[] | null;
             colorImages: Record<string, string[]> | null;
             variantStock: Record<string, number> | null;
+            mediaType: string | null;
+            glbModelIds: string[] | null;
             categoryId: string | null;
             categoryName: string | null;
             warehouseId: string | null;
             warehouseName: string | null;
+            vendorId: string | null;
             rating: string | null;
             reviewCount: number | null;
             createdAt: Date;
@@ -1555,6 +1580,10 @@ export declare const router: {
         name: import("zod").ZodString;
         slug: import("zod").ZodOptional<import("zod").ZodString>;
         description: import("zod").ZodOptional<import("zod").ZodString>;
+        type: import("zod").ZodDefault<import("zod").ZodEnum<{
+            single: "single";
+            collection: "collection";
+        }>>;
         price: import("zod").ZodString;
         originalPrice: import("zod").ZodOptional<import("zod").ZodString>;
         categoryId: import("zod").ZodOptional<import("zod").ZodString>;
@@ -1573,6 +1602,12 @@ export declare const router: {
         variantStock: import("zod").ZodOptional<import("zod").ZodRecord<import("zod").ZodString, import("zod").ZodNumber>>;
         reviewCount: import("zod").ZodDefault<import("zod").ZodNumber>;
         colorImages: import("zod").ZodOptional<import("zod").ZodRecord<import("zod").ZodString, import("zod").ZodArray<import("zod").ZodUnion<readonly [import("zod").ZodString, import("zod").ZodCustom<import("buffer").File, import("buffer").File>]>>>>;
+        mediaType: import("zod").ZodDefault<import("zod").ZodEnum<{
+            image: "image";
+            glb: "glb";
+            both: "both";
+        }>>;
+        glbModelIds: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString>>;
         variants: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodObject<{
             color: import("zod").ZodOptional<import("zod").ZodString>;
             size: import("zod").ZodOptional<import("zod").ZodString>;
@@ -1595,11 +1630,15 @@ export declare const router: {
         name: string;
         slug: string;
         description: string | null;
+        type: string | null;
         price: string;
         originalPrice: string | null;
         colorImages: Record<string, string[]> | null;
+        mediaType: string | null;
+        glbModelIds: string[] | null;
         categoryId: string | null;
         warehouseId: string | null;
+        vendorId: string | null;
         sku: string | null;
         sizes: string[] | null;
         tags: string[] | null;
@@ -1621,11 +1660,15 @@ export declare const router: {
         name: string;
         slug: string;
         description: string | null;
+        type: string | null;
         price: string;
         originalPrice: string | null;
         colorImages: Record<string, string[]> | null;
+        mediaType: string | null;
+        glbModelIds: string[] | null;
         categoryId: string | null;
         warehouseId: string | null;
+        vendorId: string | null;
         sku: string | null;
         sizes: string[] | null;
         tags: string[] | null;
@@ -1665,6 +1708,10 @@ export declare const router: {
             name: import("zod").ZodOptional<import("zod").ZodString>;
             slug: import("zod").ZodOptional<import("zod").ZodOptional<import("zod").ZodString>>;
             description: import("zod").ZodOptional<import("zod").ZodOptional<import("zod").ZodString>>;
+            type: import("zod").ZodOptional<import("zod").ZodDefault<import("zod").ZodEnum<{
+                single: "single";
+                collection: "collection";
+            }>>>;
             price: import("zod").ZodOptional<import("zod").ZodString>;
             originalPrice: import("zod").ZodOptional<import("zod").ZodOptional<import("zod").ZodString>>;
             categoryId: import("zod").ZodOptional<import("zod").ZodOptional<import("zod").ZodString>>;
@@ -1683,6 +1730,12 @@ export declare const router: {
             variantStock: import("zod").ZodOptional<import("zod").ZodOptional<import("zod").ZodRecord<import("zod").ZodString, import("zod").ZodNumber>>>;
             reviewCount: import("zod").ZodOptional<import("zod").ZodDefault<import("zod").ZodNumber>>;
             colorImages: import("zod").ZodOptional<import("zod").ZodOptional<import("zod").ZodRecord<import("zod").ZodString, import("zod").ZodArray<import("zod").ZodUnion<readonly [import("zod").ZodString, import("zod").ZodCustom<import("buffer").File, import("buffer").File>]>>>>>;
+            mediaType: import("zod").ZodOptional<import("zod").ZodDefault<import("zod").ZodEnum<{
+                image: "image";
+                glb: "glb";
+                both: "both";
+            }>>>;
+            glbModelIds: import("zod").ZodOptional<import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString>>>;
             variants: import("zod").ZodOptional<import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodObject<{
                 color: import("zod").ZodOptional<import("zod").ZodString>;
                 size: import("zod").ZodOptional<import("zod").ZodString>;
@@ -1706,11 +1759,15 @@ export declare const router: {
         name: string;
         slug: string;
         description: string | null;
+        type: string | null;
         price: string;
         originalPrice: string | null;
         colorImages: Record<string, string[]> | null;
+        mediaType: string | null;
+        glbModelIds: string[] | null;
         categoryId: string | null;
         warehouseId: string | null;
+        vendorId: string | null;
         sku: string | null;
         sizes: string[] | null;
         tags: string[] | null;
@@ -1732,11 +1789,15 @@ export declare const router: {
         name: string;
         slug: string;
         description: string | null;
+        type: string | null;
         price: string;
         originalPrice: string | null;
         colorImages: Record<string, string[]> | null;
+        mediaType: string | null;
+        glbModelIds: string[] | null;
         categoryId: string | null;
         warehouseId: string | null;
+        vendorId: string | null;
         sku: string | null;
         sizes: string[] | null;
         tags: string[] | null;
@@ -2828,6 +2889,10 @@ export declare const router: {
             banExpires?: Date | null | undefined;
         };
     }, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+        assignedWarehouses: {
+            id: any;
+            name: any;
+        }[];
         id: string;
         name: string;
         phone: string;
@@ -2845,6 +2910,10 @@ export declare const router: {
         notes: string | null;
         createdAt: Date;
     }[], {
+        assignedWarehouses: {
+            id: any;
+            name: any;
+        }[];
         id: string;
         name: string;
         phone: string;
@@ -2992,6 +3061,7 @@ export declare const router: {
         vehicleType: import("zod").ZodOptional<import("zod").ZodString>;
         vehiclePlateNumber: import("zod").ZodOptional<import("zod").ZodString>;
         warehouseId: import("zod").ZodOptional<import("zod").ZodString>;
+        warehouseIds: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString>>;
         isActive: import("zod").ZodOptional<import("zod").ZodBoolean>;
         isAvailable: import("zod").ZodOptional<import("zod").ZodBoolean>;
         notes: import("zod").ZodOptional<import("zod").ZodString>;
@@ -3080,6 +3150,7 @@ export declare const router: {
         vehicleType: import("zod").ZodOptional<import("zod").ZodString>;
         vehiclePlateNumber: import("zod").ZodOptional<import("zod").ZodString>;
         warehouseId: import("zod").ZodOptional<import("zod").ZodString>;
+        warehouseIds: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString>>;
         isActive: import("zod").ZodOptional<import("zod").ZodBoolean>;
         isAvailable: import("zod").ZodOptional<import("zod").ZodBoolean>;
         notes: import("zod").ZodOptional<import("zod").ZodString>;
@@ -3182,12 +3253,12 @@ export declare const router: {
         active: number;
         available: number;
         onDelivery: number;
-    } | undefined, {
+    }, {
         total: number;
         active: number;
         available: number;
         onDelivery: number;
-    } | undefined>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     assignDeliveryBoy: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
         user: {
             id: string;
@@ -4180,13 +4251,13 @@ export declare const router: {
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     appRefreshToken: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, Record<never, never>, import("zod").ZodObject<{
         refreshToken: import("zod").ZodString;
-    }, import("better-auth").$strip>, import("@orpc/contract").Schema<import("../utils/jwt.js").TokenPair | {
-        success: boolean;
-        error: string;
-    }, import("../utils/jwt.js").TokenPair | {
-        success: boolean;
-        error: string;
-    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    }, import("better-auth").$strip>, import("zod").ZodUnion<readonly [import("zod").ZodObject<{
+        success: import("zod").ZodLiteral<false>;
+        error: import("zod").ZodString;
+    }, import("better-auth").$strip>, import("zod").ZodObject<{
+        accessToken: import("zod").ZodString;
+        refreshToken: import("zod").ZodString;
+    }, import("better-auth").$strip>]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     appLogout: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, Record<never, never>, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
         success: boolean;
         message: string;
@@ -4558,11 +4629,15 @@ export declare const router: {
                 name: string;
                 slug: string;
                 description: string | null;
+                type: string | null;
                 price: string;
                 originalPrice: string | null;
                 colorImages: Record<string, string[]> | null;
+                mediaType: string | null;
+                glbModelIds: string[] | null;
                 categoryId: string | null;
                 warehouseId: string | null;
+                vendorId: string | null;
                 sku: string | null;
                 sizes: string[] | null;
                 tags: string[] | null;
@@ -4619,11 +4694,15 @@ export declare const router: {
                 name: string;
                 slug: string;
                 description: string | null;
+                type: string | null;
                 price: string;
                 originalPrice: string | null;
                 colorImages: Record<string, string[]> | null;
+                mediaType: string | null;
+                glbModelIds: string[] | null;
                 categoryId: string | null;
                 warehouseId: string | null;
+                vendorId: string | null;
                 sku: string | null;
                 sizes: string[] | null;
                 tags: string[] | null;
@@ -4810,6 +4889,1933 @@ export declare const router: {
             banned: false | null;
         };
     }, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<import("drizzle-orm/mysql2").MySqlRawQueryResult, import("drizzle-orm/mysql2").MySqlRawQueryResult>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    save3DModel: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("zod").ZodObject<{
+        id: import("zod").ZodOptional<import("zod").ZodString>;
+        name: import("zod").ZodString;
+        bodyPartType: import("zod").ZodEnum<{
+            "both-legs": "both-legs";
+            "left-leg": "left-leg";
+            "right-leg": "right-leg";
+            "top-head": "top-head";
+            "middle-head": "middle-head";
+            "lower-head": "lower-head";
+            chest: "chest";
+            "left-hand": "left-hand";
+            "right-hand": "right-hand";
+        }>;
+        colorName: import("zod").ZodOptional<import("zod").ZodString>;
+        colorHex: import("zod").ZodOptional<import("zod").ZodString>;
+        prompt: import("zod").ZodString;
+        leftLegUrl: import("zod").ZodOptional<import("zod").ZodString>;
+        rightLegUrl: import("zod").ZodOptional<import("zod").ZodString>;
+        scale: import("zod").ZodOptional<import("zod").ZodNumber>;
+        positionX: import("zod").ZodOptional<import("zod").ZodNumber>;
+        positionY: import("zod").ZodOptional<import("zod").ZodNumber>;
+        positionZ: import("zod").ZodOptional<import("zod").ZodNumber>;
+        inferenceSteps: import("zod").ZodOptional<import("zod").ZodNumber>;
+        guidanceScale: import("zod").ZodOptional<import("zod").ZodNumber>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        scale: number;
+        positionX: number;
+        positionY: number;
+        positionZ: number;
+        guidanceScale: number | null;
+        leftLegUrl: string | null;
+        rightLegUrl: string | null;
+        id: string;
+        name: string;
+        bodyPartType: "both-legs" | "left-leg" | "right-leg" | "top-head" | "middle-head" | "lower-head" | "chest" | "left-hand" | "right-hand";
+        colorName: string | null;
+        colorHex: string | null;
+        prompt: string;
+        leftLegFile: string | null;
+        rightLegFile: string | null;
+        leftLegSize: number | null;
+        rightLegSize: number | null;
+        leftLegOriginalSize: number | null;
+        rightLegOriginalSize: number | null;
+        inferenceSteps: number | null;
+    }, {
+        scale: number;
+        positionX: number;
+        positionY: number;
+        positionZ: number;
+        guidanceScale: number | null;
+        leftLegUrl: string | null;
+        rightLegUrl: string | null;
+        id: string;
+        name: string;
+        bodyPartType: "both-legs" | "left-leg" | "right-leg" | "top-head" | "middle-head" | "lower-head" | "chest" | "left-hand" | "right-hand";
+        colorName: string | null;
+        colorHex: string | null;
+        prompt: string;
+        leftLegFile: string | null;
+        rightLegFile: string | null;
+        leftLegSize: number | null;
+        rightLegSize: number | null;
+        leftLegOriginalSize: number | null;
+        rightLegOriginalSize: number | null;
+        inferenceSteps: number | null;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    list3DModels: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+        scale: number;
+        positionX: number;
+        positionY: number;
+        positionZ: number;
+        guidanceScale: number | null;
+        leftLegUrl: string | null;
+        rightLegUrl: string | null;
+        id: string;
+        name: string;
+        bodyPartType: string;
+        colorName: string | null;
+        colorHex: string | null;
+        prompt: string;
+        leftLegFile: string | null;
+        rightLegFile: string | null;
+        leftLegSize: number | null;
+        rightLegSize: number | null;
+        leftLegOriginalSize: number | null;
+        rightLegOriginalSize: number | null;
+        inferenceSteps: number | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[], {
+        scale: number;
+        positionX: number;
+        positionY: number;
+        positionZ: number;
+        guidanceScale: number | null;
+        leftLegUrl: string | null;
+        rightLegUrl: string | null;
+        id: string;
+        name: string;
+        bodyPartType: string;
+        colorName: string | null;
+        colorHex: string | null;
+        prompt: string;
+        leftLegFile: string | null;
+        rightLegFile: string | null;
+        leftLegSize: number | null;
+        rightLegSize: number | null;
+        leftLegOriginalSize: number | null;
+        rightLegOriginalSize: number | null;
+        inferenceSteps: number | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    delete3DModel: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    checkModelSaved: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("zod").ZodObject<{
+        prompt: import("zod").ZodString;
+        bodyPartType: import("zod").ZodString;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        isSaved: boolean;
+        modelId: string | null;
+        model: {
+            scale: number;
+            positionX: number;
+            positionY: number;
+            positionZ: number;
+            guidanceScale: number | null;
+            id: string;
+            name: string;
+            bodyPartType: string;
+            colorName: string | null;
+            colorHex: string | null;
+            prompt: string;
+            leftLegFile: string | null;
+            rightLegFile: string | null;
+            leftLegSize: number | null;
+            rightLegSize: number | null;
+            leftLegOriginalSize: number | null;
+            rightLegOriginalSize: number | null;
+            inferenceSteps: number | null;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
+    }, {
+        isSaved: boolean;
+        modelId: string | null;
+        model: {
+            scale: number;
+            positionX: number;
+            positionY: number;
+            positionZ: number;
+            guidanceScale: number | null;
+            id: string;
+            name: string;
+            bodyPartType: string;
+            colorName: string | null;
+            colorHex: string | null;
+            prompt: string;
+            leftLegFile: string | null;
+            rightLegFile: string | null;
+            leftLegSize: number | null;
+            rightLegSize: number | null;
+            leftLegOriginalSize: number | null;
+            rightLegOriginalSize: number | null;
+            inferenceSteps: number | null;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    get3DModel: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, Record<never, never>, import("zod").ZodString, import("@orpc/contract").Schema<{
+        id: string;
+        bodyPartType: string;
+        leftLegFile: string | null;
+        rightLegFile: string | null;
+        scale: number;
+        positionX: number;
+        positionY: number;
+        positionZ: number;
+        leftLegUrl: string | null;
+        rightLegUrl: string | null;
+    }, {
+        id: string;
+        bodyPartType: string;
+        leftLegFile: string | null;
+        rightLegFile: string | null;
+        scale: number;
+        positionX: number;
+        positionY: number;
+        positionZ: number;
+        leftLegUrl: string | null;
+        rightLegUrl: string | null;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    proxyGLB: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, Record<never, never>, import("zod").ZodObject<{
+        url: import("zod").ZodString;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        success: boolean;
+        data: string;
+        size: number;
+        contentType: string;
+    }, {
+        success: boolean;
+        data: string;
+        size: number;
+        contentType: string;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getVendorWarehouses: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        id: string;
+        name: string;
+        address: string;
+        latitude: string;
+        longitude: string;
+        phone: string | null;
+        isActive: boolean | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[], {
+        id: string;
+        name: string;
+        address: string;
+        latitude: string;
+        longitude: string;
+        phone: string | null;
+        isActive: boolean | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    setVendorWarehouses: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("zod").ZodObject<{
+        vendorId: import("zod").ZodString;
+        warehouseIds: import("zod").ZodArray<import("zod").ZodString>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getVendorStats: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+        totalProducts: number;
+        pendingApproval: number;
+        totalWarehouses: number;
+        totalOrders: number;
+        totalRevenue: string;
+    }, {
+        totalProducts: number;
+        pendingApproval: number;
+        totalWarehouses: number;
+        totalOrders: number;
+        totalRevenue: string;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getVendorProducts: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("zod").ZodObject<{
+        search: import("zod").ZodOptional<import("zod").ZodString>;
+        page: import("zod").ZodDefault<import("zod").ZodNumber>;
+        limit: import("zod").ZodDefault<import("zod").ZodNumber>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        products: {
+            id: string;
+            name: string;
+            slug: string;
+            description: string | null;
+            type: string | null;
+            price: string;
+            originalPrice: string | null;
+            colorImages: Record<string, string[]> | null;
+            mediaType: string | null;
+            glbModelIds: string[] | null;
+            categoryId: string | null;
+            warehouseId: string | null;
+            vendorId: string | null;
+            sku: string | null;
+            sizes: string[] | null;
+            tags: string[] | null;
+            variantStock: Record<string, number> | null;
+            rating: string | null;
+            reviewCount: number | null;
+            inStock: boolean | null;
+            stockQuantity: number | null;
+            lowStockThreshold: number | null;
+            discount: number | null;
+            weight: string | null;
+            isActive: boolean | null;
+            isFeatured: boolean | null;
+            isDigital: boolean | null;
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+        total: number;
+    }, {
+        products: {
+            id: string;
+            name: string;
+            slug: string;
+            description: string | null;
+            type: string | null;
+            price: string;
+            originalPrice: string | null;
+            colorImages: Record<string, string[]> | null;
+            mediaType: string | null;
+            glbModelIds: string[] | null;
+            categoryId: string | null;
+            warehouseId: string | null;
+            vendorId: string | null;
+            sku: string | null;
+            sizes: string[] | null;
+            tags: string[] | null;
+            variantStock: Record<string, number> | null;
+            rating: string | null;
+            reviewCount: number | null;
+            inStock: boolean | null;
+            stockQuantity: number | null;
+            lowStockThreshold: number | null;
+            discount: number | null;
+            weight: string | null;
+            isActive: boolean | null;
+            isFeatured: boolean | null;
+            isDigital: boolean | null;
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+        total: number;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    createVendorProduct: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("zod").ZodObject<{
+        name: import("zod").ZodString;
+        description: import("zod").ZodOptional<import("zod").ZodString>;
+        price: import("zod").ZodString;
+        originalPrice: import("zod").ZodOptional<import("zod").ZodString>;
+        categoryId: import("zod").ZodOptional<import("zod").ZodString>;
+        warehouseId: import("zod").ZodOptional<import("zod").ZodString>;
+        sku: import("zod").ZodOptional<import("zod").ZodString>;
+        stockQuantity: import("zod").ZodDefault<import("zod").ZodNumber>;
+        discount: import("zod").ZodDefault<import("zod").ZodNumber>;
+        sizes: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString>>;
+        tags: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString>>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        id: string;
+        slug: string;
+    }, {
+        id: string;
+        slug: string;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    updateVendorProduct: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("zod").ZodObject<{
+        id: import("zod").ZodString;
+        name: import("zod").ZodOptional<import("zod").ZodString>;
+        description: import("zod").ZodOptional<import("zod").ZodString>;
+        price: import("zod").ZodOptional<import("zod").ZodString>;
+        originalPrice: import("zod").ZodOptional<import("zod").ZodString>;
+        categoryId: import("zod").ZodOptional<import("zod").ZodString>;
+        warehouseId: import("zod").ZodOptional<import("zod").ZodString>;
+        sku: import("zod").ZodOptional<import("zod").ZodString>;
+        stockQuantity: import("zod").ZodOptional<import("zod").ZodNumber>;
+        discount: import("zod").ZodOptional<import("zod").ZodNumber>;
+        sizes: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString>>;
+        tags: import("zod").ZodOptional<import("zod").ZodArray<import("zod").ZodString>>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    deleteVendorProduct: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getVendorOwnWarehouses: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+        id: string;
+        name: string;
+        address: string;
+        latitude: string;
+        longitude: string;
+        phone: string | null;
+        isActive: boolean | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[], {
+        id: string;
+        name: string;
+        address: string;
+        latitude: string;
+        longitude: string;
+        phone: string | null;
+        isActive: boolean | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getAllWarehousesForVendor: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+        id: string;
+        name: string;
+        address: string;
+        latitude: string;
+        longitude: string;
+        phone: string | null;
+        isActive: boolean | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[], {
+        id: string;
+        name: string;
+        address: string;
+        latitude: string;
+        longitude: string;
+        phone: string | null;
+        isActive: boolean | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    updateVendorWarehouse: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("zod").ZodObject<{
+        id: import("zod").ZodString;
+        name: import("zod").ZodOptional<import("zod").ZodString>;
+        address: import("zod").ZodOptional<import("zod").ZodString>;
+        phone: import("zod").ZodOptional<import("zod").ZodString>;
+        isActive: import("zod").ZodOptional<import("zod").ZodBoolean>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getVendorOrders: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never> & Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user">, Record<never, never>>, Omit<import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }>, "user"> & Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string;
+            emailVerified: boolean;
+            name: string;
+            image?: string | null | undefined | undefined;
+            banned: boolean | null | undefined;
+            role?: string | null | undefined;
+            banReason?: string | null | undefined;
+            banExpires?: Date | null | undefined;
+        };
+    }, import("zod").ZodObject<{
+        page: import("zod").ZodDefault<import("zod").ZodNumber>;
+        limit: import("zod").ZodDefault<import("zod").ZodNumber>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        orders: {
+            id: string;
+            userId: string;
+            orderNumber: string;
+            status: string;
+            subtotal: string;
+            tax: string | null;
+            shipping: string | null;
+            discount: string | null;
+            total: string;
+            currency: string | null;
+            shippingAddressId: string | null;
+            billingAddressId: string | null;
+            paymentMethodId: string | null;
+            paymentStatus: string | null;
+            shippingMethod: string | null;
+            trackingNumber: string | null;
+            courierService: string | null;
+            deliveryBoy: boolean | null;
+            deliveryBoyId: string | null;
+            estimatedDelivery: Date | null;
+            shippedAt: Date | null;
+            deliveredAt: Date | null;
+            cancelledAt: Date | null;
+            cancellationReason: string | null;
+            notes: string | null;
+            metadata: Record<string, any> | null;
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+        total: number;
+    }, {
+        orders: {
+            id: string;
+            userId: string;
+            orderNumber: string;
+            status: string;
+            subtotal: string;
+            tax: string | null;
+            shipping: string | null;
+            discount: string | null;
+            total: string;
+            currency: string | null;
+            shippingAddressId: string | null;
+            billingAddressId: string | null;
+            paymentMethodId: string | null;
+            paymentStatus: string | null;
+            shippingMethod: string | null;
+            trackingNumber: string | null;
+            courierService: string | null;
+            deliveryBoy: boolean | null;
+            deliveryBoyId: string | null;
+            estimatedDelivery: Date | null;
+            shippedAt: Date | null;
+            deliveredAt: Date | null;
+            cancelledAt: Date | null;
+            cancellationReason: string | null;
+            notes: string | null;
+            metadata: Record<string, any> | null;
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+        total: number;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    deliveryBoyLogin: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, Record<never, never>, import("zod").ZodObject<{
+        phone: import("zod").ZodString;
+        password: import("zod").ZodString;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        success: boolean;
+        error: string;
+    } | {
+        accessToken: string;
+        refreshToken: string;
+        success: boolean;
+        deliveryBoy: {
+            id: string;
+            name: string;
+            phone: string;
+            photo: string | null;
+            vehicleType: string | null;
+        };
+        error?: never;
+    }, {
+        success: boolean;
+        error: string;
+    } | {
+        accessToken: string;
+        refreshToken: string;
+        success: boolean;
+        deliveryBoy: {
+            id: string;
+            name: string;
+            phone: string;
+            photo: string | null;
+            vehicleType: string | null;
+        };
+        error?: never;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getMyAssignedOrders: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        deliveryBoy: {
+            id: string;
+            name: string;
+            phone: string;
+        };
+    }, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+        id: string;
+        orderNumber: string;
+        status: string;
+        total: string;
+        currency: string | null;
+        paymentStatus: string | null;
+        createdAt: Date;
+        shippedAt: Date | null;
+        deliveredAt: Date | null;
+        customerName: string | null;
+    }[], {
+        id: string;
+        orderNumber: string;
+        status: string;
+        total: string;
+        currency: string | null;
+        paymentStatus: string | null;
+        createdAt: Date;
+        shippedAt: Date | null;
+        deliveredAt: Date | null;
+        customerName: string | null;
+    }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getClaimableOrders: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        deliveryBoy: {
+            id: string;
+            name: string;
+            phone: string;
+        };
+    }, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+        id: string;
+        orderNumber: string;
+        status: string;
+        total: string;
+        currency: string | null;
+        createdAt: Date;
+        customerName: string | null;
+    }[], {
+        id: string;
+        orderNumber: string;
+        status: string;
+        total: string;
+        currency: string | null;
+        createdAt: Date;
+        customerName: string | null;
+    }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    claimOrder: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        deliveryBoy: {
+            id: string;
+            name: string;
+            phone: string;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    updateDeliveryStatus: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        deliveryBoy: {
+            id: string;
+            name: string;
+            phone: string;
+        };
+    }, import("zod").ZodObject<{
+        orderId: import("zod").ZodString;
+        status: import("zod").ZodEnum<{
+            returned: "returned";
+            delivered: "delivered";
+            out_for_delivery: "out_for_delivery";
+        }>;
+        notes: import("zod").ZodOptional<import("zod").ZodString>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    deliveryGetStats: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        deliveryBoy: {
+            id: string;
+            name: string;
+            phone: string;
+        };
+    }, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+        totalDeliveries: number;
+        currentAssignedOrders: number;
+        isAvailable: boolean;
+        rating: string;
+    }, {
+        totalDeliveries: number;
+        currentAssignedOrders: number;
+        isAvailable: boolean;
+        rating: string;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    createPost: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodObject<{
+        id: import("zod").ZodOptional<import("zod").ZodString>;
+        caption: import("zod").ZodNullable<import("zod").ZodOptional<import("zod").ZodString>>;
+        isDraft: import("zod").ZodDefault<import("zod").ZodBoolean>;
+        sceneMode: import("zod").ZodDefault<import("zod").ZodEnum<{
+            "3d": "3d";
+            "2d": "2d";
+        }>>;
+        backgroundColor: import("zod").ZodNullable<import("zod").ZodOptional<import("zod").ZodEnum<{
+            floor: "floor";
+            studio: "studio";
+            outdoor: "outdoor";
+            minimal: "minimal";
+        }>>>;
+        items: import("zod").ZodDefault<import("zod").ZodArray<import("zod").ZodObject<{
+            productId: import("zod").ZodString;
+            modelId: import("zod").ZodString;
+            leftLegFile: import("zod").ZodNullable<import("zod").ZodOptional<import("zod").ZodString>>;
+            boneName: import("zod").ZodString;
+            bodyPartType: import("zod").ZodString;
+            scale: import("zod").ZodNumber;
+            positionX: import("zod").ZodNumber;
+            positionY: import("zod").ZodNumber;
+            positionZ: import("zod").ZodNumber;
+        }, import("better-auth").$strip>>>;
+        textElements: import("zod").ZodDefault<import("zod").ZodArray<import("zod").ZodObject<{
+            content: import("zod").ZodString;
+            positionX: import("zod").ZodNumber;
+            positionY: import("zod").ZodNumber;
+            fontSize: import("zod").ZodNumber;
+            fontFamily: import("zod").ZodString;
+            color: import("zod").ZodString;
+            rotation: import("zod").ZodNumber;
+            zIndex: import("zod").ZodNumber;
+        }, import("better-auth").$strip>>>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        postId: string;
+        isUpdate: boolean;
+    }, {
+        postId: string;
+        isUpdate: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getFeedPosts: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodObject<{
+        limit: import("zod").ZodDefault<import("zod").ZodNumber>;
+        offset: import("zod").ZodDefault<import("zod").ZodNumber>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        items: {
+            id: string;
+            postId: string;
+            productId: string;
+            modelId: string;
+            leftLegFile: string | null;
+            boneName: string;
+            bodyPartType: string;
+            scale: string;
+            positionX: string;
+            positionY: string;
+            positionZ: string;
+            productName: string;
+        }[];
+        textElements: {
+            id: string;
+            postId: string;
+            content: string;
+            positionX: string;
+            positionY: string;
+            fontSize: number;
+            fontFamily: string;
+            color: string;
+            rotation: string;
+            zIndex: number;
+            createdAt: Date;
+        }[];
+        isLiked: boolean;
+        isSaved: boolean;
+        isFollowing: boolean;
+        id: string;
+        userId: string;
+        caption: string | null;
+        likesCount: number;
+        sharesCount: number;
+        savesCount: number;
+        viewsCount: number;
+        sceneMode: string;
+        backgroundColor: string | null;
+        createdAt: Date;
+        userName: string | null;
+        userImage: string | null;
+        engagementScore: number;
+    }[], {
+        items: {
+            id: string;
+            postId: string;
+            productId: string;
+            modelId: string;
+            leftLegFile: string | null;
+            boneName: string;
+            bodyPartType: string;
+            scale: string;
+            positionX: string;
+            positionY: string;
+            positionZ: string;
+            productName: string;
+        }[];
+        textElements: {
+            id: string;
+            postId: string;
+            content: string;
+            positionX: string;
+            positionY: string;
+            fontSize: number;
+            fontFamily: string;
+            color: string;
+            rotation: string;
+            zIndex: number;
+            createdAt: Date;
+        }[];
+        isLiked: boolean;
+        isSaved: boolean;
+        isFollowing: boolean;
+        id: string;
+        userId: string;
+        caption: string | null;
+        likesCount: number;
+        sharesCount: number;
+        savesCount: number;
+        viewsCount: number;
+        sceneMode: string;
+        backgroundColor: string | null;
+        createdAt: Date;
+        userName: string | null;
+        userImage: string | null;
+        engagementScore: number;
+    }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getMyPosts: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodObject<{
+        limit: import("zod").ZodDefault<import("zod").ZodNumber>;
+        offset: import("zod").ZodDefault<import("zod").ZodNumber>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        items: {
+            id: string;
+            postId: string;
+            productId: string;
+            modelId: string;
+            leftLegFile: string | null;
+            boneName: string;
+            bodyPartType: string;
+            scale: string;
+            positionX: string;
+            positionY: string;
+            positionZ: string;
+            productName: string;
+        }[];
+        textElements: {
+            id: string;
+            postId: string;
+            content: string;
+            positionX: string;
+            positionY: string;
+            fontSize: number;
+            fontFamily: string;
+            color: string;
+            rotation: string;
+            zIndex: number;
+            createdAt: Date;
+        }[];
+        isLiked: boolean;
+        isSaved: boolean;
+        isFollowing: boolean;
+        id: string;
+        userId: string;
+        caption: string | null;
+        likesCount: number;
+        sharesCount: number;
+        savesCount: number;
+        viewsCount: number;
+        sceneMode: string;
+        backgroundColor: string | null;
+        isDraft: boolean;
+        isPublished: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        userName: string | null;
+        userImage: string | null;
+    }[], {
+        items: {
+            id: string;
+            postId: string;
+            productId: string;
+            modelId: string;
+            leftLegFile: string | null;
+            boneName: string;
+            bodyPartType: string;
+            scale: string;
+            positionX: string;
+            positionY: string;
+            positionZ: string;
+            productName: string;
+        }[];
+        textElements: {
+            id: string;
+            postId: string;
+            content: string;
+            positionX: string;
+            positionY: string;
+            fontSize: number;
+            fontFamily: string;
+            color: string;
+            rotation: string;
+            zIndex: number;
+            createdAt: Date;
+        }[];
+        isLiked: boolean;
+        isSaved: boolean;
+        isFollowing: boolean;
+        id: string;
+        userId: string;
+        caption: string | null;
+        likesCount: number;
+        sharesCount: number;
+        savesCount: number;
+        viewsCount: number;
+        sceneMode: string;
+        backgroundColor: string | null;
+        isDraft: boolean;
+        isPublished: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        userName: string | null;
+        userImage: string | null;
+    }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getDraftPosts: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+        items: {
+            id: string;
+            postId: string;
+            productId: string;
+            modelId: string;
+            leftLegFile: string | null;
+            boneName: string;
+            bodyPartType: string;
+            scale: string;
+            positionX: string;
+            positionY: string;
+            positionZ: string;
+            createdAt: Date;
+        }[];
+        textElements: {
+            id: string;
+            postId: string;
+            content: string;
+            positionX: string;
+            positionY: string;
+            fontSize: number;
+            fontFamily: string;
+            color: string;
+            rotation: string;
+            zIndex: number;
+            createdAt: Date;
+        }[];
+        id: string;
+        userId: string;
+        caption: string | null;
+        likesCount: number;
+        sharesCount: number;
+        savesCount: number;
+        viewsCount: number;
+        isDraft: boolean;
+        isPublished: boolean;
+        sceneMode: string;
+        backgroundColor: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[], {
+        items: {
+            id: string;
+            postId: string;
+            productId: string;
+            modelId: string;
+            leftLegFile: string | null;
+            boneName: string;
+            bodyPartType: string;
+            scale: string;
+            positionX: string;
+            positionY: string;
+            positionZ: string;
+            createdAt: Date;
+        }[];
+        textElements: {
+            id: string;
+            postId: string;
+            content: string;
+            positionX: string;
+            positionY: string;
+            fontSize: number;
+            fontFamily: string;
+            color: string;
+            rotation: string;
+            zIndex: number;
+            createdAt: Date;
+        }[];
+        id: string;
+        userId: string;
+        caption: string | null;
+        likesCount: number;
+        sharesCount: number;
+        savesCount: number;
+        viewsCount: number;
+        isDraft: boolean;
+        isPublished: boolean;
+        sceneMode: string;
+        backgroundColor: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getPostById: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        items: {
+            id: string;
+            postId: string;
+            productId: string;
+            modelId: string;
+            leftLegFile: string | null;
+            boneName: string;
+            bodyPartType: string;
+            scale: string;
+            positionX: string;
+            positionY: string;
+            positionZ: string;
+            productName: string;
+        }[];
+        textElements: {
+            id: string;
+            postId: string;
+            content: string;
+            positionX: string;
+            positionY: string;
+            fontSize: number;
+            fontFamily: string;
+            color: string;
+            rotation: string;
+            zIndex: number;
+            createdAt: Date;
+        }[];
+        id: string;
+        userId: string;
+        caption: string | null;
+        likesCount: number;
+        sharesCount: number;
+        savesCount: number;
+        viewsCount: number;
+        sceneMode: string;
+        backgroundColor: string | null;
+        isDraft: boolean;
+        isPublished: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        userName: string | null;
+        userImage: string | null;
+    }, {
+        items: {
+            id: string;
+            postId: string;
+            productId: string;
+            modelId: string;
+            leftLegFile: string | null;
+            boneName: string;
+            bodyPartType: string;
+            scale: string;
+            positionX: string;
+            positionY: string;
+            positionZ: string;
+            productName: string;
+        }[];
+        textElements: {
+            id: string;
+            postId: string;
+            content: string;
+            positionX: string;
+            positionY: string;
+            fontSize: number;
+            fontFamily: string;
+            color: string;
+            rotation: string;
+            zIndex: number;
+            createdAt: Date;
+        }[];
+        id: string;
+        userId: string;
+        caption: string | null;
+        likesCount: number;
+        sharesCount: number;
+        savesCount: number;
+        viewsCount: number;
+        sceneMode: string;
+        backgroundColor: string | null;
+        isDraft: boolean;
+        isPublished: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        userName: string | null;
+        userImage: string | null;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    updatePost: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodObject<{
+        postId: import("zod").ZodString;
+        caption: import("zod").ZodNullable<import("zod").ZodOptional<import("zod").ZodString>>;
+        isDraft: import("zod").ZodDefault<import("zod").ZodBoolean>;
+        sceneMode: import("zod").ZodDefault<import("zod").ZodEnum<{
+            "3d": "3d";
+            "2d": "2d";
+        }>>;
+        backgroundColor: import("zod").ZodNullable<import("zod").ZodOptional<import("zod").ZodEnum<{
+            floor: "floor";
+            studio: "studio";
+            outdoor: "outdoor";
+            minimal: "minimal";
+        }>>>;
+        items: import("zod").ZodDefault<import("zod").ZodArray<import("zod").ZodObject<{
+            productId: import("zod").ZodString;
+            modelId: import("zod").ZodString;
+            leftLegFile: import("zod").ZodNullable<import("zod").ZodOptional<import("zod").ZodString>>;
+            boneName: import("zod").ZodString;
+            bodyPartType: import("zod").ZodString;
+            scale: import("zod").ZodNumber;
+            positionX: import("zod").ZodNumber;
+            positionY: import("zod").ZodNumber;
+            positionZ: import("zod").ZodNumber;
+        }, import("better-auth").$strip>>>;
+        textElements: import("zod").ZodDefault<import("zod").ZodArray<import("zod").ZodObject<{
+            content: import("zod").ZodString;
+            positionX: import("zod").ZodNumber;
+            positionY: import("zod").ZodNumber;
+            fontSize: import("zod").ZodNumber;
+            fontFamily: import("zod").ZodString;
+            color: import("zod").ZodString;
+            rotation: import("zod").ZodNumber;
+            zIndex: import("zod").ZodNumber;
+        }, import("better-auth").$strip>>>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        success: boolean;
+        postId: string;
+    }, {
+        success: boolean;
+        postId: string;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    likePost: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        liked: boolean;
+    }, {
+        liked: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    savePost: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        saved: boolean;
+    }, {
+        saved: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    sharePost: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    viewPost: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    followUser: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        following: boolean;
+    }, {
+        following: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getFollowLists: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodObject<{
+        userId: import("zod").ZodOptional<import("zod").ZodString>;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        followers: {
+            id: string | null;
+            name: string | null;
+            image: string | null;
+            email: string | null;
+            followedAt: Date;
+        }[];
+        following: {
+            id: string | null;
+            name: string | null;
+            image: string | null;
+            email: string | null;
+            followedAt: Date;
+        }[];
+        followersCount: number;
+        followingCount: number;
+    }, {
+        followers: {
+            id: string | null;
+            name: string | null;
+            image: string | null;
+            email: string | null;
+            followedAt: Date;
+        }[];
+        following: {
+            id: string | null;
+            name: string | null;
+            image: string | null;
+            email: string | null;
+            followedAt: Date;
+        }[];
+        followersCount: number;
+        followingCount: number;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    deletePost: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext> & {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phoneNumber: string | null;
+            phoneNumberVerified: boolean | null;
+            image: string | null;
+            role: string | null;
+            banned: false | null;
+        };
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     handshake: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, Record<never, never>, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
         service: string;
         version: string;

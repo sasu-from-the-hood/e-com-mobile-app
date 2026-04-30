@@ -6,6 +6,7 @@ import { orders, orderItems, products, cartItems, warehouses } from '../../datab
 import { eq, desc, and, inArray } from 'drizzle-orm';
 import cuid from 'cuid';
 import { createNotification } from '../notifications.js';
+import { ORPCError } from '@orpc/server';
 
 export const getOrders = jwtProtectedProcedure
   .handler(async ({ context }) => {
@@ -342,7 +343,10 @@ export const updateOrderStatus = adminProcedure
       .where(eq(orders.id, input.id));
 
     if (!order) {
-      throw new Error('Order not found');
+      throw new ORPCError({
+        code: 'NOT_FOUND',
+        message: 'Order not found'
+      });
     }
 
     await db
@@ -373,6 +377,64 @@ export const updateOrderStatus = adminProcedure
     return { success: true };
   });
 
+export const completeOrder = jwtProtectedProcedure
+  .input(z.string())
+  .handler(async ({ input, context }) => {
+    console.log('[CompleteOrder] Completing order');
+    console.log('[CompleteOrder] Order ID:', input);
+    console.log('[CompleteOrder] User ID:', context.user.id);
+
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, input));
+
+    if (!order) {
+      console.log('[CompleteOrder] Order not found');
+      throw new ORPCError({
+        code: 'NOT_FOUND',
+        message: 'Order not found'
+      });
+    }
+
+    if (order.userId !== context.user.id) {
+      console.log('[CompleteOrder] Unauthorized');
+      throw new ORPCError({
+        code: 'FORBIDDEN',
+        message: 'Unauthorized'
+      });
+    }
+
+    // Only allow completing if order is confirmed
+    if (order.status !== 'confirmed') {
+      console.log('[CompleteOrder] Cannot complete - order status:', order.status);
+      throw new ORPCError({
+        code: 'BAD_REQUEST',
+        message: 'Order can only be completed when it is confirmed as delivered'
+      });
+    }
+
+    await db
+      .update(orders)
+      .set({ 
+        status: 'delivered',
+        deliveredAt: new Date()
+      })
+      .where(eq(orders.id, input));
+
+    // Send completion notification
+    await createNotification({
+      userId: order.userId,
+      title: 'Order Completed',
+      message: 'Your order has been completed. Thank you for shopping with us!',
+      type: 'order_update',
+      category: 'order'
+    });
+
+    console.log('[CompleteOrder] Order completed successfully');
+    return { success: true };
+  });
+
 export const updateDeliveryBoy = jwtProtectedProcedure
   .input(z.object({
     orderId: z.string(),
@@ -390,12 +452,27 @@ export const updateDeliveryBoy = jwtProtectedProcedure
 
     if (!order) {
       console.log('[UpdateDeliveryBoy] Order not found');
-      throw new Error('Order not found');
+      throw new ORPCError({
+        code: 'NOT_FOUND',
+        message: 'Order not found'
+      });
     }
 
     if (order.userId !== context.user.id) {
       console.log('[UpdateDeliveryBoy] Unauthorized');
-      throw new Error('Unauthorized');
+      throw new ORPCError({
+        code: 'FORBIDDEN',
+        message: 'Unauthorized'
+      });
+    }
+
+    // Only allow changing delivery boy setting when order is pending
+    if (order.status !== 'pending') {
+      console.log('[UpdateDeliveryBoy] Cannot change - order status:', order.status);
+      throw new ORPCError({
+        code: 'BAD_REQUEST',
+        message: 'Cannot change delivery boy status - the delivery has already started'
+      });
     }
 
     await db

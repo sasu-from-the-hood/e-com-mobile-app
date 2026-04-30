@@ -2,7 +2,7 @@ import { View, StyleSheet, TouchableOpacity, Alert, Animated, Switch, ScrollView
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { MapPin, ChevronLeft, Store, Bike, Package } from 'lucide-react-native';
+import { MapPin, ChevronLeft, Store, Bike, Package, RefreshCw as IconRefresh } from 'lucide-react-native';
 import { ThemedText } from '@/components/themed-text';
 import { AppTheme } from '@/constants/app-theme';
 import { MapComponent } from '@/components/map/MapComponent';
@@ -14,7 +14,7 @@ import { useState, useEffect, useRef } from 'react';
 export default function OrderTrackingScreen() {
   const router = useRouter();
   const { orderId } = useLocalSearchParams();
-  const { order, loading } = useOrder(orderId as string);
+  const { order, loading, refetch } = useOrder(orderId as string);
   const [deliveryBoyEnabled, setDeliveryBoyEnabled] = useState(false);
   const [warehouseLocation, setWarehouseLocation] = useState<{
     latitude: number;
@@ -54,6 +54,12 @@ export default function OrderTrackingScreen() {
   };
 
   const handleDeliveryBoyToggle = async (value: boolean) => {
+    // Only allow toggle when order is pending
+    if (order?.status?.toLowerCase() !== 'pending') {
+      Alert.alert('Cannot Change', 'Delivery boy can only be changed when order is pending');
+      return;
+    }
+    
     setDeliveryBoyEnabled(value);
     try {
       await orpcClient.updateOrderDeliveryBoy({
@@ -62,9 +68,14 @@ export default function OrderTrackingScreen() {
       });
     } catch (error) {
       console.error('Failed to update delivery boy status:', error);
-      Alert.alert('Error', 'Failed to update delivery boy status');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update delivery boy status';
+      Alert.alert('Error', errorMessage);
+      
       // Revert on error
       setDeliveryBoyEnabled(!value);
+      
+      // Refetch order data to sync with backend
+      await refetch();
     }
   };
 
@@ -145,6 +156,9 @@ export default function OrderTrackingScreen() {
             <ChevronLeft size={24} color={AppTheme.colors.foreground} />
           </TouchableOpacity>
           <ThemedText style={styles.mapTitle}>Order Tracking</ThemedText>
+          <TouchableOpacity style={styles.refreshButton} onPress={() => refetch()}>
+            <IconRefresh size={20} color={AppTheme.colors.foreground} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -184,7 +198,7 @@ export default function OrderTrackingScreen() {
               </View>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
-              <ThemedText style={styles.statusText}>{order.status}</ThemedText>
+              <ThemedText style={styles.statusText}>{getStatusLabel(order.status)}</ThemedText>
             </View>
           </View>
 
@@ -200,7 +214,11 @@ export default function OrderTrackingScreen() {
               <Switch
                 value={deliveryBoyEnabled}
                 onValueChange={handleDeliveryBoyToggle}
-                trackColor={{ false: AppTheme.colors.border, true: AppTheme.colors.primary }}
+                disabled={order.status?.toLowerCase() !== 'pending'}
+                trackColor={{ 
+                  false: AppTheme.colors.border, 
+                  true: order.status?.toLowerCase() === 'pending' ? AppTheme.colors.primary : AppTheme.colors.mutedForeground 
+                }}
                 thumbColor={AppTheme.colors.background}
               />
             </View>
@@ -291,6 +309,36 @@ export default function OrderTrackingScreen() {
           </View>
           )}
 
+          {/* Complete Order Button - Show when status is confirmed */}
+          {order.status === 'confirmed' && (
+            <TouchableOpacity 
+              style={styles.completeButton}
+              onPress={() => {
+                Alert.alert(
+                  'Complete Order',
+                  'Confirm that you have received this order?',
+                  [
+                    { text: 'No', style: 'cancel' },
+                    { 
+                      text: 'Yes, Complete', 
+                      onPress: async () => {
+                        try {
+                          await orpcClient.appCompleteOrder(order.id);
+                          Alert.alert('Success', 'Order completed successfully');
+                          await refetch();
+                        } catch (error) {
+                          Alert.alert('Error', 'Failed to complete order');
+                        }
+                      }
+                    }
+                  ]
+                );
+              }}
+            >
+              <ThemedText style={styles.completeButtonText}>Complete Order</ThemedText>
+            </TouchableOpacity>
+          )}
+
           {/* Cancel Order Button - Hide when delivery boy is ON and order is on the way (processing) */}
           {(order.status === 'pending' || order.status === 'processing') && 
            !(deliveryBoyEnabled && order.status === 'processing') && (
@@ -340,6 +388,32 @@ const getStatusColor = (status: string) => {
       return AppTheme.colors.statusProcessing;
     default:
       return AppTheme.colors.statusPlaced;
+  }
+};
+
+const getStatusLabel = (status: string) => {
+  const statusLower = status?.toLowerCase() || '';
+  switch (statusLower) {
+    case 'out_for_delivery':
+      return 'On the way';
+    case 'pending':
+      return 'Pending';
+    case 'packed':
+      return 'Packed';
+    case 'shipped':
+      return 'Shipped';
+    case 'confirmed':
+      return 'Confirmed';
+    case 'delivered':
+      return 'Completed';
+    case 'cancelled':
+      return 'Cancelled';
+    case 'returned':
+      return 'Returned';
+    case 'processing':
+      return 'Processing';
+    default:
+      return status.replace(/_/g, ' ');
   }
 };
 
@@ -424,9 +498,20 @@ const styles = StyleSheet.create({
     marginRight: AppTheme.spacing.md,
     ...AppTheme.shadows.small,
   },
+  refreshButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: AppTheme.colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: AppTheme.spacing.md,
+    ...AppTheme.shadows.small,
+  },
   mapTitle: {
     fontSize: AppTheme.fontSize.lg,
     fontWeight: AppTheme.fontWeight.bold,
+    flex: 1,
   },
   content: {
     padding: AppTheme.spacing.md,
@@ -507,6 +592,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButtonText: {
+    fontSize: AppTheme.fontSize.base,
+    fontWeight: AppTheme.fontWeight.semibold,
+    color: AppTheme.colors.primaryForeground,
+  },
+  completeButton: {
+    marginTop: AppTheme.spacing.lg,
+    paddingVertical: AppTheme.spacing.md,
+    paddingHorizontal: AppTheme.spacing.lg,
+    backgroundColor: AppTheme.colors.primary,
+    borderRadius: AppTheme.borderRadius.md,
+    alignItems: 'center',
+  },
+  completeButtonText: {
     fontSize: AppTheme.fontSize.base,
     fontWeight: AppTheme.fontWeight.semibold,
     color: AppTheme.colors.primaryForeground,

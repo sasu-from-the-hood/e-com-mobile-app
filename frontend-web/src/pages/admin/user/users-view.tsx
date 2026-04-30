@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createUserColumns } from "./user-columns";
 import { EnhancedDataTable } from "@/components/enhanced-data-table";
 import { authClient } from "@/hooks/auth/auth-client";
+import { orpc } from "@/lib/oprc";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -61,13 +62,13 @@ export function UsersView() {
         query.searchOperator = "contains";
       }
       
+      // Use role filter as the primary server-side filter field
       if (role && role !== "all") {
         query.filterField = "role";
         query.filterValue = role;
         query.filterOperator = "eq";
-      }
-      
-      if (status && status !== "all") {
+      } else if (status && status !== "all") {
+        // Only use banned as server-side filter when no role filter is active
         query.filterField = "banned";
         query.filterValue = status === "banned";
         query.filterOperator = "eq";
@@ -75,13 +76,20 @@ export function UsersView() {
       
       const response = await authClient.admin.listUsers({ query });
       if (response.data) {
-        const users = response.data.users.map((user: any) => ({
+        let users = response.data.users.map((user: any) => ({
           id: user.id,
           name: user.name || '',
           phoneNumber: user.phoneNumber || '',
           role: user.role || 'user',
           banned: user.banned || false,
         }));
+
+        // Client-side filter for the secondary condition when both are active
+        if (role && role !== "all" && status && status !== "all") {
+          const wantBanned = status === "banned";
+          users = users.filter((u: UserFormData) => u.banned === wantBanned);
+        }
+
         setData(users);
       }
     } catch (error) {
@@ -117,13 +125,22 @@ export function UsersView() {
         email: `${newRecord.name.toLowerCase().replace(/\s+/g, '.')}@temp.com`,
         password: newRecord.password || 'defaultPassword123',
         name: newRecord.name,
-        role: newRecord.role as "user" | "admin",
+        role: newRecord.role as "user" | "admin" | "vendor",
         data: { phoneNumber: newRecord.phoneNumber }
       });
       
       if (response.error) {
         toast.error(response.error.message || 'Failed to create user');
       } else {
+        // Link warehouses if vendor with pending selections
+        const newUserId = response.data?.user?.id;
+        if (newUserId && newRecord.role === 'vendor' && newRecord.pendingWarehouseIds?.length) {
+          try {
+            await orpc.setVendorWarehouses({ vendorId: newUserId, warehouseIds: newRecord.pendingWarehouseIds });
+          } catch {
+            toast.error('User created but failed to link warehouses');
+          }
+        }
         fetchUsers();
         setIsDialogOpen(false);
         toast.success(`User ${newRecord.name} created successfully`);
@@ -159,7 +176,7 @@ export function UsersView() {
       
       const roleRes = await authClient.admin.setRole({
         userId: updatedUser.id!,
-        role: updatedUser.role as "user" | "admin"
+        role: updatedUser.role as "user" | "admin" | "vendor"
       });
       
       if (roleRes.error) {
@@ -279,6 +296,7 @@ export function UsersView() {
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="vendor">Vendor</SelectItem>
               <SelectItem value="user">User</SelectItem>
             </SelectContent>
           </Select>

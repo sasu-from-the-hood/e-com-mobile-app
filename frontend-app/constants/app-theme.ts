@@ -6,6 +6,8 @@ export const AppTheme = {
     secondaryForeground: '#000000',
     background: '#FFFFFF',
     foreground: '#000000',
+    card: '#FFFFFF',
+    cardForeground: '#000000',
     muted: '#9E9E9E',
     mutedForeground: '#757575',
     accent: '#5B4CCC',

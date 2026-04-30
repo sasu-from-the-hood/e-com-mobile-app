@@ -54,8 +54,15 @@ export const getDashboardStats = os
       })
       .from(orders)
       .where(gte(orders.createdAt, sql`DATE_SUB(NOW(), INTERVAL 6 MONTH)`))
-      .groupBy(sql`YEAR(${orders.createdAt}), MONTH(${orders.createdAt})`)
-      .orderBy(sql`YEAR(${orders.createdAt}), MONTH(${orders.createdAt})`)
+      .groupBy(
+        sql`YEAR(${orders.createdAt})`,
+        sql`MONTH(${orders.createdAt})`,
+        sql`DATE_FORMAT(${orders.createdAt}, '%b')`
+      )
+      .orderBy(
+        sql`YEAR(${orders.createdAt})`,
+        sql`MONTH(${orders.createdAt})`
+      )
       .limit(6)
 
 

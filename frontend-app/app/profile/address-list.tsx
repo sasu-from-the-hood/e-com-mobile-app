@@ -38,22 +38,42 @@ export default function AddressListScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleAddNew = async () => {
-    const locationData = await getCurrentLocation();
+    try {
+      const locationData = await getCurrentLocation();
+      
+      setFormData({
+        fullName: user?.name || '',
+        phone: user?.phone || '',
+        addressLine1: '',
+        addressLine2: '',
+        city: locationData?.city || '',
+        state: locationData?.state || '',
+        zipCode: '',
+        country: 'Ethiopia',
+        latitude: locationData?.latitude?.toString() || '',
+        longitude: locationData?.longitude?.toString() || '',
+        instructions: '',
+        isDefault: false
+      });
+    } catch (error) {
+      console.log('[AddAddress] Location not available, using defaults');
+      // Set default values without location
+      setFormData({
+        fullName: user?.name || '',
+        phone: user?.phone || '',
+        addressLine1: '',
+        addressLine2: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        country: 'Ethiopia',
+        latitude: '',
+        longitude: '',
+        instructions: '',
+        isDefault: false
+      });
+    }
     
-    setFormData({
-      fullName: user?.name || '',
-      phone: user?.phone || '',
-      addressLine1: '',
-      addressLine2: '',
-      city: locationData?.city || '',
-      state: locationData?.state || '',
-      zipCode: '',
-      country: 'Ethiopia',
-      latitude: locationData?.latitude?.toString() || '',
-      longitude: locationData?.longitude?.toString() || '',
-      instructions: '',
-      isDefault: false
-    });
     setEditingId(null);
     setErrors({});
     setShowAddModal(true);

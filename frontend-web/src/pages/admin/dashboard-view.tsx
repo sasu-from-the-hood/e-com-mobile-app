@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { IconUsers, IconPackage, IconShoppingCart, IconTrendingUp, IconCategory, IconAlertTriangle } from "@tabler/icons-react"
+import { IconUsers, IconPackage, IconShoppingCart, IconTrendingUp, IconCategory, IconAlertTriangle, IconClock } from "@tabler/icons-react"
 import { useQuery } from "@tanstack/react-query"
 import { orpc } from "@/lib/oprc"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
@@ -9,6 +9,17 @@ export function DashboardView() {
     queryKey: ['dashboard-stats'],
     queryFn: () => orpc.getDashboardStats()
   })
+
+  const { data: pendingData } = useQuery({
+    queryKey: ['pending-products-count'],
+    queryFn: () => orpc.getAdminProducts({ 
+      status: 'pending',
+      page: 1,
+      limit: 1
+    })
+  })
+
+  const pendingCount = pendingData?.pagination?.total || 0
 
   if (isLoading) {
     return <div className="p-6">Loading dashboard...</div>
@@ -26,6 +37,13 @@ export function DashboardView() {
       value: dashboardData?.stats.totalProducts || 0,
       icon: IconPackage,
       color: "text-green-600"
+    },
+    {
+      title: "Pending Approval",
+      value: pendingCount,
+      icon: IconClock,
+      color: "text-yellow-600",
+      description: "Vendor products awaiting review"
     },
     {
       title: "Total Categories",
@@ -75,6 +93,11 @@ export function DashboardView() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stat.value}</div>
+                {stat.description && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {stat.description}
+                  </p>
+                )}
               </CardContent>
             </Card>
           )

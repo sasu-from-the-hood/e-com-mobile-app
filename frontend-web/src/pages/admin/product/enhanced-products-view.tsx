@@ -129,7 +129,7 @@ export function EnhancedProductsView() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Products</CardTitle>
@@ -153,6 +153,20 @@ export function EnhancedProductsView() {
             </div>
             <p className="text-xs text-muted-foreground">
               Currently visible
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {productsData?.products?.filter(p => !p.isActive && p.vendorId).length || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Vendor submissions
             </p>
           </CardContent>
         </Card>
@@ -227,6 +241,7 @@ export function EnhancedProductsView() {
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
               </SelectContent>
             </Select>
 
@@ -319,13 +334,33 @@ export function EnhancedProductsView() {
 
                   <div className="flex items-center gap-2 text-xs">
                     <span className="text-muted-foreground">SKU:</span>
-                    <span className="font-mono">{product.sku}</span>
+                    <span className="font-mono">{product.sku || 'N/A'}</span>
                   </div>
+                  
+                  {product.categoryName && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-muted-foreground">Category:</span>
+                      <span>{product.categoryName}</span>
+                    </div>
+                  )}
+                  
+                  {product.warehouseName && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-muted-foreground">Warehouse:</span>
+                      <span>{product.warehouseName}</span>
+                    </div>
+                  )}
 
                   <div className="flex flex-wrap gap-1">
                     {getStatusBadge(product.isActive)}
+                    {!product.isActive && product.vendorId && (
+                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
+                        Pending
+                      </Badge>
+                    )}
                     {getStockStatusBadge(product)}
                     {product.isFeatured && <Badge variant="secondary">Featured</Badge>}
+                    {product.type === 'collection' && <Badge variant="outline">Collection</Badge>}
                   </div>
 
                   {/* Enhanced Stats */}

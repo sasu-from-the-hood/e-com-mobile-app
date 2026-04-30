@@ -8,6 +8,7 @@ import { type GenerationJob } from '@/config/3d-agent.config'
 import * as THREE from 'three'
 import { ErrorBoundary } from 'react-error-boundary'
 import { orpc } from '@/lib/oprc'
+import { URL as AppURL } from '@/config'
 
 interface ModelViewerProps {
   job: GenerationJob
@@ -75,22 +76,33 @@ export function ModelViewer({ job, onClose }: ModelViewerProps) {
   
   // Use saved model URLs if available, otherwise use job result URLs
   const glbUrl = savedModelData?.leftLegFile 
-    ? `http://localhost:3000/api/admin/3d-models/files/${savedModelData.leftLegFile}` 
+    ? `${AppURL.BASE}/api/admin/3d-models/files/${savedModelData.leftLegFile}` 
     : (job.result?.fileUrl || '')
   const glbUrl2 = savedModelData?.rightLegFile 
-    ? `http://localhost:3000/api/admin/3d-models/files/${savedModelData.rightLegFile}` 
+    ? `${AppURL.BASE}/api/admin/3d-models/files/${savedModelData.rightLegFile}` 
     : (job.result?.fileUrl2 || '')
   
-  const hasBothLegs = job.bodyPartType === 'both-legs' && glbUrl && glbUrl2
+  // Convert relative URLs to absolute URLs
+  const absoluteGlbUrl = glbUrl.startsWith('http') ? glbUrl : (glbUrl ? `${AppURL.BASE}${glbUrl}` : '')
+  const absoluteGlbUrl2 = glbUrl2.startsWith('http') ? glbUrl2 : (glbUrl2 ? `${AppURL.BASE}${glbUrl2}` : '')
+  
+  const hasBothLegs = job.bodyPartType === 'both-legs' && absoluteGlbUrl && absoluteGlbUrl2
   
   // Also try the HTML path as fallback
   const htmlUrl = job.result?.outputHtml 
     ? `${job.apiUrl}${job.result.outputHtml}` 
     : null
 
-  console.log('🎨 Model Viewer - Full Job:', job)
-  console.log('🎨 Model Viewer - Result:', job.result)
-  console.log('🎨 Model Viewer URLs:', { glbUrl, glbUrl2, htmlUrl, hasBothLegs, savedModelData })
+  console.log('🎨 Model Viewer URLs:', { 
+    glbUrl, 
+    glbUrl2,
+    absoluteGlbUrl,
+    absoluteGlbUrl2,
+    hasBothLegs, 
+    savedModelData,
+    jobResultFileUrl: job.result?.fileUrl,
+    jobResultFileUrl2: job.result?.fileUrl2
+  })
   
   // Fetch GLB files with bypass header and convert to blob URLs
   useEffect(() => {
@@ -134,20 +146,20 @@ export function ModelViewer({ job, onClose }: ModelViewerProps) {
     const loadGLBs = async () => {
       try {
         // Load first GLB (left leg or single item)
-        if (glbUrl && isMounted && !isCheckingSaved) {
+        if (absoluteGlbUrl && isMounted && !isCheckingSaved) {
           // Check if URL is from local server or external
-          const isLocalUrl = glbUrl.startsWith('http://localhost') || glbUrl.startsWith('/api/')
+          const isLocalUrl = absoluteGlbUrl.startsWith('http://localhost') || absoluteGlbUrl.startsWith(AppURL.BASE)
           
           if (isLocalUrl) {
             console.log('📥 Fetching left leg GLB from local server...')
-            const blobUrl = await fetchDirectly(glbUrl)
+            const blobUrl = await fetchDirectly(absoluteGlbUrl)
             if (isMounted) {
               setProxiedGlbUrl(blobUrl)
               console.log('✅ Left leg GLB loaded from local server')
             }
           } else {
             console.log('📥 Fetching left leg GLB via proxy...')
-            const blobUrl = await fetchViaProxy(glbUrl)
+            const blobUrl = await fetchViaProxy(absoluteGlbUrl)
             if (isMounted) {
               setProxiedGlbUrl(blobUrl)
               console.log('✅ Left leg GLB loaded via proxy')
@@ -156,20 +168,20 @@ export function ModelViewer({ job, onClose }: ModelViewerProps) {
         }
         
         // Load second GLB (right leg) if exists
-        if (glbUrl2 && isMounted && !isCheckingSaved) {
+        if (absoluteGlbUrl2 && isMounted && !isCheckingSaved) {
           // Check if URL is from local server or external
-          const isLocalUrl = glbUrl2.startsWith('http://localhost') || glbUrl2.startsWith('/api/')
+          const isLocalUrl = absoluteGlbUrl2.startsWith('http://localhost') || absoluteGlbUrl2.startsWith(AppURL.BASE)
           
           if (isLocalUrl) {
             console.log('📥 Fetching right leg GLB from local server...')
-            const blobUrl2 = await fetchDirectly(glbUrl2)
+            const blobUrl2 = await fetchDirectly(absoluteGlbUrl2)
             if (isMounted) {
               setProxiedGlbUrl2(blobUrl2)
               console.log('✅ Right leg GLB loaded from local server')
             }
           } else {
             console.log('📥 Fetching right leg GLB via proxy...')
-            const blobUrl2 = await fetchViaProxy(glbUrl2)
+            const blobUrl2 = await fetchViaProxy(absoluteGlbUrl2)
             if (isMounted) {
               setProxiedGlbUrl2(blobUrl2)
               console.log('✅ Right leg GLB loaded via proxy')
@@ -184,7 +196,7 @@ export function ModelViewer({ job, onClose }: ModelViewerProps) {
       }
     }
     
-    if (glbUrl && !isCheckingSaved) {
+    if (absoluteGlbUrl && !isCheckingSaved) {
       loadGLBs()
     }
     
@@ -198,7 +210,7 @@ export function ModelViewer({ job, onClose }: ModelViewerProps) {
         URL.revokeObjectURL(proxiedGlbUrl2)
       }
     }
-  }, [glbUrl, glbUrl2, isCheckingSaved]) // Depend on both URLs and checking state
+  }, [absoluteGlbUrl, absoluteGlbUrl2, isCheckingSaved]) // Depend on both URLs and checking state
 
   const handleDownload = () => {
     if (job.result?.fileUrl) {
@@ -468,7 +480,7 @@ export function ModelViewer({ job, onClose }: ModelViewerProps) {
                     </div>
                   )}
                 </>
-              ) : glbUrl ? (
+              ) : absoluteGlbUrl ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8 max-w-md">
                     <div className="relative w-16 h-16 mx-auto mb-4">
@@ -504,17 +516,25 @@ export function ModelViewer({ job, onClose }: ModelViewerProps) {
             <CardTitle className="text-base">Generation Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">API URL:</span>
-              <a 
-                href={job.apiUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline truncate max-w-[200px]"
-              >
-                {new URL(job.apiUrl).hostname}
-              </a>
-            </div>
+            {job.apiUrl && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">API URL:</span>
+                <a 
+                  href={job.apiUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline truncate max-w-[200px]"
+                >
+                  {(() => {
+                    try {
+                      return new URL(job.apiUrl).hostname
+                    } catch {
+                      return job.apiUrl
+                    }
+                  })()}
+                </a>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-muted-foreground">Status:</span>
               <span className="font-medium">{job.status}</span>

@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/sidebar"
 
 type SidebarData = {
-  primary: Array<{ title: string; url: string; icon?: React.ComponentType }>
-  secondary: Array<{ title: string; url: string; icon?: React.ComponentType }>
+  primary: Array<{ title: string; url: string; icon?: React.ComponentType; onClick?: () => void; badge?: number }>
+  secondary: Array<{ title: string; url: string; icon?: React.ComponentType; onClick?: () => void; badge?: number }>
 }
 
 type UserData = {

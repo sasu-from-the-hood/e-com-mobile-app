@@ -1,8 +1,10 @@
+export * from './3d-models.js';
 export * from './auth-schema.js';
 export * from './categories.js';
 export * from './products.js';
 export * from './warehouses.js';
 export * from './delivery-boys.js';
+export * from './delivery-boy-warehouses.js';
 export * from './addresses.js';
 export * from './payment-methods.js';
 export * from './orders.js';
@@ -22,4 +24,6 @@ export * from './inventory.js';
 export * from './product-seo.js';
 export * from './help-articles.js';
 export * from './app-settings.js';
+export * from './vendor-warehouses.js';
+export * from './fashion-posts.js';
 //# sourceMappingURL=index.d.ts.map

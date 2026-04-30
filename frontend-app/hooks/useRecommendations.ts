@@ -6,20 +6,22 @@ export function useRecommendations(limit = 10) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchRecommendations = async () => {
-      try {
-        setLoading(true);
-        const result = await orpcClient.getRecommendations({ limit });
-        setRecommendations(result);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch recommendations');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchRecommendations = async () => {
+    try {
+      setLoading(true);
+      const result = await orpcClient.getRecommendations({ limit });
+      // Filter out collections - only show single products
+      const singleProducts = result.filter((p: any) => p.type !== 'collection');
+      setRecommendations(singleProducts);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch recommendations');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchRecommendations();
   }, [limit]);
 
@@ -31,5 +33,5 @@ export function useRecommendations(limit = 10) {
     }
   };
 
-  return { recommendations, loading, error, trackInteraction };
+  return { recommendations, loading, error, trackInteraction, refetch: fetchRecommendations };
 }

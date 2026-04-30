@@ -1,35 +1,33 @@
-import { View, Text, StyleSheet, Dimensions, ImageBackground } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import type { OnboardingData } from './onboarding-mock-data';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+const SCENE_HEIGHT = height * 0.72; // full top coverage
 
-export interface OnboardingSlideProps {
-  image: any;
-  title: string;
-  description: string;
+interface OnboardingSlideProps {
+  item: OnboardingData;
 }
 
-export function OnboardingSlide({ image, title, description }: OnboardingSlideProps) {
+export function OnboardingSlide({ item }: OnboardingSlideProps) {
+  const Illustration = item.illustration;
+
   return (
-    <View style={styles.container}>
-      <ImageBackground
-        source={image}
-        style={styles.imageContainer}
-        resizeMode="cover"
-      >
-        <LinearGradient
-          colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.8)', '#FFFFFF']}
-          locations={[0, 0.4, 0.7, 1]}
-          style={styles.gradient}
-        />
-      </ImageBackground>
-      <View style={styles.textContainer}>
-        <Text style={styles.title}>
-          {title}
-        </Text>
-        <Text style={styles.description}>
-          {description}
-        </Text>
+    <View style={[styles.container, { width }]}>
+      {/* Dark scene — fills top of screen */}
+      <View style={[styles.scene, { backgroundColor: item.bgColor }]}>
+        <View style={[styles.blob, styles.blobTL, { backgroundColor: item.blob1 }]} />
+        <View style={[styles.blob, styles.blobBR, { backgroundColor: item.blob2 }]} />
+        <View style={styles.svgWrap}>
+          <Illustration />
+        </View>
+      </View>
+
+      {/* White card — subtle curve, overlaps scene */}
+      <View style={styles.card}>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>{item.title}</Text>
+        </View>
+        <Text style={styles.description}>{item.description}</Text>
       </View>
     </View>
   );
@@ -37,44 +35,66 @@ export function OnboardingSlide({ image, title, description }: OnboardingSlidePr
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
+  },
+  scene: {
     width,
+    height: SCENE_HEIGHT,
     alignItems: 'center',
-    paddingHorizontal: 24,
-    backgroundColor: '#FFFFFF',
-  },
-  imageContainer: {
-    width: width,
-    height: width,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     overflow: 'hidden',
-    marginBottom: 24,
-    backgroundColor: '#F5F5F5',
   },
-
-  gradient: {
+  blob: {
     position: 'absolute',
-    top: 90,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    borderRadius: 999,
   },
-  textContainer: {
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    backgroundColor: 'transparent',
+  blobTL: {
+    width: width * 0.7,
+    height: width * 0.7,
+    top: -width * 0.12,
+    left: -width * 0.14,
+    opacity: 0.85,
+  },
+  blobBR: {
+    width: width * 0.55,
+    height: width * 0.55,
+    bottom: -width * 0.08,
+    right: -width * 0.08,
+    opacity: 0.7,
+  },
+  svgWrap: {
+    zIndex: 2,
+  },
+  // White card: very subtle curve — borderRadius 6 on top corners only
+  card: {
+    width,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+    marginTop: -6,
+    paddingHorizontal: 28,
+    paddingTop: 22,
+    paddingBottom: 8,
+    zIndex: 3,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 16,
-    lineHeight: 32,
-    color: '#000000',
+    flex: 1,
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#111',
+    lineHeight: 30,
+    letterSpacing: -0.3,
+    paddingRight: 12,
   },
   description: {
-    fontSize: 14,
-    textAlign: 'center',
+    fontSize: 13.5,
     lineHeight: 22,
-    color: '#757575',
+    color: '#888',
   },
 });

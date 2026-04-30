@@ -7,6 +7,7 @@ import { Search, Bell } from 'lucide-react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Avatar } from '@/components/ui/Avatar';
 import { PromotionalBanner, CategoryCard, TabNavigation, ProductCard } from '@/components/shop';
+import { CollectionCard } from '@/components/shop/collection-card';
 import { ProductSkeleton } from '@/components/shop/product-skeleton';
 import { BottomTabBar } from '@/components/navigation/bottom-tab-bar';
 import { AppTheme } from '@/constants/app-theme';
@@ -15,7 +16,9 @@ import { useRecommendations } from '@/hooks/useRecommendations';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuth } from '@/hooks/useAuth';
 import { useNewArrivals } from '@/hooks/useNewArrivals';
+import { useCollections } from '@/hooks/useCollections';
 import { useBrowseAll } from '@/hooks/useBrowseAll';
+import { useBanners } from '@/hooks/useBanners';
 import { authConfig as URL } from '@/config/auth.config';
 
 export default function ShopHomeScreen() {
@@ -23,13 +26,15 @@ export default function ShopHomeScreen() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'Home' | 'Category'>('Home');
   const { products: newArrivals, loading: newArrivalsLoading, refetch: refetchNewArrivals } = useNewArrivals(8);
+  const { collections, loading: collectionsLoading, refetch: refetchCollections } = useCollections(6);
   const { categories } = useCategories();
-  const { recommendations, loading: recommendationsLoading, trackInteraction } = useRecommendations(6);
+  const { recommendations, loading: recommendationsLoading, trackInteraction, refetch: refetchRecommendations } = useRecommendations(6);
   const { unreadCount } = useNotifications();
+  const { refetch: refetchBanners } = useBanners(); // Add banner refetch
   
   // Get IDs to exclude from browse all
   const excludeIds = [...newArrivals.map((p: any) => p.id), ...recommendations.map((p: any) => p.id)];
-  const { products: browseAllProducts, loading: browseAllLoading } = useBrowseAll(excludeIds, 6);
+  const { products: browseAllProducts, loading: browseAllLoading, refetch: refetchBrowseAll } = useBrowseAll(excludeIds, 6);
   
   const [isBottomNavVisible, setIsBottomNavVisible] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -96,7 +101,14 @@ export default function ShopHomeScreen() {
                 refreshing={refreshing}
                 onRefresh={async () => {
                   setRefreshing(true);
-                  await refetchNewArrivals();
+                  // Refresh all sections: banners, new arrivals, collections, recommendations, and browse all
+                  await Promise.all([
+                    refetchBanners(),
+                    refetchNewArrivals(), 
+                    refetchCollections(),
+                    refetchRecommendations(),
+                    refetchBrowseAll()
+                  ]);
                   setRefreshing(false);
                 }}
               />
@@ -159,6 +171,35 @@ export default function ShopHomeScreen() {
                   <View key={index} style={styles.productCard}>
                     <ProductSkeleton />
                   </View>
+                ))}
+              </ScrollView>
+            </>
+          )}
+
+          {/* Collections Section - Only show if there are collections */}
+          {!collectionsLoading && collections.length > 0 && (
+            <>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionTitleContainer}>
+                  <ThemedText style={styles.sectionTitle}>Collections </ThemedText>
+                  <ThemedText style={styles.fireEmoji}>👔</ThemedText>
+                </View>
+              </View>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalScrollContent}
+              >
+                {collections.map((collection: any) => (
+                  <CollectionCard
+                    key={collection.id}
+                    collection={collection}
+                    onPress={() => {
+                      trackInteraction(collection.id, 'view');
+                      router.push(`/shop/product-detail?id=${collection.id}`);
+                    }}
+                  />
                 ))}
               </ScrollView>
             </>

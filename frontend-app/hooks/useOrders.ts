@@ -43,24 +43,24 @@ export function useOrder(id: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchOrder = async () => {
     if (!id) return;
+    
+    try {
+      setLoading(true);
+      const result = await orpcClient.appGetOrder(id);
+      setOrder(result);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch order');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchOrder = async () => {
-      try {
-        setLoading(true);
-        const result = await orpcClient.appGetOrder(id);
-        setOrder(result);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch order');
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchOrder();
   }, [id]);
 
-  return { order, loading, error };
+  return { order, loading, error, refetch: fetchOrder };
 }

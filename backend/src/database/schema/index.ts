@@ -5,6 +5,7 @@ export * from './categories.js';
 export * from './products.js';
 export * from './warehouses.js';
 export * from './delivery-boys.js';
+export * from './delivery-boy-warehouses.js';
 export * from './addresses.js';
 export * from './payment-methods.js';
 export * from './orders.js';
@@ -28,3 +29,7 @@ export * from './product-seo.js';
 // Help and settings
 export * from './help-articles.js';
 export * from './app-settings.js';
+export * from './vendor-warehouses.js';
+
+// Fashion posts (3D social feed)
+export * from './fashion-posts.js';

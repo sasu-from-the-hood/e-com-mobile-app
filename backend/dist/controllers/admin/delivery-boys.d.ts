@@ -56,6 +56,10 @@ export declare const getDeliveryBoys: import("@orpc/server").DecoratedProcedure<
         banExpires?: Date | null | undefined;
     };
 }>>, import("@orpc/contract").Schema<unknown, unknown>, import("@orpc/contract").Schema<{
+    assignedWarehouses: {
+        id: any;
+        name: any;
+    }[];
     id: string;
     name: string;
     phone: string;
@@ -73,6 +77,10 @@ export declare const getDeliveryBoys: import("@orpc/server").DecoratedProcedure<
     notes: string | null;
     createdAt: Date;
 }[], {
+    assignedWarehouses: {
+        id: any;
+        name: any;
+    }[];
     id: string;
     name: string;
     phone: string;
@@ -248,6 +256,7 @@ export declare const createDeliveryBoy: import("@orpc/server").DecoratedProcedur
     vehicleType: z.ZodOptional<z.ZodString>;
     vehiclePlateNumber: z.ZodOptional<z.ZodString>;
     warehouseId: z.ZodOptional<z.ZodString>;
+    warehouseIds: z.ZodOptional<z.ZodArray<z.ZodString>>;
     isActive: z.ZodOptional<z.ZodBoolean>;
     isAvailable: z.ZodOptional<z.ZodBoolean>;
     notes: z.ZodOptional<z.ZodString>;
@@ -350,6 +359,7 @@ export declare const updateDeliveryBoy: import("@orpc/server").DecoratedProcedur
     vehicleType: z.ZodOptional<z.ZodString>;
     vehiclePlateNumber: z.ZodOptional<z.ZodString>;
     warehouseId: z.ZodOptional<z.ZodString>;
+    warehouseIds: z.ZodOptional<z.ZodArray<z.ZodString>>;
     isActive: z.ZodOptional<z.ZodBoolean>;
     isAvailable: z.ZodOptional<z.ZodBoolean>;
     notes: z.ZodOptional<z.ZodString>;
@@ -480,12 +490,12 @@ export declare const getDeliveryBoyStats: import("@orpc/server").DecoratedProced
     active: number;
     available: number;
     onDelivery: number;
-} | undefined, {
+}, {
     total: number;
     active: number;
     available: number;
     onDelivery: number;
-} | undefined>, Record<never, never>, Record<never, never>>;
+}>, Record<never, never>, Record<never, never>>;
 export declare const assignDeliveryBoy: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
     user: {
         id: string;

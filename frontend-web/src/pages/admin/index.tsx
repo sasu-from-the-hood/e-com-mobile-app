@@ -1,10 +1,11 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import DashboardShell from "@/components/layouts/dashboard-shell"
-import { IconUsers, IconDashboard, IconPackage, IconCategory, IconHelp, IconSettings, IconMapPin, IconBike, IconShoppingCart, IconTerminal, IconCube } from "@tabler/icons-react"
+import { IconUsers, IconDashboard, IconPackage, IconCategory, IconHelp, IconSettings, IconMapPin, IconBike, IconShoppingCart, IconTerminal, IconCube, IconShirt } from "@tabler/icons-react"
 import { useSession } from "@/hooks/auth/auth-client"
 import { DashboardView } from "./dashboard-view"
 import { UsersView } from "./user/users-view"
 import { ProductsView } from "./product/products-view"
+import { ProductCollectionsView } from "./product/product-collections-view"
 import { CategoriesView } from "./catagores/categories-view"
 import { HelpArticlesView } from "./help/help-articles-view"
 import { SettingsView } from "./settings/settings-view"
@@ -16,17 +17,47 @@ import { Agent3DView } from "./3d-agent/3d-agent-view"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { Agent3DProvider, useAgent3D } from "@/contexts/3d-agent-context"
 import { GenerationQueue } from "./3d-agent/generation-queue"
+import { orpc } from "@/lib/oprc"
 
 function AdminPage() {
   const { data: session } = useSession()
   const [activeView, setActiveView] = useState("dashboard")
+  const [pendingCount, setPendingCount] = useState(0)
+
+  // Fetch pending products count
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const response = await orpc.getAdminProducts({ 
+          status: 'pending',
+          page: 1,
+          limit: 1
+        })
+        setPendingCount(response?.pagination?.total || 0)
+      } catch (error) {
+        console.error('Failed to fetch pending count:', error)
+      }
+    }
+    
+    fetchPendingCount()
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchPendingCount, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   const sidebarData = {
     primary: [
       { title: "Dashboard", url: "#", icon: IconDashboard, onClick: () => setActiveView("dashboard") },
       { title: "Orders", url: "#", icon: IconShoppingCart, onClick: () => setActiveView("orders") },
       { title: "Users", url: "#", icon: IconUsers, onClick: () => setActiveView("users") },
-      { title: "Products", url: "#", icon: IconPackage, onClick: () => setActiveView("products") },
+      { 
+        title: "Products", 
+        url: "#", 
+        icon: IconPackage, 
+        onClick: () => setActiveView("products"),
+        badge: pendingCount > 0 ? pendingCount : undefined
+      },
+      { title: "Product Collections", url: "#", icon: IconShirt, onClick: () => setActiveView("collections") },
       { title: "Categories", url: "#", icon: IconCategory, onClick: () => setActiveView("categories") },
       { title: "Warehouses", url: "#", icon: IconMapPin, onClick: () => setActiveView("warehouses") },
       { title: "Delivery Boys", url: "#", icon: IconBike, onClick: () => setActiveView("delivery-boys") },
@@ -56,6 +87,8 @@ function AdminPage() {
         return <UsersView />
       case "products":
         return <ProductsView />
+      case "collections":
+        return <ProductCollectionsView />
       case "categories":
         return <CategoriesView />
       case "warehouses":

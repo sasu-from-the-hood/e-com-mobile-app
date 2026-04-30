@@ -32,6 +32,11 @@ interface MapComponentProps {
     longitudeDelta: number;
   };
   showControls?: boolean;
+  disableAutoCenter?: boolean;
+  initialZoom?: number;
+  onZoomChange?: (zoom: number) => void;
+  onCenterChange?: (center: { latitude: number; longitude: number }) => void;
+  hideCurrentLocation?: boolean;
 }
 
 export const MapComponent = React.memo(
@@ -44,11 +49,22 @@ export const MapComponent = React.memo(
         onMapPress,
         initialRegion,
         showControls = true,
+        disableAutoCenter = false,
+        initialZoom = 15,
+        onZoomChange,
+        onCenterChange,
+        hideCurrentLocation = false,
       },
       ref
     ) => {
       const webViewRef = useRef<WebView>(null);
       const [mapType, setMapType] = useState<'standard' | 'satellite'>('standard');
+      const [currentZoom, setCurrentZoom] = useState(initialZoom);
+      const [currentCenter, setCurrentCenter] = useState(
+        initialRegion
+          ? { latitude: initialRegion.latitude, longitude: initialRegion.longitude }
+          : { latitude: 9.03, longitude: 38.74 }
+      );
       const [location, setLocation] = useState(
         initialRegion
           ? { latitude: initialRegion.latitude, longitude: initialRegion.longitude }
@@ -56,6 +72,11 @@ export const MapComponent = React.memo(
       );
 
       useEffect(() => {
+        // Skip auto-centering if disabled (e.g., for map picker)
+        if (disableAutoCenter) {
+          return;
+        }
+
         (async () => {
           const { status } = await Location.requestForegroundPermissionsAsync();
           if (status !== 'granted') {
@@ -69,7 +90,7 @@ export const MapComponent = React.memo(
             longitude: currentLocation.coords.longitude,
           });
         })();
-      }, []);
+      }, [disableAutoCenter]);
 
       useImperativeHandle(ref, () => ({
         flyTo: (options: { center: [number, number]; zoom?: number }) => {
@@ -99,8 +120,8 @@ export const MapComponent = React.memo(
             true;
           `);
         },
-        getCenter: () => location,
-        getZoom: () => 12,
+        getCenter: () => currentCenter,
+        getZoom: () => currentZoom,
       }));
 
       const handleMapTypeChange = (type: 'standard' | 'satellite') => {
@@ -168,19 +189,21 @@ export const MapComponent = React.memo(
       // Create markers GeoJSON
       const markers = [];
       
-      // Add user location marker
-      markers.push({
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [location.longitude, location.latitude],
-        },
-        properties: {
-          color: '#4285F4',
-          size: 12,
-          title: 'Your Location',
-        },
-      });
+      // Add user location marker only if not hidden
+      if (!hideCurrentLocation) {
+        markers.push({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [location.longitude, location.latitude],
+          },
+          properties: {
+            color: '#4285F4',
+            size: 12,
+            title: 'Your Location',
+          },
+        });
+      }
 
       // Add destination marker if provided
       if (destination) {
@@ -245,7 +268,7 @@ export const MapComponent = React.memo(
               container: 'map',
               style: 'https://tiles.openfreemap.org/styles/liberty',
               center: [${location.longitude}, ${location.latitude}],
-              zoom: 15,
+              zoom: ${initialZoom},
               pitch: ${mapType === 'satellite' ? 60 : 0},
               bearing: ${mapType === 'satellite' ? -20 : 0}
             });
@@ -270,6 +293,29 @@ export const MapComponent = React.memo(
                   'circle-stroke-color': '#FFFFFF'
                 }
               });
+            });
+
+            // Track zoom changes
+            window.map.on('zoomend', () => {
+              const zoom = window.map.getZoom();
+              if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                  type: 'zoomChange',
+                  zoom: zoom
+                }));
+              }
+            });
+
+            // Track center changes (pan/move)
+            window.map.on('moveend', () => {
+              const center = window.map.getCenter();
+              if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                  type: 'centerChange',
+                  latitude: center.lat,
+                  longitude: center.lng
+                }));
+              }
             });
 
             window.map.on('click', (e) => {
@@ -302,6 +348,20 @@ export const MapComponent = React.memo(
                     latitude: data.latitude,
                     longitude: data.longitude,
                   });
+                } else if (data.type === 'zoomChange') {
+                  setCurrentZoom(data.zoom);
+                  if (onZoomChange) {
+                    onZoomChange(data.zoom);
+                  }
+                } else if (data.type === 'centerChange') {
+                  const newCenter = {
+                    latitude: data.latitude,
+                    longitude: data.longitude,
+                  };
+                  setCurrentCenter(newCenter);
+                  if (onCenterChange) {
+                    onCenterChange(newCenter);
+                  }
                 }
               } catch (e) {
                 console.error('Error parsing WebView message:', e);

@@ -32,6 +32,10 @@ import * as appAuthOrders from '../controllers/app-auth/orders.js'
 import * as appAuthNotifications from '../controllers/app-auth/notifications.js'
 import * as threeDModels from '../controllers/admin/3d-models-orpc.js'
 import * as threeDProxy from '../controllers/admin/3d-proxy.js'
+import * as vendorWarehouses from '../controllers/admin/vendor-warehouses.js'
+import * as vendor from '../controllers/vendor/vendor.js'
+import * as delivery from '../controllers/delivery/delivery.js'
+import * as fashionPosts from '../controllers/fashion-posts/fashion-posts.js'
 import { handshake } from '../utils/handshake.js'
 
 export const router = os.router({
@@ -69,6 +73,7 @@ export const router = os.router({
   getOrder: orders.getOrder,
   createOrder: orders.createOrder,
   cancelOrder: orders.cancelOrder,
+  completeOrder: orders.completeOrder,
   updateOrderStatus: orders.updateOrderStatus,
   updateOrderDeliveryBoy: orders.updateDeliveryBoy,
   getOrderWarehouse: orders.getOrderWarehouse,
@@ -194,6 +199,7 @@ export const router = os.router({
   appGetOrders: appAuthOrders.getOrders,
   appGetOrder: appAuthOrders.getOrder,
   appCreateOrder: appAuthOrders.createOrder,
+  appCompleteOrder: appAuthOrders.completeOrder,
 
   // App Notifications (JWT-protected for mobile app)
   appGetNotifications: appAuthNotifications.getNotifications,
@@ -206,7 +212,47 @@ export const router = os.router({
   list3DModels: threeDModels.list3DModels,
   delete3DModel: threeDModels.delete3DModel,
   checkModelSaved: threeDModels.checkModelSaved,
+  get3DModel: threeDModels.get3DModel, // User-accessible endpoint
   proxyGLB: threeDProxy.proxyGLB,
+
+  // Vendor Warehouses
+  getVendorWarehouses: vendorWarehouses.getVendorWarehouses,
+  setVendorWarehouses: vendorWarehouses.setVendorWarehouses,
+
+  // Vendor Dashboard
+  getVendorStats: vendor.getVendorStats,
+  getVendorProducts: vendor.getVendorProducts,
+  createVendorProduct: vendor.createVendorProduct,
+  updateVendorProduct: vendor.updateVendorProduct,
+  deleteVendorProduct: vendor.deleteVendorProduct,
+  getVendorOwnWarehouses: vendor.getVendorOwnWarehouses,
+  getAllWarehousesForVendor: vendor.getAllWarehousesForVendor,
+  updateVendorWarehouse: vendor.updateVendorWarehouse,
+  getVendorOrders: vendor.getVendorOrders,
+
+  // Delivery Boy
+  deliveryBoyLogin: delivery.deliveryBoyLogin,
+  deliveryBoyRefreshToken: delivery.deliveryBoyRefreshToken,
+  getMyAssignedOrders: delivery.getMyAssignedOrders,
+  getClaimableOrders: delivery.getClaimableOrders,
+  claimOrder: delivery.claimOrder,
+  updateDeliveryStatus: delivery.updateDeliveryStatus,
+  deliveryGetStats: delivery.getDeliveryBoyStats,
+
+  // Fashion Posts (3D Social Feed)
+  createPost: fashionPosts.createPost,
+  getFeedPosts: fashionPosts.getFeedPosts,
+  getMyPosts: fashionPosts.getMyPosts,
+  getDraftPosts: fashionPosts.getDraftPosts,
+  getPostById: fashionPosts.getPostById,
+  updatePost: fashionPosts.updatePost,
+  likePost: fashionPosts.likePost,
+  savePost: fashionPosts.savePost,
+  sharePost: fashionPosts.sharePost,
+  viewPost: fashionPosts.viewPost,
+  followUser: fashionPosts.followUser,
+  getFollowLists: fashionPosts.getFollowLists,
+  deletePost: fashionPosts.deletePost,
 
   //  handshake
   handshake,

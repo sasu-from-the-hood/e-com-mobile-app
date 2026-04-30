@@ -64,6 +64,16 @@ export const refreshToken = os
   .input(z.object({
     refreshToken: z.string(),
   }))
+  .output(z.union([
+    z.object({
+      success: z.literal(false),
+      error: z.string(),
+    }),
+    z.object({
+      accessToken: z.string(),
+      refreshToken: z.string(),
+    }),
+  ]))
   .handler(async ({ input }) => {
     const { refreshToken } = input
 
@@ -74,7 +84,7 @@ export const refreshToken = os
     if (!payload) {
       logger.warn('[Session] Invalid refresh token')
       return {
-        success: false,
+        success: false as const,
         error: 'Invalid or expired refresh token',
       }
     }
@@ -89,7 +99,7 @@ export const refreshToken = os
     if (!currentUser) {
       logger.warn(`[Session] User not found: ${payload.userId}`)
       return {
-        success: false,
+        success: false as const,
         error: 'User not found',
       }
     }
@@ -98,7 +108,7 @@ export const refreshToken = os
     if (currentUser.banned) {
       logger.warn(`[Session] Banned user attempted refresh: ${currentUser.id}`)
       return {
-        success: false,
+        success: false as const,
         error: 'Account suspended',
       }
     }
@@ -115,8 +125,13 @@ export const refreshToken = os
     })
 
     logger.info(`[Session] Tokens refreshed for user: ${currentUser.id}`)
+    logger.info(`[Session] New access token length: ${tokens.accessToken.length}`)
+    logger.info(`[Session] New refresh token length: ${tokens.refreshToken.length}`)
 
-    return tokens
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    }
   })
 
 // Logout (client-side token deletion, no server action needed)

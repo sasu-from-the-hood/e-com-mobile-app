@@ -6,7 +6,6 @@ export { TextLink } from './text-link';
 export { onboardingMockData } from './onboarding-mock-data';
 export type { OnboardingData } from './onboarding-mock-data';
 export type { OnboardingScreenProps } from './onboarding-screen';
-export type { OnboardingSlideProps } from './onboarding-slide';
 export type { PaginationDotsProps } from './pagination-dots';
 export type { PrimaryButtonProps } from './primary-button';
 export type { TextLinkProps } from './text-link';

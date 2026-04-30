@@ -1,16 +1,20 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Plus, X, Upload } from "lucide-react"
-import { URL } from "@/config"
+import { Plus, X, Upload, Sparkles } from "lucide-react"
+import { URL as AppURL } from "@/config"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface ColorImagesManagerProps {
   colorImages: Record<string, any> | null | undefined
   onChange: (colorImages: Record<string, (string | File)[]>) => void
+  onGenerateGLB?: (color: string, images: (string | File)[], bodyPartType: string) => void
+  hideGLBGeneration?: boolean
 }
 
-export function VariantManager({ colorImages, onChange }: ColorImagesManagerProps) {
+export function VariantManager({ colorImages, onChange, onGenerateGLB, hideGLBGeneration = false }: ColorImagesManagerProps) {
   const [newColor, setNewColor] = useState("#000000")
+  const [bodyPartTypes, setBodyPartTypes] = useState<Record<string, string>>({}) // Store body part type per color
 
   const addColor = () => {
     if (colorImages && colorImages[newColor]) {
@@ -87,12 +91,47 @@ export function VariantManager({ colorImages, onChange }: ColorImagesManagerProp
             </div>
 
             <div className="space-y-2">
-              <Label>Images for {color}</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label>Images for {color}</Label>
+                {imageArray.length === 4 && onGenerateGLB && !hideGLBGeneration && (
+                  <div className="flex items-center gap-2">
+                    <Select 
+                      value={bodyPartTypes[color] || 'chest'} 
+                      onValueChange={(value) => setBodyPartTypes(prev => ({ ...prev, [color]: value }))}
+                    >
+                      <SelectTrigger className="w-32 h-8">
+                        <SelectValue placeholder="Body Part" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="chest">Chest</SelectItem>
+                        <SelectItem value="both-legs">Both Legs</SelectItem>
+                        <SelectItem value="left-leg">Left Leg</SelectItem>
+                        <SelectItem value="right-leg">Right Leg</SelectItem>
+                        <SelectItem value="top-head">Top Head</SelectItem>
+                        <SelectItem value="middle-head">Middle Head</SelectItem>
+                        <SelectItem value="lower-head">Lower Head</SelectItem>
+                        <SelectItem value="left-hand">Left Hand</SelectItem>
+                        <SelectItem value="right-hand">Right Hand</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onGenerateGLB(color, imageArray, bodyPartTypes[color] || 'chest')}
+                      className="gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Make GLB
+                    </Button>
+                  </div>
+                )}
+              </div>
               <div className="flex flex-wrap gap-2">
                 {imageArray.map((image, idx) => (
                   <div key={idx} className="relative group">
                     <img
-                      src={typeof image === 'string' ? URL.IMAGE + image : window.URL.createObjectURL(image)}
+                      src={typeof image === 'string' ? AppURL.IMAGE + image : window.URL.createObjectURL(image)}
                       alt={`${color} ${idx}`}
                       className="w-20 h-20 object-cover rounded border"
                     />
@@ -116,6 +155,11 @@ export function VariantManager({ colorImages, onChange }: ColorImagesManagerProp
                   />
                 </label>
               </div>
+              {imageArray.length < 4 && !hideGLBGeneration && (
+                <p className="text-xs text-muted-foreground">
+                  Upload 4 images (front, back, left, right) to enable GLB generation
+                </p>
+              )}
             </div>
           </div>
         )

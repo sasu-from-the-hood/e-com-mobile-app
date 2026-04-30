@@ -1,54 +1,42 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/themed-text';
 import { AppTheme } from '@/constants/app-theme';
 import { useBanners } from '@/hooks/useBanners';
 import { authConfig } from '@/config/auth.config';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BANNER_WIDTH = SCREEN_WIDTH - (AppTheme.spacing.md * 2);
+const BANNER_WIDTH = SCREEN_WIDTH - AppTheme.spacing.md * 2;
 
-interface BannerData {
-  id: string;
-  title: string;
-  subtitle: string;
-  imageUrl: string;
-  imageAlt: string;
-  productId?: string;
-  type?: string;
-}
+// Cycle through gradient pairs per banner slot
+const GRADIENTS: [string, string][] = [
+  ['#5B4CCC', '#8B7FE8'],
+  ['#2D1B8E', '#5B4CCC'],
+  ['#7C3AED', '#4C3AB0'],
+];
 
 interface PromotionalBannerProps {
   onBannerPress?: (productId: string) => void;
+  onRefresh?: () => Promise<void>; // Add refresh callback
 }
 
-export function PromotionalBanner({ onBannerPress }: PromotionalBannerProps) {
+export function PromotionalBanner({ onBannerPress, onRefresh }: PromotionalBannerProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
-  const { banners: backendBanners, loading } = useBanners();
-
+  const { banners: backendBanners } = useBanners();
   const banners = backendBanners || [];
 
   const handleScroll = (event: any) => {
-    const scrollPosition = event.nativeEvent.contentOffset.x;
-    const index = Math.round(scrollPosition / BANNER_WIDTH);
+    const index = Math.round(event.nativeEvent.contentOffset.x / BANNER_WIDTH);
     setActiveIndex(index);
   };
 
   const getImageUrl = (imageUrl: string) => {
-    if (!imageUrl) {
-      return "";
-    }
-    // If it's already a full URL, return as is
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      console.log('Banner - Full URL:', imageUrl);
-      return imageUrl;
-    }
-    // Otherwise, prepend the IMAGE URL
-    const fullUrl = authConfig.ImageUrl + imageUrl;
-    console.log('Banner - Constructed URL:', fullUrl, 'from', imageUrl);
-    return fullUrl;
+    if (!imageUrl) return '';
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) return imageUrl;
+    return authConfig.ImageUrl + imageUrl;
   };
 
   return (
@@ -62,47 +50,63 @@ export function PromotionalBanner({ onBannerPress }: PromotionalBannerProps) {
         scrollEventThrottle={16}
         contentContainerStyle={styles.scrollContent}
       >
-        {banners.map((banner: any) => (
-          <TouchableOpacity 
-            key={banner.id} 
-            style={styles.bannerCard}
-            onPress={() => banner.productId && onBannerPress?.(banner.productId)}
-            activeOpacity={banner.productId ? 0.8 : 1}
-          >
-            <View style={styles.bannerContent}>
-              <View style={styles.decorativeCircle} />
-              <View style={styles.textContainer}>
-                <ThemedText style={styles.bannerTitle}>
-                  {banner.title}
-                </ThemedText>
-                <ThemedText style={styles.bannerTitle}>
-                  {banner.subtitle}
-                </ThemedText>
-                <ThemedText style={styles.bannerSubtitle}>
-                  By store
-                </ThemedText>
-              </View>
-              <View >
-                <Image
-                  source={{ uri: getImageUrl(banner.imageUrl) }}
-                  style={styles.bannerImage}
-                  contentFit="cover"
-                  alt={banner.imageAlt}
-                />
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
+        {banners.map((banner: any, i: number) => {
+          const [gradStart, gradEnd] = GRADIENTS[i % GRADIENTS.length];
+          return (
+            <TouchableOpacity
+              key={banner.id}
+              style={styles.bannerCard}
+              onPress={() => banner.productId && onBannerPress?.(banner.productId)}
+              activeOpacity={banner.productId ? 0.85 : 1}
+            >
+              <LinearGradient
+                colors={[gradStart, gradEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.bannerContent}
+              >
+                {/* Decorative blobs */}
+                <View style={styles.blobTL} />
+                <View style={styles.blobBR} />
+
+                {/* Text */}
+                <View style={styles.textContainer}>
+                  <ThemedText style={styles.bannerTitle} numberOfLines={2}>
+                    {banner.title}
+                  </ThemedText>
+                  {!!banner.subtitle && (
+                    <ThemedText style={styles.bannerSubtitle} numberOfLines={1}>
+                      {banner.subtitle}
+                    </ThemedText>
+                  )}
+                  {banner.productId && (
+                    <View style={styles.shopBtn}>
+                      <ThemedText style={styles.shopBtnText}>Shop Now →</ThemedText>
+                    </View>
+                  )}
+                </View>
+
+                {/* Product image */}
+                {!!banner.imageUrl && (
+                  <Image
+                    source={{ uri: getImageUrl(banner.imageUrl) }}
+                    style={styles.bannerImage}
+                    contentFit="cover"
+                    alt={banner.imageAlt}
+                  />
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
-      
+
+      {/* Dots */}
       <View style={styles.dotsContainer}>
         {banners.map((_, index) => (
           <View
             key={index}
-            style={[
-              styles.dot,
-              index === activeIndex && styles.dotActive
-            ]}
+            style={[styles.dot, index === activeIndex && styles.dotActive]}
           />
         ))}
       </View>
@@ -121,48 +125,65 @@ const styles = StyleSheet.create({
   bannerCard: {
     width: BANNER_WIDTH,
     height: 160,
+    borderRadius: AppTheme.borderRadius.lg,
+    overflow: 'hidden',
   },
   bannerContent: {
     flex: 1,
-    backgroundColor: '#F7F7F7',
-    borderRadius: AppTheme.borderRadius.md,
-    overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: AppTheme.spacing.lg,
+    overflow: 'hidden',
   },
-  decorativeCircle: {
+  blobTL: {
     position: 'absolute',
-    left: -40,
-    top: '25%',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: '#A89FE8',
-    opacity: 0.3,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    top: -50,
+    left: -50,
+  },
+  blobBR: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    bottom: -40,
+    right: 100,
   },
   textContainer: {
     flex: 1,
     zIndex: 2,
+    gap: 4,
   },
   bannerTitle: {
     fontSize: AppTheme.fontSize.lg,
     fontWeight: AppTheme.fontWeight.bold,
-    color: AppTheme.colors.foreground,
-    marginBottom: 4,
+    color: '#fff',
+    lineHeight: 24,
   },
   bannerSubtitle: {
     fontSize: AppTheme.fontSize.sm,
-    color: AppTheme.colors.mutedForeground,
+    color: 'rgba(255,255,255,0.75)',
   },
-  bannerNote: {
-    marginTop: AppTheme.spacing.xs,
-    fontSize: AppTheme.fontSize.sm,
-    color: '#888',
+  shopBtn: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  shopBtnText: {
+    fontSize: AppTheme.fontSize.xs,
+    fontWeight: AppTheme.fontWeight.semibold,
+    color: '#fff',
   },
   bannerImage: {
-    width: 120,
-    height: 120,
+    width: 110,
+    height: 110,
     borderRadius: 12,
     marginLeft: AppTheme.spacing.md,
     zIndex: 1,
@@ -171,7 +192,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: AppTheme.spacing.md,
+    marginTop: AppTheme.spacing.sm,
     gap: AppTheme.spacing.xs,
   },
   dot: {

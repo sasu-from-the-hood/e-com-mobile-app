@@ -18,6 +18,7 @@ interface Product {
   slug?: string
   brand?: string
   sku?: string
+  type?: string
   price: string
   originalPrice?: string
   discount?: number
@@ -51,6 +52,18 @@ export const createProductColumns = ({ onEdit, onDelete }: ProductColumnProps) =
     accessorKey: "categoryName",
     header: "Category",
     cell: (value: string | undefined) => value || "Uncategorized"
+  },
+  {
+    accessorKey: "type",
+    header: "Type",
+    cell: (value: string | undefined, row: Product) => {
+      const type = value || 'single'
+      return (
+        <Badge variant={type === 'collection' ? 'default' : 'secondary'} className="text-xs">
+          {type === 'collection' ? '👔 Collection' : '📦 Single'}
+        </Badge>
+      )
+    }
   },
   {
     accessorKey: "warehouseName",

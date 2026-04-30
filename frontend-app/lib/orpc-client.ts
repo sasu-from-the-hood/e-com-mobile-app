@@ -7,6 +7,7 @@ import type { AppRouter } from '../../backend/src/routes/_app';
 
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
+let clientInstance: RouterClient<AppRouter> | null = null;
 
 // Helper function to decode JWT and check expiration
 function isTokenExpired(token: string): boolean {
@@ -28,41 +29,41 @@ function isTokenExpired(token: string): boolean {
   }
 }
 
-// Function to refresh token directly without circular dependency
+// Function to refresh token using the main oRPC client
 async function refreshTokenDirect(): Promise<boolean> {
   try {
     const refreshToken = await tokenStorage.getRefreshToken();
-    if (!refreshToken) return false;
-
-    const response = await fetch(`${URL.ORPC}/appRefreshToken`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refreshToken }),
-    });
-
-    if (!response.ok) {
-      console.log('[ORPC] Refresh token request failed');
-      await tokenStorage.clearTokens();
+    if (!refreshToken) {
+      console.log('[ORPC] No refresh token available');
       return false;
     }
 
-    const data = await response.json();
+    console.log('[ORPC] Attempting token refresh via oRPC client...');
+
+    // Create a temporary client without auth for refresh only
+    const tempLink = new RPCLink({ url: URL.ORPC });
+    const tempClient: RouterClient<AppRouter> = createORPCClient(tempLink);
+    
+    // Use temporary client to refresh (no auth headers)
+    const response = await tempClient.appRefreshToken({ refreshToken });
+
+    console.log('[ORPC] Refresh response received');
     
     // Check if failed
-    if ('success' in data && data.success === false) {
-      console.log('[ORPC] Invalid refresh token, clearing auth');
+    if ('success' in response && response.success === false) {
+      console.log('[ORPC] Invalid refresh token:', (response as any).error);
       await tokenStorage.clearTokens();
       return false;
     }
     
     // Type guard: if we have accessToken, it's a success response
-    if ('accessToken' in data && 'refreshToken' in data) {
-      await tokenStorage.setTokens(data.accessToken, data.refreshToken);
+    if ('accessToken' in response && 'refreshToken' in response) {
+      console.log('[ORPC] Token refresh successful');
+      await tokenStorage.setTokens(response.accessToken, response.refreshToken);
       return true;
     }
     
+    console.log('[ORPC] Unexpected response format:', Object.keys(response));
     return false;
   } catch (error) {
     console.error('[ORPC] Refresh error:', error);
@@ -174,3 +175,6 @@ const link = new RPCLink({
 
 export const orpcClient: RouterClient<AppRouter> = createORPCClient(link);
 export const orpc = orpcClient; // Alias for convenience
+
+// Store reference for refresh function
+clientInstance = orpcClient;
