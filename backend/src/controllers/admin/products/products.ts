@@ -7,16 +7,14 @@ import {
   warehouses,
   productVariants, 
   productMedia, 
-  productAttributes, 
-  attributes,
-  attributeGroups,
   productSeo,
   inventoryTransactions,
   stockAlerts
 } from '../../../database/schema/index.js'
-import { eq, like, and, desc, asc, sql, count } from 'drizzle-orm'
+import { eq, and, desc, asc, sql, count } from 'drizzle-orm'
 import cuid from 'cuid'
 import { authMiddleware } from '../../../middleware/auth.js'
+import { logger } from '../../../utils/logger.js'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -85,12 +83,18 @@ export const getAdminProducts = os
   }))
   .use(authMiddleware)
   .handler(async ({ input, context }) => {
-    if (context.user.role !== 'admin') {
-      throw new Error('Unauthorized')
-    }
+    try {
+      logger.info('[getAdminProducts] Starting request', { input, userRole: context.user.role })
+      
+      if (context.user.role !== 'admin') {
+        logger.warn('[getAdminProducts] Unauthorized - user is not admin', { userId: context.user.id })
+        throw new Error('Unauthorized')
+      }
 
-    const { search, category, status, stockStatus, page, limit, sortBy, sortOrder } = input
-    const offset = (page - 1) * limit
+      const { search, category, status, stockStatus, page, limit, sortBy, sortOrder } = input
+      const offset = (page - 1) * limit
+      
+      logger.info('[getAdminProducts] Query params', { search, category, status, stockStatus, page, limit, offset, sortBy, sortOrder })
 
     // Build conditions
     const conditions = []
@@ -193,23 +197,34 @@ export const getAdminProducts = os
       query = query.where(whereClause)
     }
 
+    console.log('[getAdminProducts] Executing main query...')
     const result = await query.orderBy(orderFn).limit(limit).offset(offset)
+    logger.info('[getAdminProducts] Query returned products', { count: result.length })
     
-    console.log('=== GET ADMIN PRODUCTS ===')
-    console.log('First product variantStock:', result[0]?.variantStock)
-    console.log('First product variantStock type:', typeof result[0]?.variantStock)
+    if (result.length > 0 && result[0]) {
+      logger.info('[getAdminProducts] First product sample', {
+        id: result[0].id,
+        name: result[0].name,
+        type: result[0].type,
+        variantStockType: typeof result[0].variantStock
+      })
+    }
     
     // Get total count
+    logger.info('[getAdminProducts] Getting total count')
     const totalQuery = db.select({ count: count() }).from(products)
     if (whereClause) {
       totalQuery.where(whereClause)
     }
     const totalResult = await totalQuery
     const total = totalResult[0]?.count ?? 0
+    logger.info('[getAdminProducts] Total products', { total })
 
     // Enhance each product with variant and media info
+    logger.info('[getAdminProducts] Enhancing products with stats')
     const enhancedProducts = await Promise.all(
       result.map(async (product) => {
+        try {
         // Get variant count and stock
         const variantStats = await db
           .select({
@@ -246,10 +261,16 @@ export const getAdminProducts = os
               : 'out_of_stock'
           }
         }
+        } catch (error) {
+          logger.error('[getAdminProducts] Error enhancing product', { productId: product.id, error })
+          throw error
+        }
       })
     )
 
-    return {
+    logger.info('[getAdminProducts] Successfully enhanced products', { count: enhancedProducts.length })
+    
+    const response = {
       products: enhancedProducts,
       pagination: {
         total,
@@ -257,6 +278,16 @@ export const getAdminProducts = os
         limit,
         totalPages: Math.ceil(total / limit)
       }
+    }
+    
+    logger.info('[getAdminProducts] Returning response', { productCount: response.products.length })
+    return response
+    } catch (error) {
+      logger.error('[getAdminProducts] ERROR', { 
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      })
+      throw error
     }
   })
 

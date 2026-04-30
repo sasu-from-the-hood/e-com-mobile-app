@@ -5,6 +5,7 @@ import { products, categories, warehouses, productVariants, productMedia, produc
 import { eq, and, desc, asc, sql, count } from 'drizzle-orm';
 import cuid from 'cuid';
 import { authMiddleware } from '../../../middleware/auth.js';
+import { logger } from '../../../utils/logger.js';
 import * as fs from 'fs';
 import * as path from 'path';
 // Enhanced product creation schema
@@ -68,156 +69,187 @@ export const getAdminProducts = os
 }))
     .use(authMiddleware)
     .handler(async ({ input, context }) => {
-    if (context.user.role !== 'admin') {
-        throw new Error('Unauthorized');
-    }
-    const { search, category, status, stockStatus, page, limit, sortBy, sortOrder } = input;
-    const offset = (page - 1) * limit;
-    // Build conditions
-    const conditions = [];
-    // Status filter
-    if (status === 'active') {
-        conditions.push(eq(products.isActive, true));
-    }
-    else if (status === 'inactive') {
-        conditions.push(eq(products.isActive, false));
-        conditions.push(sql `${products.vendorId} IS NULL`); // Only admin-created inactive products
-    }
-    else if (status === 'pending') {
-        conditions.push(eq(products.isActive, false));
-        conditions.push(sql `${products.vendorId} IS NOT NULL`); // Only vendor-created pending products
-    }
-    // For 'all', show everything
-    if (search) {
-        conditions.push(sql `(${products.name} LIKE ${`%${search}%`} OR ${products.description} LIKE ${`%${search}%`} OR ${products.sku} LIKE ${`%${search}%`})`);
-    }
-    if (category) {
-        conditions.push(eq(products.categoryId, category));
-    }
-    if (stockStatus !== 'all') {
-        switch (stockStatus) {
-            case 'out_of_stock':
-                conditions.push(eq(products.inStock, false));
-                break;
-            case 'low_stock':
-                conditions.push(sql `${products.stockQuantity} <= ${products.lowStockThreshold} AND ${products.inStock} = true`);
-                break;
-            case 'in_stock':
-                conditions.push(sql `${products.stockQuantity} > ${products.lowStockThreshold} AND ${products.inStock} = true`);
-                break;
+    try {
+        logger.info('[getAdminProducts] Starting request', { input, userRole: context.user.role });
+        if (context.user.role !== 'admin') {
+            logger.warn('[getAdminProducts] Unauthorized - user is not admin', { userId: context.user.id });
+            throw new Error('Unauthorized');
         }
-    }
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-    // Build order clause
-    let orderColumn;
-    switch (sortBy) {
-        case 'name':
-            orderColumn = products.name;
-            break;
-        case 'price':
-            orderColumn = products.price;
-            break;
-        case 'stock':
-            orderColumn = products.stockQuantity;
-            break;
-        default:
-            orderColumn = products.createdAt;
-    }
-    const orderFn = sortOrder === 'asc' ? asc(orderColumn) : desc(orderColumn);
-    // Main query with enhanced data
-    let query = db.select({
-        id: products.id,
-        name: products.name,
-        slug: products.slug,
-        description: products.description,
-        type: products.type,
-        sku: products.sku,
-        price: products.price,
-        originalPrice: products.originalPrice,
-        discount: products.discount,
-        stockQuantity: products.stockQuantity,
-        lowStockThreshold: products.lowStockThreshold,
-        weight: products.weight,
-        isActive: products.isActive,
-        isFeatured: products.isFeatured,
-        isDigital: products.isDigital,
-        inStock: products.inStock,
-        sizes: products.sizes,
-        tags: products.tags,
-        colorImages: products.colorImages,
-        variantStock: products.variantStock,
-        mediaType: products.mediaType,
-        glbModelIds: products.glbModelIds,
-        categoryId: products.categoryId,
-        categoryName: categories.name,
-        warehouseId: products.warehouseId,
-        warehouseName: warehouses.name,
-        vendorId: products.vendorId,
-        rating: products.rating,
-        reviewCount: products.reviewCount,
-        createdAt: products.createdAt,
-        updatedAt: products.updatedAt
-    })
-        .from(products)
-        .leftJoin(categories, eq(products.categoryId, categories.id))
-        .leftJoin(warehouses, eq(products.warehouseId, warehouses.id))
-        .$dynamic();
-    if (whereClause) {
-        query = query.where(whereClause);
-    }
-    const result = await query.orderBy(orderFn).limit(limit).offset(offset);
-    console.log('=== GET ADMIN PRODUCTS ===');
-    console.log('First product variantStock:', result[0]?.variantStock);
-    console.log('First product variantStock type:', typeof result[0]?.variantStock);
-    // Get total count
-    const totalQuery = db.select({ count: count() }).from(products);
-    if (whereClause) {
-        totalQuery.where(whereClause);
-    }
-    const totalResult = await totalQuery;
-    const total = totalResult[0]?.count ?? 0;
-    // Enhance each product with variant and media info
-    const enhancedProducts = await Promise.all(result.map(async (product) => {
-        // Get variant count and stock
-        const variantStats = await db
-            .select({
-            count: count(),
-            totalStock: sql `COALESCE(SUM(${productVariants.stockQuantity}), 0)`
+        const { search, category, status, stockStatus, page, limit, sortBy, sortOrder } = input;
+        const offset = (page - 1) * limit;
+        logger.info('[getAdminProducts] Query params', { search, category, status, stockStatus, page, limit, offset, sortBy, sortOrder });
+        // Build conditions
+        const conditions = [];
+        // Status filter
+        if (status === 'active') {
+            conditions.push(eq(products.isActive, true));
+        }
+        else if (status === 'inactive') {
+            conditions.push(eq(products.isActive, false));
+            conditions.push(sql `${products.vendorId} IS NULL`); // Only admin-created inactive products
+        }
+        else if (status === 'pending') {
+            conditions.push(eq(products.isActive, false));
+            conditions.push(sql `${products.vendorId} IS NOT NULL`); // Only vendor-created pending products
+        }
+        // For 'all', show everything
+        if (search) {
+            conditions.push(sql `(${products.name} LIKE ${`%${search}%`} OR ${products.description} LIKE ${`%${search}%`} OR ${products.sku} LIKE ${`%${search}%`})`);
+        }
+        if (category) {
+            conditions.push(eq(products.categoryId, category));
+        }
+        if (stockStatus !== 'all') {
+            switch (stockStatus) {
+                case 'out_of_stock':
+                    conditions.push(eq(products.inStock, false));
+                    break;
+                case 'low_stock':
+                    conditions.push(sql `${products.stockQuantity} <= ${products.lowStockThreshold} AND ${products.inStock} = true`);
+                    break;
+                case 'in_stock':
+                    conditions.push(sql `${products.stockQuantity} > ${products.lowStockThreshold} AND ${products.inStock} = true`);
+                    break;
+            }
+        }
+        const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+        // Build order clause
+        let orderColumn;
+        switch (sortBy) {
+            case 'name':
+                orderColumn = products.name;
+                break;
+            case 'price':
+                orderColumn = products.price;
+                break;
+            case 'stock':
+                orderColumn = products.stockQuantity;
+                break;
+            default:
+                orderColumn = products.createdAt;
+        }
+        const orderFn = sortOrder === 'asc' ? asc(orderColumn) : desc(orderColumn);
+        // Main query with enhanced data
+        let query = db.select({
+            id: products.id,
+            name: products.name,
+            slug: products.slug,
+            description: products.description,
+            type: products.type,
+            sku: products.sku,
+            price: products.price,
+            originalPrice: products.originalPrice,
+            discount: products.discount,
+            stockQuantity: products.stockQuantity,
+            lowStockThreshold: products.lowStockThreshold,
+            weight: products.weight,
+            isActive: products.isActive,
+            isFeatured: products.isFeatured,
+            isDigital: products.isDigital,
+            inStock: products.inStock,
+            sizes: products.sizes,
+            tags: products.tags,
+            colorImages: products.colorImages,
+            variantStock: products.variantStock,
+            mediaType: products.mediaType,
+            glbModelIds: products.glbModelIds,
+            categoryId: products.categoryId,
+            categoryName: categories.name,
+            warehouseId: products.warehouseId,
+            warehouseName: warehouses.name,
+            vendorId: products.vendorId,
+            rating: products.rating,
+            reviewCount: products.reviewCount,
+            createdAt: products.createdAt,
+            updatedAt: products.updatedAt
         })
-            .from(productVariants)
-            .where(eq(productVariants.productId, product.id));
-        // Get media count
-        const mediaCount = await db
-            .select({ count: count() })
-            .from(productMedia)
-            .where(eq(productMedia.productId, product.id));
-        // Get stock alerts
-        const alertCount = await db
-            .select({ count: count() })
-            .from(stockAlerts)
-            .where(and(eq(stockAlerts.productId, product.id), eq(stockAlerts.isResolved, false)));
-        return {
-            ...product,
-            stats: {
-                variantCount: variantStats[0]?.count || 0,
-                totalVariantStock: variantStats[0]?.totalStock || 0,
-                mediaCount: mediaCount[0]?.count || 0,
-                alertCount: alertCount[0]?.count || 0,
-                stockStatus: product.inStock
-                    ? ((product.stockQuantity ?? 0) <= (product.lowStockThreshold ?? 0) ? 'low_stock' : 'in_stock')
-                    : 'out_of_stock'
+            .from(products)
+            .leftJoin(categories, eq(products.categoryId, categories.id))
+            .leftJoin(warehouses, eq(products.warehouseId, warehouses.id))
+            .$dynamic();
+        if (whereClause) {
+            query = query.where(whereClause);
+        }
+        console.log('[getAdminProducts] Executing main query...');
+        const result = await query.orderBy(orderFn).limit(limit).offset(offset);
+        logger.info('[getAdminProducts] Query returned products', { count: result.length });
+        if (result.length > 0 && result[0]) {
+            logger.info('[getAdminProducts] First product sample', {
+                id: result[0].id,
+                name: result[0].name,
+                type: result[0].type,
+                variantStockType: typeof result[0].variantStock
+            });
+        }
+        // Get total count
+        logger.info('[getAdminProducts] Getting total count');
+        const totalQuery = db.select({ count: count() }).from(products);
+        if (whereClause) {
+            totalQuery.where(whereClause);
+        }
+        const totalResult = await totalQuery;
+        const total = totalResult[0]?.count ?? 0;
+        logger.info('[getAdminProducts] Total products', { total });
+        // Enhance each product with variant and media info
+        logger.info('[getAdminProducts] Enhancing products with stats');
+        const enhancedProducts = await Promise.all(result.map(async (product) => {
+            try {
+                // Get variant count and stock
+                const variantStats = await db
+                    .select({
+                    count: count(),
+                    totalStock: sql `COALESCE(SUM(${productVariants.stockQuantity}), 0)`
+                })
+                    .from(productVariants)
+                    .where(eq(productVariants.productId, product.id));
+                // Get media count
+                const mediaCount = await db
+                    .select({ count: count() })
+                    .from(productMedia)
+                    .where(eq(productMedia.productId, product.id));
+                // Get stock alerts
+                const alertCount = await db
+                    .select({ count: count() })
+                    .from(stockAlerts)
+                    .where(and(eq(stockAlerts.productId, product.id), eq(stockAlerts.isResolved, false)));
+                return {
+                    ...product,
+                    stats: {
+                        variantCount: variantStats[0]?.count || 0,
+                        totalVariantStock: variantStats[0]?.totalStock || 0,
+                        mediaCount: mediaCount[0]?.count || 0,
+                        alertCount: alertCount[0]?.count || 0,
+                        stockStatus: product.inStock
+                            ? ((product.stockQuantity ?? 0) <= (product.lowStockThreshold ?? 0) ? 'low_stock' : 'in_stock')
+                            : 'out_of_stock'
+                    }
+                };
+            }
+            catch (error) {
+                logger.error('[getAdminProducts] Error enhancing product', { productId: product.id, error });
+                throw error;
+            }
+        }));
+        logger.info('[getAdminProducts] Successfully enhanced products', { count: enhancedProducts.length });
+        const response = {
+            products: enhancedProducts,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
             }
         };
-    }));
-    return {
-        products: enhancedProducts,
-        pagination: {
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit)
-        }
-    };
+        logger.info('[getAdminProducts] Returning response', { productCount: response.products.length });
+        return response;
+    }
+    catch (error) {
+        logger.error('[getAdminProducts] ERROR', {
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+        });
+        throw error;
+    }
 });
 // Enhanced product creation
 export const createProduct = os
