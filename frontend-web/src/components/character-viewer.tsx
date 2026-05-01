@@ -68,7 +68,7 @@ export function CharacterViewer({ job, onClose }: CharacterViewerProps) {
   const [isCheckingSaved, setIsCheckingSaved] = useState(true)
   const [showXbot, setShowXbot] = useState(true)
   
-  const characterModelUrl = '/Xbot.glb'
+  const characterModelUrl = `${AppURL.BASE}/api/admin/3d-models/files/Xbot.glb`
   
   const itemUrl = savedModelData?.leftLegFile 
     ? `${AppURL.BASE}/api/admin/3d-models/files/${savedModelData.leftLegFile}` 
@@ -136,7 +136,7 @@ export function CharacterViewer({ job, onClose }: CharacterViewerProps) {
       const blob = new Blob([bytes], { type: 'model/gltf-binary' })
       
       console.log('✅ GLB blob created via proxy, size:', blob.size)
-      return URL.createObjectURL(blob)
+      return window.URL.createObjectURL(blob)
     }
     
     const fetchDirectly = async (url: string): Promise<string> => {
@@ -149,7 +149,7 @@ export function CharacterViewer({ job, onClose }: CharacterViewerProps) {
       
       const blob = await response.blob()
       console.log('✅ GLB blob created directly, size:', blob.size)
-      return URL.createObjectURL(blob)
+      return window.URL.createObjectURL(blob)
     }
     
     const loadGLBs = async () => {
@@ -207,8 +207,8 @@ export function CharacterViewer({ job, onClose }: CharacterViewerProps) {
     
     return () => {
       isMounted = false
-      if (proxiedItemUrl) URL.revokeObjectURL(proxiedItemUrl)
-      if (proxiedItemUrl2) URL.revokeObjectURL(proxiedItemUrl2)
+      if (proxiedItemUrl) window.URL.revokeObjectURL(proxiedItemUrl)
+      if (proxiedItemUrl2) window.URL.revokeObjectURL(proxiedItemUrl2)
     }
   }, [itemUrl, itemUrl2])
   

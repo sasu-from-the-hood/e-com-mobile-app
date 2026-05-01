@@ -86,7 +86,7 @@ function XbotWithModels({ xbotUrl, productModels, selectedAnimation }: { xbotUrl
     })
 
     // Attach new models
-    productScenes.forEach((model, index) => {
+    productScenes.forEach((model, _) => {
       if (!model) return
       
       const boneName = boneMapping[model.bodyPartType]
@@ -159,7 +159,7 @@ export function CollectionPreview({ selectedModelIds, models }: CollectionPrevie
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selectedAnimation, setSelectedAnimation] = useState<string>('none')
 
-  const xbotUrl = '/Xbot.glb' // Load from public folder
+  const xbotUrl = `${AppURL.BASE}/api/admin/3d-models/files/Xbot.glb` // Load from backend API
   
   // Clear GLB cache when component mounts to ensure fresh data
   useEffect(() => {
