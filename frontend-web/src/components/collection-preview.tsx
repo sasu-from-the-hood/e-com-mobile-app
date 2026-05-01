@@ -105,6 +105,13 @@ function XbotWithModels({ xbotUrl, productModels, selectedAnimation }: { xbotUrl
       
       // Apply position - use saved positions directly
       // The saved positions already include any offsets that were set when saving
+      console.log(`🎯 Applying position for ${model.bodyPartType}:`, {
+        x: model.positionX,
+        y: model.positionY,
+        z: model.positionZ,
+        scale: actualScale
+      })
+      
       clonedScene.position.set(
         model.positionX, 
         model.positionY, 
@@ -116,6 +123,8 @@ function XbotWithModels({ xbotUrl, productModels, selectedAnimation }: { xbotUrl
       const boneWorldPos = new THREE.Vector3()
       bone.getWorldPosition(boneWorldPos)
       bone.add(clonedScene)
+      
+      console.log(`✅ Attached ${model.bodyPartType} to bone ${boneName}`)
       
       // Verify attachment
       console.log(`   ✅ Attached! Bone has ${bone.children.length} children`)
@@ -183,21 +192,36 @@ export function CollectionPreview({ selectedModelIds, models }: CollectionPrevie
   const selectedModels = models
     .filter(m => selectedModelIds.includes(m.id))
     .map(m => {
+      // Ensure all position values are properly parsed as numbers
+      const scale = typeof m.scale === 'string' ? parseFloat(m.scale) : (m.scale || 1)
+      const positionX = typeof m.positionX === 'string' ? parseFloat(m.positionX) : (m.positionX || 0)
+      const positionY = typeof m.positionY === 'string' ? parseFloat(m.positionY) : (m.positionY || 0)
+      const positionZ = typeof m.positionZ === 'string' ? parseFloat(m.positionZ) : (m.positionZ || 0)
+      
       const model = {
         url: `${AppURL.BASE}/api/admin/3d-models/files/${m.leftLegFile}`,
         bodyPartType: m.bodyPartType,
-        scale: parseFloat(m.scale || '1'),
-        positionX: parseFloat(m.positionX || '0'),
-        positionY: parseFloat(m.positionY || '0'),
-        positionZ: parseFloat(m.positionZ || '0')
+        scale,
+        positionX,
+        positionY,
+        positionZ
       }
       
       console.log('📋 Loading model from database:', {
+        id: m.id,
+        name: m.name,
         bodyPartType: model.bodyPartType,
         scale: model.scale,
         positionX: model.positionX,
         positionY: model.positionY,
         positionZ: model.positionZ,
+        rawValues: {
+          scale: m.scale,
+          positionX: m.positionX,
+          positionY: m.positionY,
+          positionZ: m.positionZ
+        }
+      })
         rawData: { scale: m.scale, positionX: m.positionX, positionY: m.positionY, positionZ: m.positionZ }
       })
       
