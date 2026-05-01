@@ -159,6 +159,7 @@ export declare const getOrder: import("@orpc/server").DecoratedProcedure<import(
             isActive: boolean | null;
             isFeatured: boolean | null;
             isDigital: boolean | null;
+            rejectionReason: string | null;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -224,6 +225,7 @@ export declare const getOrder: import("@orpc/server").DecoratedProcedure<import(
             isActive: boolean | null;
             isFeatured: boolean | null;
             isDigital: boolean | null;
+            rejectionReason: string | null;
             createdAt: Date;
             updatedAt: Date;
         };

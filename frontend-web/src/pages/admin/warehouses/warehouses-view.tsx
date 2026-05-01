@@ -4,11 +4,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
-import { IconPlus, IconEdit, IconTrash, IconMapPin } from "@tabler/icons-react"
+import { IconPlus, IconEdit, IconTrash, IconMapPin, IconMap } from "@tabler/icons-react"
 import { orpc } from "@/lib/oprc"
 import { toast } from "sonner"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Switch } from "@/components/ui/switch"
+import { MapPicker } from "@/components/map-picker"
 
 interface Warehouse {
   id: string
@@ -22,6 +23,7 @@ interface Warehouse {
 
 export function WarehousesView() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false)
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(null)
   const [formData, setFormData] = useState({
     name: "",
@@ -264,8 +266,8 @@ export function WarehousesView() {
                   onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
                   placeholder="9.03"
                   required
+                  readOnly
                 />
-                <p className="text-xs text-gray-500">-90 to 90</p>
               </div>
               
               <div className="space-y-2">
@@ -278,14 +280,20 @@ export function WarehousesView() {
                   onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
                   placeholder="38.74"
                   required
+                  readOnly
                 />
-                <p className="text-xs text-gray-500">-180 to 180</p>
               </div>
             </div>
             
-            <div className="p-3 bg-blue-50 rounded-md text-sm text-blue-800">
-              💡 Tip: Use <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="underline">Google Maps</a> to find coordinates. Right-click on a location and copy the coordinates.
-            </div>
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full"
+              onClick={() => setIsMapPickerOpen(true)}
+            >
+              <IconMap className="h-4 w-4 mr-2" />
+              {formData.latitude && formData.longitude ? 'Update Location on Map' : 'Select Location on Map'}
+            </Button>
             
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
@@ -321,6 +329,20 @@ export function WarehousesView() {
           </form>
         </SheetContent>
       </Sheet>
+
+      <MapPicker
+        open={isMapPickerOpen}
+        onClose={() => setIsMapPickerOpen(false)}
+        onLocationSelect={(latitude, longitude) => {
+          setFormData({
+            ...formData,
+            latitude: latitude.toString(),
+            longitude: longitude.toString()
+          })
+        }}
+        initialLatitude={formData.latitude ? parseFloat(formData.latitude) : 9.03}
+        initialLongitude={formData.longitude ? parseFloat(formData.longitude) : 38.74}
+      />
     </div>
   )
 }

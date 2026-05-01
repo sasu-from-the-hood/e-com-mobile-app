@@ -170,9 +170,23 @@ export const getAdminProducts = os
         if (whereClause) {
             query = query.where(whereClause);
         }
-        console.log('[getAdminProducts] Executing main query...');
-        const result = await query.orderBy(orderFn).limit(limit).offset(offset);
-        logger.info('[getAdminProducts] Query returned products', { count: result.length });
+        logger.info('[getAdminProducts] Executing main query');
+        let result;
+        try {
+            result = await query.orderBy(orderFn).limit(limit).offset(offset);
+            logger.info('[getAdminProducts] Query returned products', { count: result.length });
+        }
+        catch (queryError) {
+            logger.error('[getAdminProducts] Query execution failed', {
+                error: queryError.message,
+                code: queryError.code,
+                errno: queryError.errno,
+                sql: queryError.sql,
+                sqlMessage: queryError.sqlMessage,
+                sqlState: queryError.sqlState
+            });
+            throw queryError;
+        }
         if (result.length > 0 && result[0]) {
             logger.info('[getAdminProducts] First product sample', {
                 id: result[0].id,
@@ -257,7 +271,8 @@ export const createProduct = os
     .use(authMiddleware)
     .handler(async ({ input, context }) => {
     try {
-        if (context.user.role !== 'admin') {
+        // Allow both admin and vendor to create products
+        if (context.user.role !== 'admin' && context.user.role !== 'vendor') {
             throw new Error('Unauthorized');
         }
         const uploadDir = path.join(process.cwd(), 'uploads', 'products');
@@ -294,12 +309,13 @@ export const createProduct = os
             originalPrice: input.originalPrice && input.originalPrice !== '' ? input.originalPrice : null,
             categoryId: input.categoryId && input.categoryId !== '' ? input.categoryId : null,
             warehouseId: input.warehouseId && input.warehouseId !== '' ? input.warehouseId : null,
+            vendorId: context.user.role === 'vendor' ? context.user.id : null, // Link product to vendor
             sku: input.sku || undefined,
             stockQuantity: input.stockQuantity,
             lowStockThreshold: input.lowStockThreshold,
             discount: input.discount && typeof input.discount === 'number' && input.discount > 0 ? input.discount : null,
             weight: input.weight && input.weight !== '' ? input.weight : null,
-            isActive: input.isActive,
+            isActive: context.user.role === 'admin' ? input.isActive : false, // Vendor products need approval
             isFeatured: input.isFeatured,
             isDigital: input.isDigital,
             inStock: input.inStock,
@@ -406,7 +422,8 @@ export const updateProduct = os
     .use(authMiddleware)
     .handler(async ({ input, context }) => {
     try {
-        if (context.user.role !== 'admin') {
+        // Allow both admin and vendor to update products
+        if (context.user.role !== 'admin' && context.user.role !== 'vendor') {
             throw new Error('Unauthorized');
         }
         const uploadDir = path.join(process.cwd(), 'uploads', 'products');
@@ -589,5 +606,48 @@ export const getProductAnalytics = os
         alerts,
         period: input.period
     };
+});
+// Approve vendor product
+export const approveProduct = os
+    .input(z.string())
+    .use(authMiddleware)
+    .handler(async ({ input, context }) => {
+    if (context.user.role !== 'admin') {
+        throw new Error('Unauthorized');
+    }
+    await db
+        .update(products)
+        .set({
+        isActive: true,
+        rejectionReason: null // Clear any previous rejection reason
+    })
+        .where(eq(products.id, input));
+    logger.info('[approveProduct] Product approved', { productId: input, adminId: context.user.id });
+    return { success: true };
+});
+// Reject vendor product
+export const rejectProduct = os
+    .input(z.object({
+    productId: z.string(),
+    reason: z.string().min(1, 'Rejection reason is required')
+}))
+    .use(authMiddleware)
+    .handler(async ({ input, context }) => {
+    if (context.user.role !== 'admin') {
+        throw new Error('Unauthorized');
+    }
+    await db
+        .update(products)
+        .set({
+        isActive: false,
+        rejectionReason: input.reason
+    })
+        .where(eq(products.id, input.productId));
+    logger.info('[rejectProduct] Product rejected', {
+        productId: input.productId,
+        reason: input.reason,
+        adminId: context.user.id
+    });
+    return { success: true };
 });
 //# sourceMappingURL=products.js.map

@@ -111,6 +111,8 @@ export const router = os.router({
   updateProduct: adminProducts.updateProduct,
   deleteProduct: adminProducts.deleteProduct,
   getProductAnalytics: adminProducts.getProductAnalytics,
+  approveProduct: adminProducts.approveProduct,
+  rejectProduct: adminProducts.rejectProduct,
 
   // Product Variants
   getProductVariants: adminProducts.getProductVariants,

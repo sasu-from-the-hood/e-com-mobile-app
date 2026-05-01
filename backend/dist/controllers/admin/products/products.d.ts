@@ -230,6 +230,7 @@ export declare const createProduct: import("@orpc/server").DecoratedProcedure<im
     isActive: boolean | null;
     isFeatured: boolean | null;
     isDigital: boolean | null;
+    rejectionReason: string | null;
     createdAt: Date;
     updatedAt: Date;
 }, {
@@ -260,6 +261,7 @@ export declare const createProduct: import("@orpc/server").DecoratedProcedure<im
     isActive: boolean | null;
     isFeatured: boolean | null;
     isDigital: boolean | null;
+    rejectionReason: string | null;
     createdAt: Date;
     updatedAt: Date;
 }>, Record<never, never>, Record<never, never>>;
@@ -359,6 +361,7 @@ export declare const updateProduct: import("@orpc/server").DecoratedProcedure<im
     isActive: boolean | null;
     isFeatured: boolean | null;
     isDigital: boolean | null;
+    rejectionReason: string | null;
     createdAt: Date;
     updatedAt: Date;
 }, {
@@ -389,6 +392,7 @@ export declare const updateProduct: import("@orpc/server").DecoratedProcedure<im
     isActive: boolean | null;
     isFeatured: boolean | null;
     isDigital: boolean | null;
+    rejectionReason: string | null;
     createdAt: Date;
     updatedAt: Date;
 }>, Record<never, never>, Record<never, never>>;
@@ -463,5 +467,50 @@ export declare const getProductAnalytics: import("@orpc/server").DecoratedProced
         count: number;
     }[];
     period: "7d" | "30d" | "90d" | "1y";
+}>, Record<never, never>, Record<never, never>>;
+export declare const approveProduct: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, {
+    request?: Request;
+} & Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        email: string;
+        name?: string;
+        role?: string;
+        emailVerified?: boolean;
+    };
+    session: {
+        id: string;
+        userId: string;
+        expiresAt: Date;
+    } | undefined;
+    role: string | undefined;
+}>, z.ZodString, import("@orpc/contract").Schema<{
+    success: boolean;
+}, {
+    success: boolean;
+}>, Record<never, never>, Record<never, never>>;
+export declare const rejectProduct: import("@orpc/server").DecoratedProcedure<import("@orpc/server").MergedInitialContext<Record<never, never>, {
+    request?: Request;
+} & Record<never, never>, Record<never, never>>, import("@orpc/server").MergedCurrentContext<Record<never, never>, {
+    user: {
+        id: string;
+        email: string;
+        name?: string;
+        role?: string;
+        emailVerified?: boolean;
+    };
+    session: {
+        id: string;
+        userId: string;
+        expiresAt: Date;
+    } | undefined;
+    role: string | undefined;
+}>, z.ZodObject<{
+    productId: z.ZodString;
+    reason: z.ZodString;
+}, z.core.$strip>, import("@orpc/contract").Schema<{
+    success: boolean;
+}, {
+    success: boolean;
 }>, Record<never, never>, Record<never, never>>;
 //# sourceMappingURL=products.d.ts.map

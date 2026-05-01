@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `rejection_reason` text;

@@ -414,6 +414,11 @@ export function EnhancedProductForm({ product, onSuccess, defaultType = 'single'
     }
     
     const fetch3DModels = async () => {
+      // Don't fetch 3D models for vendors
+      if (isVendor) {
+        return
+      }
+      
       try {
         const response = await orpc.list3DModels()
         setAllModels(response || [])
@@ -684,6 +689,7 @@ export function EnhancedProductForm({ product, onSuccess, defaultType = 'single'
                 <CardDescription>Essential product details and identification</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Product Name and Category - Side by Side */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Product Name *</Label>
@@ -701,29 +707,6 @@ export function EnhancedProductForm({ product, onSuccess, defaultType = 'single'
                       }}
                       placeholder="Enter product name"
                       required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="slug">URL Slug (Auto-generated)</Label>
-                    <Input
-                      id="slug"
-                      value={formData.slug}
-                      readOnly
-                      className="bg-muted"
-                      placeholder="auto-generated-from-name"
-                    />
-                    <p className="text-xs text-muted-foreground">Automatically generated from product name</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="sku">SKU</Label>
-                    <Input
-                      id="sku"
-                      value={formData.sku}
-                      onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                      placeholder="Auto-generated unique identifier"
                     />
                   </div>
                   <div className="space-y-2">
@@ -750,6 +733,7 @@ export function EnhancedProductForm({ product, onSuccess, defaultType = 'single'
                   </div>
                 </div>
 
+                {/* Warehouse Location - Full Width */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="warehouseId">Warehouse Location</Label>
@@ -801,6 +785,7 @@ export function EnhancedProductForm({ product, onSuccess, defaultType = 'single'
                   </p>
                 </div>
 
+                {/* Description - Full Width */}
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
                   <Textarea
@@ -812,7 +797,8 @@ export function EnhancedProductForm({ product, onSuccess, defaultType = 'single'
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                {/* Price and Original Price - Side by Side */}
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="price">Price (Birr) *</Label>
                     <Input
@@ -864,19 +850,22 @@ export function EnhancedProductForm({ product, onSuccess, defaultType = 'single'
                       }}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="discount">Discount (%) - Auto</Label>
-                    <Input
-                      id="discount"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.discount}
-                      onChange={(e) => setFormData({ ...formData, discount: parseInt(e.target.value) || 0 })}
-                      className="bg-muted"
-                      title="Automatically calculated from Original Price and Sale Price"
-                    />
-                  </div>
+                </div>
+
+                {/* Discount - Read Only, Auto-calculated */}
+                <div className="space-y-2">
+                  <Label htmlFor="discount">Discount (%) - Auto-calculated</Label>
+                  <Input
+                    id="discount"
+                    type="number"
+                    value={formData.discount}
+                    readOnly
+                    className="bg-muted"
+                    placeholder="Automatically calculated from prices"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Discount is automatically calculated when you set both Original Price and Sale Price
+                  </p>
                 </div>
 
                 {/* Sizes and Tags */}
@@ -895,35 +884,39 @@ export function EnhancedProductForm({ product, onSuccess, defaultType = 'single'
                     />
                     <p className="text-xs text-muted-foreground">Enter sizes separated by commas</p>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="tags">Product Tags (comma-separated)</Label>
-                    <Textarea
-                      id="tags"
-                      rows={2}
-                      defaultValue={Array.isArray(formData.tags) ? formData.tags.join(', ') : ''}
-                      onBlur={(e) => {
-                        const tagsArray = e.target.value.split(',').map(t => t.trim()).filter(t => t)
-                        setFormData({ ...formData, tags: tagsArray })
-                      }}
-                      placeholder="e.g., wireless, premium, bestseller"
-                    />
-                    <p className="text-xs text-muted-foreground">Enter tags separated by commas</p>
-                  </div>
+                  {!isVendor && (
+                    <div className="space-y-2">
+                      <Label htmlFor="tags">Product Tags (comma-separated)</Label>
+                      <Textarea
+                        id="tags"
+                        rows={2}
+                        defaultValue={Array.isArray(formData.tags) ? formData.tags.join(', ') : ''}
+                        onBlur={(e) => {
+                          const tagsArray = e.target.value.split(',').map(t => t.trim()).filter(t => t)
+                          setFormData({ ...formData, tags: tagsArray })
+                        }}
+                        placeholder="e.g., wireless, premium, bestseller"
+                      />
+                      <p className="text-xs text-muted-foreground">Enter tags separated by commas</p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Review Count */}
-                <div className="space-y-2">
-                  <Label htmlFor="reviewCount">Review Count</Label>
-                  <Input
-                    id="reviewCount"
-                    type="number"
-                    min="0"
-                    value={formData.reviewCount || 0}
-                    onChange={(e) => setFormData({ ...formData, reviewCount: parseInt(e.target.value) || 0 })}
-                    placeholder="Number of reviews"
-                  />
-                  <p className="text-xs text-muted-foreground">Total number of customer reviews</p>
-                </div>
+                {/* Review Count - Hidden for vendors */}
+                {!isVendor && (
+                  <div className="space-y-2">
+                    <Label htmlFor="reviewCount">Review Count</Label>
+                    <Input
+                      id="reviewCount"
+                      type="number"
+                      min="0"
+                      value={formData.reviewCount || 0}
+                      onChange={(e) => setFormData({ ...formData, reviewCount: parseInt(e.target.value) || 0 })}
+                      placeholder="Number of reviews"
+                    />
+                    <p className="text-xs text-muted-foreground">Total number of customer reviews</p>
+                  </div>
+                )}
 
                 {/* SEO Auto-fill Notice */}
                 {formData.seo.metaTitle && (
@@ -1109,39 +1102,42 @@ export function EnhancedProductForm({ product, onSuccess, defaultType = 'single'
                   </div>
                 )}
 
-                {/* Media Type Switch - Auto-set to GLB for collections */}
-                <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-                  <Label htmlFor="mediaType" className="text-sm font-medium">Media Type:</Label>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant={formData.mediaType === 'image' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setFormData({ ...formData, mediaType: 'image' })}
-                      disabled={formData.type === 'collection'}
-                    >
-                      Images
-                    </Button>
-                    {!isVendor && (
-                      <Button
-                        type="button"
-                        variant={formData.mediaType === 'glb' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setFormData({ ...formData, mediaType: 'glb' })}
-                      >
-                        3D Models (GLB)
-                      </Button>
-                    )}
-                  </div>
-                  {formData.type === 'collection' && (
-                    <p className="text-xs text-muted-foreground">
-                      Collections require 3D models
-                    </p>
-                  )}
-                </div>
+                {/* Hide 3D models section completely for vendors */}
+                {!isVendor && (
+                  <>
+                    {/* Media Type Switch - Auto-set to GLB for collections */}
+                    <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
+                      <Label htmlFor="mediaType" className="text-sm font-medium">Media Type:</Label>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant={formData.mediaType === 'image' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setFormData({ ...formData, mediaType: 'image' })}
+                          disabled={formData.type === 'collection'}
+                        >
+                          Images
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={formData.mediaType === 'glb' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setFormData({ ...formData, mediaType: 'glb' })}
+                        >
+                          3D Models (GLB)
+                        </Button>
+                      </div>
+                      {formData.type === 'collection' && (
+                        <p className="text-xs text-muted-foreground">
+                          Collections require 3D models
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
 
-                {/* Image Mode */}
-                {formData.mediaType === 'image' && formData.type !== 'collection' && (
+                {/* Image Mode - Always show for vendors, conditionally for admins */}
+                {(isVendor || (formData.mediaType === 'image' && formData.type !== 'collection')) && (
                   <VariantManager
                     colorImages={formData.colorImages || {}}
                     onChange={(colorImages) => setFormData({ ...formData, colorImages })}
@@ -1150,8 +1146,8 @@ export function EnhancedProductForm({ product, onSuccess, defaultType = 'single'
                   />
                 )}
 
-                {/* GLB Mode */}
-                {(formData.mediaType === 'glb' || formData.type === 'collection') && (
+                {/* GLB Mode - Only for admins */}
+                {!isVendor && (formData.mediaType === 'glb' || formData.type === 'collection') && (
                   <div className="space-y-4">
                     <div className="text-sm text-muted-foreground">
                       {formData.type === 'collection' 

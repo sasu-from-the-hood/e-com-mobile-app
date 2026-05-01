@@ -31,6 +31,7 @@ export declare const getNewArrivals: import("@orpc/server").DecoratedProcedure<R
     isActive: boolean | null;
     isFeatured: boolean | null;
     isDigital: boolean | null;
+    rejectionReason: string | null;
     createdAt: Date;
     updatedAt: Date;
 }[], {
@@ -63,6 +64,7 @@ export declare const getNewArrivals: import("@orpc/server").DecoratedProcedure<R
     isActive: boolean | null;
     isFeatured: boolean | null;
     isDigital: boolean | null;
+    rejectionReason: string | null;
     createdAt: Date;
     updatedAt: Date;
 }[]>, Record<never, never>, Record<never, never>>;

@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import { EnhancedProductForm } from "./enhanced-product-form"
 import { useAdminProducts } from "@/hooks/useAdminProducts"
 import { orpc } from "@/lib/oprc"
@@ -21,7 +23,9 @@ import {
   Trash2,
   MoreHorizontal,
   Download,
-  Upload
+  Upload,
+  Check,
+  X
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -42,6 +46,9 @@ export function EnhancedProductsView() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<any>(null)
   const [categories, setCategories] = useState<any[]>([])
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
+  const [rejectingProduct, setRejectingProduct] = useState<any>(null)
+  const [rejectionReason, setRejectionReason] = useState("")
 
   const { data: productsData, isLoading, refetch } = useAdminProducts({
     search: searchTerm,
@@ -74,6 +81,43 @@ export function EnhancedProductsView() {
     setEditingProduct(null)
     refetch()
     toast.success("Product updated successfully")
+  }
+
+  const handleApprove = async (productId: string) => {
+    try {
+      await orpc.approveProduct(productId)
+      toast.success("Product approved successfully")
+      refetch()
+    } catch (error) {
+      toast.error("Failed to approve product")
+    }
+  }
+
+  const handleRejectClick = (product: any) => {
+    setRejectingProduct(product)
+    setRejectionReason("")
+    setRejectDialogOpen(true)
+  }
+
+  const handleRejectSubmit = async () => {
+    if (!rejectionReason.trim()) {
+      toast.error("Please provide a rejection reason")
+      return
+    }
+
+    try {
+      await orpc.rejectProduct({ 
+        productId: rejectingProduct.id, 
+        reason: rejectionReason 
+      })
+      toast.success("Product rejected")
+      setRejectDialogOpen(false)
+      setRejectingProduct(null)
+      setRejectionReason("")
+      refetch()
+    } catch (error) {
+      toast.error("Failed to reject product")
+    }
   }
 
   const getStockStatusBadge = (product: any) => {
@@ -314,6 +358,23 @@ export function EnhancedProductsView() {
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
+                        {product.vendorId && (
+                          <>
+                            <DropdownMenuSeparator />
+                            {!product.isActive && !product.rejectionReason && (
+                              <DropdownMenuItem onClick={() => handleApprove(product.id)} className="text-green-600">
+                                <Check className="w-4 h-4 mr-2" />
+                                Approve
+                              </DropdownMenuItem>
+                            )}
+                            {!product.rejectionReason && (
+                              <DropdownMenuItem onClick={() => handleRejectClick(product)} className="text-orange-600">
+                                <X className="w-4 h-4 mr-2" />
+                                Reject
+                              </DropdownMenuItem>
+                            )}
+                          </>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive">
                           <Trash2 className="w-4 h-4 mr-2" />
@@ -414,6 +475,36 @@ export function EnhancedProductsView() {
               onSuccess={handleEditSuccess} 
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Product Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Product</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="rejectionReason">Rejection Reason *</Label>
+              <Textarea
+                id="rejectionReason"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Please provide a reason for rejecting this product..."
+                rows={4}
+                className="mt-2"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleRejectSubmit}>
+              Reject Product
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

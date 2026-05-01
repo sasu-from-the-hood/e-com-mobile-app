@@ -42,6 +42,7 @@ export const products = mysqlTable("products", {
   isActive: boolean("is_active").default(false), // false until admin approves
   isFeatured: boolean("is_featured").default(false),
   isDigital: boolean("is_digital").default(false),
+  rejectionReason: text("rejection_reason"), // Reason if product is rejected by admin
   createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { fsp: 3 })
     .defaultNow()

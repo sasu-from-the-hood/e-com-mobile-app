@@ -155,6 +155,13 @@
       "when": 1777132367465,
       "tag": "0021_high_blackheart",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "5",
+      "when": 1777635864447,
+      "tag": "0022_smooth_night_thrasher",
+      "breakpoints": true
     }
   ]
 }

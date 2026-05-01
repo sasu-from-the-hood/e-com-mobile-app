@@ -471,6 +471,23 @@ export declare const products: import("drizzle-orm/mysql-core").MySqlTableWithCo
             identity: undefined;
             generated: undefined;
         }, {}, {}>;
+        rejectionReason: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "rejection_reason";
+            tableName: "products";
+            dataType: "string";
+            columnType: "MySqlText";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
         createdAt: import("drizzle-orm/mysql-core").MySqlColumn<{
             name: "created_at";
             tableName: "products";

@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 
-const isDev = true;
+const isDev = false;
 
 function getDevHost(): string {
   // Try all known Expo Constants locations for the Metro host

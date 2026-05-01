@@ -128,22 +128,42 @@ export function VariantManager({ colorImages, onChange, onGenerateGLB, hideGLBGe
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                {imageArray.map((image, idx) => (
-                  <div key={idx} className="relative group">
-                    <img
-                      src={typeof image === 'string' ? AppURL.IMAGE + image : window.URL.createObjectURL(image)}
-                      alt={`${color} ${idx}`}
-                      className="w-20 h-20 object-cover rounded border"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(color, idx)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
+                {imageArray.map((image, idx) => {
+                  // Handle different image formats
+                  let imageSrc = ''
+                  if (typeof image === 'string') {
+                    // If it's already a full URL, use it as is
+                    if (image.startsWith('http://') || image.startsWith('https://')) {
+                      imageSrc = image
+                    } else {
+                      // Otherwise prepend the base URL
+                      imageSrc = AppURL.IMAGE + image
+                    }
+                  } else if (image instanceof File) {
+                    imageSrc = window.URL.createObjectURL(image)
+                  }
+                  
+                  return (
+                    <div key={idx} className="relative group">
+                      <img
+                        src={imageSrc}
+                        alt={`${color} ${idx}`}
+                        className="w-20 h-20 object-cover rounded border"
+                        onError={(e) => {
+                          console.error('Failed to load image:', imageSrc)
+                          e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect width="80" height="80" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(color, idx)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )
+                })}
                 <label className="w-20 h-20 border-2 border-dashed rounded flex items-center justify-center cursor-pointer hover:bg-gray-50">
                   <Upload className="w-6 h-6 text-gray-400" />
                   <input

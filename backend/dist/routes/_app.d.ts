@@ -191,6 +191,7 @@ export declare const router: {
         isActive: boolean | null;
         isFeatured: boolean | null;
         isDigital: boolean | null;
+        rejectionReason: string | null;
         createdAt: Date;
         updatedAt: Date;
     }[], {
@@ -223,6 +224,7 @@ export declare const router: {
         isActive: boolean | null;
         isFeatured: boolean | null;
         isDigital: boolean | null;
+        rejectionReason: string | null;
         createdAt: Date;
         updatedAt: Date;
     }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
@@ -643,6 +645,7 @@ export declare const router: {
                 isActive: boolean | null;
                 isFeatured: boolean | null;
                 isDigital: boolean | null;
+                rejectionReason: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -708,6 +711,7 @@ export declare const router: {
                 isActive: boolean | null;
                 isFeatured: boolean | null;
                 isDigital: boolean | null;
+                rejectionReason: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -1671,6 +1675,7 @@ export declare const router: {
         isActive: boolean | null;
         isFeatured: boolean | null;
         isDigital: boolean | null;
+        rejectionReason: string | null;
         createdAt: Date;
         updatedAt: Date;
     }, {
@@ -1701,6 +1706,7 @@ export declare const router: {
         isActive: boolean | null;
         isFeatured: boolean | null;
         isDigital: boolean | null;
+        rejectionReason: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
@@ -1800,6 +1806,7 @@ export declare const router: {
         isActive: boolean | null;
         isFeatured: boolean | null;
         isDigital: boolean | null;
+        rejectionReason: string | null;
         createdAt: Date;
         updatedAt: Date;
     }, {
@@ -1830,6 +1837,7 @@ export declare const router: {
         isActive: boolean | null;
         isFeatured: boolean | null;
         isDigital: boolean | null;
+        rejectionReason: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
@@ -1905,9 +1913,54 @@ export declare const router: {
         }[];
         period: "7d" | "30d" | "90d" | "1y";
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
-    getProductVariants: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+    approveProduct: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
     } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_6> & {
+        user: {
+            id: string;
+            email: string;
+            name?: string;
+            role?: string;
+            emailVerified?: boolean;
+        };
+        session: {
+            id: string;
+            userId: string;
+            expiresAt: Date;
+        } | undefined;
+        role: string | undefined;
+    }, import("zod").ZodString, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    rejectProduct: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_7> & {
+        user: {
+            id: string;
+            email: string;
+            name?: string;
+            role?: string;
+            emailVerified?: boolean;
+        };
+        session: {
+            id: string;
+            userId: string;
+            expiresAt: Date;
+        } | undefined;
+        role: string | undefined;
+    }, import("zod").ZodObject<{
+        productId: import("zod").ZodString;
+        reason: import("zod").ZodString;
+    }, import("better-auth").$strip>, import("@orpc/contract").Schema<{
+        success: boolean;
+    }, {
+        success: boolean;
+    }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
+    getProductVariants: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
+        request?: Request;
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_8> & {
         user: {
             id: string;
             email: string;
@@ -1962,7 +2015,7 @@ export declare const router: {
     }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     createProductVariant: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_7> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_9> & {
         user: {
             id: string;
             email: string;
@@ -2042,7 +2095,7 @@ export declare const router: {
     } | undefined>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     updateProductVariant: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_8> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_10> & {
         user: {
             id: string;
             email: string;
@@ -2124,7 +2177,7 @@ export declare const router: {
     } | undefined>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     deleteProductVariant: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_9> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_11> & {
         user: {
             id: string;
             email: string;
@@ -2147,7 +2200,7 @@ export declare const router: {
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     bulkUpdateVariantStock: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_10> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_12> & {
         user: {
             id: string;
             email: string;
@@ -2186,7 +2239,7 @@ export declare const router: {
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     getInventoryTransactions: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_11> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_13> & {
         user: {
             id: string;
             email: string;
@@ -2272,7 +2325,7 @@ export declare const router: {
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     createInventoryAdjustment: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_12> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_14> & {
         user: {
             id: string;
             email: string;
@@ -2306,7 +2359,7 @@ export declare const router: {
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     getStockAlerts: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_13> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_15> & {
         user: {
             id: string;
             email: string;
@@ -2375,7 +2428,7 @@ export declare const router: {
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     resolveStockAlert: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_14> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_16> & {
         user: {
             id: string;
             email: string;
@@ -2398,7 +2451,7 @@ export declare const router: {
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     generateStockReport: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_15> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_17> & {
         user: {
             id: string;
             email: string;
@@ -2474,7 +2527,7 @@ export declare const router: {
     }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     adminCreateCategory: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_16> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_18> & {
         user: {
             id: string;
             email: string;
@@ -2511,7 +2564,7 @@ export declare const router: {
     } | undefined>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     adminUpdateCategory: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_17> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_19> & {
         user: {
             id: string;
             email: string;
@@ -2549,7 +2602,7 @@ export declare const router: {
     } | undefined>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     adminDeleteCategory: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_18> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_20> & {
         user: {
             id: string;
             email: string;
@@ -3913,7 +3966,7 @@ export declare const router: {
     }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     createHelpArticle: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_19> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_21> & {
         user: {
             id: string;
             email: string;
@@ -3957,7 +4010,7 @@ export declare const router: {
     } | undefined>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     updateHelpArticle: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_20> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_22> & {
         user: {
             id: string;
             email: string;
@@ -4002,7 +4055,7 @@ export declare const router: {
     } | undefined>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     deleteHelpArticle: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_21> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_23> & {
         user: {
             id: string;
             email: string;
@@ -4055,7 +4108,7 @@ export declare const router: {
     }[]>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     updateAppSetting: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_22> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_24> & {
         user: {
             id: string;
             email: string;
@@ -4088,7 +4141,7 @@ export declare const router: {
     } | undefined>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     bulkUpdateAppSettings: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_23> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_25> & {
         user: {
             id: string;
             email: string;
@@ -4109,7 +4162,7 @@ export declare const router: {
     }>, import("@orpc/contract").MergedErrorMap<Record<never, never>, Record<never, never>>, Record<never, never>>;
     deleteAppSetting: import("@orpc/server").Procedure<import("@orpc/server").MergedInitialContext<Record<never, never>, Record<never, never> & Omit<{
         request?: Request;
-    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_24> & {
+    } & Record<never, never>, never>, Record<never, never>>, Omit<Record<never, never>, keyof UOutContext_26> & {
         user: {
             id: string;
             email: string;
@@ -4670,6 +4723,7 @@ export declare const router: {
                 isActive: boolean | null;
                 isFeatured: boolean | null;
                 isDigital: boolean | null;
+                rejectionReason: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -4735,6 +4789,7 @@ export declare const router: {
                 isActive: boolean | null;
                 isFeatured: boolean | null;
                 isDigital: boolean | null;
+                rejectionReason: string | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -5546,6 +5601,7 @@ export declare const router: {
             isActive: boolean | null;
             isFeatured: boolean | null;
             isDigital: boolean | null;
+            rejectionReason: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];
@@ -5579,6 +5635,7 @@ export declare const router: {
             isActive: boolean | null;
             isFeatured: boolean | null;
             isDigital: boolean | null;
+            rejectionReason: string | null;
             createdAt: Date;
             updatedAt: Date;
         }[];

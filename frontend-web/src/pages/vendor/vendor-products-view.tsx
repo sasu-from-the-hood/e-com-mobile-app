@@ -86,10 +86,20 @@ export function VendorProductsView() {
                   <td className="px-4 py-3">{p.stockQuantity}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{p.warehouseId ? "Assigned" : "—"}</td>
                   <td className="px-4 py-3">
-                    {p.isActive
-                      ? <Badge className="bg-green-100 text-green-700 border-0"><IconCheck className="h-3 w-3 mr-1" />Approved</Badge>
-                      : <Badge className="bg-yellow-100 text-yellow-700 border-0"><IconClock className="h-3 w-3 mr-1" />Pending</Badge>
-                    }
+                    {p.isActive ? (
+                      <Badge className="bg-green-100 text-green-700 border-0">
+                        <IconCheck className="h-3 w-3 mr-1" />Approved
+                      </Badge>
+                    ) : p.rejectionReason ? (
+                      <div className="space-y-1">
+                        <Badge className="bg-red-100 text-red-700 border-0">Rejected</Badge>
+                        <p className="text-xs text-red-600 mt-1">{p.rejectionReason}</p>
+                      </div>
+                    ) : (
+                      <Badge className="bg-yellow-100 text-yellow-700 border-0">
+                        <IconClock className="h-3 w-3 mr-1" />Pending
+                      </Badge>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
