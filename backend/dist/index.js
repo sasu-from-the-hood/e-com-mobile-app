@@ -35,6 +35,7 @@ app.get('/uploads/*', async (c) => {
             '.png': 'image/png',
             '.gif': 'image/gif',
             '.webp': 'image/webp',
+            '.svg': 'image/svg+xml',
             '.glb': 'model/gltf-binary'
         };
         c.header('Content-Type', mimeTypes[ext] || 'application/octet-stream');

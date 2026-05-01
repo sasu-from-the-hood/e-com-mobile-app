@@ -4,6 +4,7 @@ import { db } from '../../database/db.js';
 import { products, orders, orderItems, vendorWarehouses, warehouses } from '../../database/schema/index.js';
 import { eq, and, count, desc, like, sql } from 'drizzle-orm';
 import cuid from 'cuid';
+import { logger } from '../../utils/logger.js';
 // ── Stats ────────────────────────────────────────────────────────────────────
 export const getVendorStats = vendorProcedure
     .handler(async ({ context }) => {
@@ -16,20 +17,28 @@ export const getVendorStats = vendorProcedure
         .where(eq(products.vendorId, vendorId));
     const [pendingApproval] = await db.select({ count: count() }).from(products)
         .where(and(eq(products.vendorId, vendorId), eq(products.isActive, false)));
-    // Orders for vendor's warehouses
+    // Orders that contain vendor's products
     let totalOrders = 0;
-    let totalRevenue = '0';
-    if (warehouseIds.length > 0) {
-        const [ordersCount] = await db.select({ count: count() }).from(orders)
-            .where(sql `JSON_CONTAINS(${orders.metadata}, JSON_ARRAY(${warehouseIds[0]}), '$.warehouseIds') OR 1=1`);
-        totalOrders = ordersCount?.count ?? 0;
+    const vendorProductIds = await db.select({ id: products.id })
+        .from(products)
+        .where(eq(products.vendorId, vendorId));
+    const productIds = vendorProductIds.map(p => p.id);
+    logger.info('📊 [getVendorStats] Vendor stats request', { vendorId, productCount: productIds.length });
+    if (productIds.length > 0) {
+        // Get distinct order IDs first
+        const distinctOrders = await db
+            .selectDistinct({ orderId: orderItems.orderId })
+            .from(orderItems)
+            .where(sql `${orderItems.productId} IN (${sql.join(productIds.map(id => sql `${id}`), sql `, `)})`);
+        totalOrders = distinctOrders.length;
+        logger.info('📊 [getVendorStats] Orders found', { totalOrders, distinctOrderCount: distinctOrders.length });
     }
     return {
         totalProducts: totalProducts?.count ?? 0,
         pendingApproval: pendingApproval?.count ?? 0,
         totalWarehouses: warehouseIds.length,
         totalOrders,
-        totalRevenue,
+        totalRevenue: '0',
     };
 });
 // ── Products ─────────────────────────────────────────────────────────────────
@@ -197,28 +206,40 @@ export const getVendorOrders = vendorProcedure
     .input(z.object({ page: z.number().default(1), limit: z.number().default(20) }))
     .handler(async ({ input, context }) => {
     const vendorId = context.user.id;
-    // Get vendor's warehouse IDs
-    const vw = await db.select({ warehouseId: vendorWarehouses.warehouseId })
-        .from(vendorWarehouses).where(eq(vendorWarehouses.vendorId, vendorId));
-    const warehouseIds = vw.map(r => r.warehouseId);
-    if (warehouseIds.length === 0)
-        return { orders: [], total: 0 };
-    // Orders that contain products from vendor's warehouses
+    // Get vendor's product IDs
     const vendorProductIds = await db.select({ id: products.id })
         .from(products)
         .where(eq(products.vendorId, vendorId));
     const productIds = vendorProductIds.map(p => p.id);
-    if (productIds.length === 0)
+    logger.info('📋 [getVendorOrders] Fetching orders', { vendorId, productCount: productIds.length, page: input.page });
+    if (productIds.length === 0) {
+        logger.warn('❌ [getVendorOrders] No products found for vendor', { vendorId });
         return { orders: [], total: 0 };
+    }
     const offset = (input.page - 1) * input.limit;
-    const rows = await db
-        .selectDistinct({ order: orders })
+    // Get distinct order IDs that contain vendor's products
+    const distinctOrderIds = await db
+        .selectDistinct({ orderId: orderItems.orderId })
+        .from(orderItems)
+        .where(sql `${orderItems.productId} IN (${sql.join(productIds.map(id => sql `${id}`), sql `, `)})`);
+    logger.info('📋 [getVendorOrders] Distinct orders found', { count: distinctOrderIds.length });
+    if (distinctOrderIds.length === 0) {
+        logger.warn('❌ [getVendorOrders] No orders contain vendor products', { vendorId });
+        return { orders: [], total: 0 };
+    }
+    const orderIds = distinctOrderIds.map(o => o.orderId);
+    // Get the actual order details
+    const ordersList = await db
+        .select()
         .from(orders)
-        .innerJoin(orderItems, eq(orderItems.orderId, orders.id))
-        .where(sql `${orderItems.productId} IN (${sql.join(productIds.map(id => sql `${id}`), sql `, `)})`)
+        .where(sql `${orders.id} IN (${sql.join(orderIds.map(id => sql `${id}`), sql `, `)})`)
         .orderBy(desc(orders.createdAt))
         .limit(input.limit)
         .offset(offset);
-    return { orders: rows.map(r => r.order), total: rows.length };
+    logger.info('📋 [getVendorOrders] Returning orders', { ordersCount: ordersList.length, total: distinctOrderIds.length });
+    return {
+        orders: ordersList,
+        total: distinctOrderIds.length
+    };
 });
 //# sourceMappingURL=vendor.js.map
