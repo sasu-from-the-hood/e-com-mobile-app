@@ -180,7 +180,11 @@ export function CollectionPreview({ selectedModelIds, models }: CollectionPrevie
 
   const xbotUrl = `${AppURL.BASE}/api/admin/3d-models/files/Xbot.glb` // Load from backend API
   
-  const handleRefresh = () => {
+  const handleRefresh = (e?: React.MouseEvent) => {
+    // Prevent event propagation to avoid closing parent dialogs/forms
+    e?.preventDefault()
+    e?.stopPropagation()
+    
     console.log('🔄 Refreshing collection preview scene...')
     // Clear GLB caches for all models
     selectedModelIds.forEach(id => {
@@ -295,6 +299,7 @@ export function CollectionPreview({ selectedModelIds, models }: CollectionPrevie
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm">Collection Preview ({selectedModelIds.length} models)</CardTitle>
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={handleRefresh}

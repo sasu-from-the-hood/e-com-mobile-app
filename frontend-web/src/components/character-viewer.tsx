@@ -1,9 +1,9 @@
 import { Suspense, useState, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Environment } from '@react-three/drei'
+import { OrbitControls, Environment, useGLTF } from '@react-three/drei'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { IconX } from '@tabler/icons-react'
+import { IconX, IconRefresh } from '@tabler/icons-react'
 import { type GenerationJob } from '@/config/3d-agent.config'
 import { ErrorBoundary } from 'react-error-boundary'
 import { orpc } from '@/lib/oprc'
@@ -24,6 +24,7 @@ export function CharacterViewer({ job, onClose }: CharacterViewerProps) {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [proxiedItemUrl, setProxiedItemUrl] = useState<string>('')
   const [proxiedItemUrl2, setProxiedItemUrl2] = useState<string>('')
+  const [refreshKey, setRefreshKey] = useState(0)
   
   // Load saved position from localStorage or use defaults
   const loadSavedPosition = () => {
@@ -76,6 +77,18 @@ export function CharacterViewer({ job, onClose }: CharacterViewerProps) {
   const itemUrl2 = savedModelData?.rightLegFile 
     ? `${AppURL.BASE}/api/admin/3d-models/files/${savedModelData.rightLegFile}` 
     : (job.result?.fileUrl2 || '')
+  
+  const handleRefresh = () => {
+    console.log('🔄 Refreshing character try-on scene...')
+    // Clear GLB caches
+    useGLTF.clear(characterModelUrl)
+    if (itemUrl) useGLTF.clear(itemUrl)
+    if (itemUrl2) useGLTF.clear(itemUrl2)
+    // Force remount
+    setRefreshKey(prev => prev + 1)
+    setIsLoading(true)
+    setLoadError(null)
+  }
   
   // Check if model is already saved
   useEffect(() => {
@@ -323,9 +336,20 @@ export function CharacterViewer({ job, onClose }: CharacterViewerProps) {
               {job.bodyPartType?.replace(/-/g, ' ')}
             </p>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <IconX className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh}
+              className="h-8 text-xs"
+            >
+              <IconRefresh className="h-3 w-3 mr-1" />
+              Refresh
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <IconX className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* 3D Character Viewer */}
@@ -349,6 +373,7 @@ export function CharacterViewer({ job, onClose }: CharacterViewerProps) {
               }}
             >
               <Canvas
+                key={refreshKey}
                 camera={{ position: [0, 1.5, 3], fov: 50 }}
                 gl={{ antialias: true, alpha: true }}
                 onCreated={() => setIsLoading(false)}
