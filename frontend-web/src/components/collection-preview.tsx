@@ -176,8 +176,27 @@ export function CollectionPreview({ selectedModelIds, models }: CollectionPrevie
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selectedAnimation, setSelectedAnimation] = useState<string>('none')
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const xbotUrl = `${AppURL.BASE}/api/admin/3d-models/files/Xbot.glb` // Load from backend API
+  
+  const handleRefresh = () => {
+    console.log('🔄 Refreshing collection preview scene...')
+    // Clear GLB caches for all models
+    selectedModelIds.forEach(id => {
+      const model = models.find(m => m.id === id)
+      if (model?.leftLegFile) {
+        const url = `${AppURL.BASE}/api/admin/3d-models/files/${model.leftLegFile}`
+        useGLTF.clear(url)
+      }
+    })
+    // Clear Xbot cache
+    useGLTF.clear(xbotUrl)
+    // Force remount by changing key
+    setRefreshKey(prev => prev + 1)
+    setIsLoading(true)
+    setLoadError(null)
+  }
   
   // Clear GLB cache when component mounts to ensure fresh data
   useEffect(() => {
@@ -278,15 +297,11 @@ export function CollectionPreview({ selectedModelIds, models }: CollectionPrevie
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              // Force re-render by clearing and reloading
-              setSelectedAnimation('none')
-              setTimeout(() => setSelectedAnimation('idle'), 100)
-            }}
+            onClick={handleRefresh}
             className="h-7 text-xs"
           >
             <IconRefresh className="w-3 h-3 mr-1" />
-            Refresh
+            Refresh Scene
           </Button>
         </div>
         
@@ -325,7 +340,7 @@ export function CollectionPreview({ selectedModelIds, models }: CollectionPrevie
               onError={handleLoadError}
             >
               <Canvas
-                key={selectedModelIds.join('-')} // Force remount when selection changes
+                key={`${selectedModelIds.join('-')}-${refreshKey}`} // Force remount when selection changes or refresh clicked
                 camera={{ position: [0, 1, 3], fov: 50 }}
                 gl={{ antialias: true, alpha: true }}
                 onCreated={() => setIsLoading(false)}
