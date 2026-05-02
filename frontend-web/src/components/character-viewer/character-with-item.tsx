@@ -152,12 +152,27 @@ export function CharacterWithItem({
     const actualScale = scale / 10
     const { defaultOffsetX, defaultOffsetY, defaultOffsetZ } = getDefaultOffsets(bodyPartType)
     
+    // Apply Y-axis offset: if negative, subtract 10 more; if positive, add 20
+    const adjustedY = positionY < 0 
+      ? positionY - 10  // Make more negative (move down)
+      : positionY + 20  // Make more positive (move up)
+    
     itemToAttach.scale.setScalar(actualScale)
-    itemToAttach.position.set(positionX + defaultOffsetX, positionY + defaultOffsetY, positionZ + defaultOffsetZ)
+    itemToAttach.position.set(
+      positionX + defaultOffsetX, 
+      adjustedY + defaultOffsetY, 
+      positionZ + defaultOffsetZ
+    )
     itemToAttach.visible = true
     
     console.log('📐 Applying scale:', actualScale, 'from slider value:', scale)
-    console.log('📍 Applying position:', positionX, positionY + defaultOffsetY, positionZ + defaultOffsetZ)
+    console.log('📍 Applying position:', {
+      x: positionX + defaultOffsetX,
+      y: adjustedY + defaultOffsetY,
+      z: positionZ + defaultOffsetZ,
+      originalY: positionY,
+      offset: positionY < 0 ? -10 : +20
+    })
     
     let meshCount = 0
     itemToAttach.traverse((child) => {

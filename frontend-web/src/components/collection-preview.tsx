@@ -4,6 +4,8 @@ import { OrbitControls, useGLTF, Environment, useAnimations } from '@react-three
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { IconRefresh } from '@tabler/icons-react'
 import * as THREE from 'three'
 import { ErrorBoundary } from 'react-error-boundary'
 import { URL as AppURL } from '@/config'
@@ -105,9 +107,9 @@ function XbotWithModels({ xbotUrl, productModels, selectedAnimation }: { xbotUrl
       
       // Apply position - use saved positions directly
       // The saved positions already include any offsets that were set when saving
-      // Add offset to Y-axis: if negative, subtract 20 more; if positive, add 20
+      // Add offset to Y-axis: if negative, subtract 10 more; if positive, add 20
       const adjustedY = model.positionY < 0 
-        ? model.positionY - 20  // Make more negative (move down)
+        ? model.positionY - 10  // Make more negative (move down)
         : model.positionY + 20  // Make more positive (move up)
       
       console.log(`🎯 Applying position for ${model.bodyPartType}:`, {
@@ -116,7 +118,7 @@ function XbotWithModels({ xbotUrl, productModels, selectedAnimation }: { xbotUrl
         z: model.positionZ,
         scale: actualScale,
         originalY: model.positionY,
-        offset: model.positionY < 0 ? -20 : +20
+        offset: model.positionY < 0 ? -10 : +20
       })
       
       clonedScene.position.set(
@@ -271,7 +273,22 @@ export function CollectionPreview({ selectedModelIds, models }: CollectionPrevie
   return (
     <Card>
       <CardHeader className="space-y-3">
-        <CardTitle className="text-sm">Collection Preview ({selectedModelIds.length} models)</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm">Collection Preview ({selectedModelIds.length} models)</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              // Force re-render by clearing and reloading
+              setSelectedAnimation('none')
+              setTimeout(() => setSelectedAnimation('idle'), 100)
+            }}
+            className="h-7 text-xs"
+          >
+            <IconRefresh className="w-3 h-3 mr-1" />
+            Refresh
+          </Button>
+        </div>
         
         {/* Animation Selector */}
         <div className="flex items-center gap-2">
