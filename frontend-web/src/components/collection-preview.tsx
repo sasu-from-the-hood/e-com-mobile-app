@@ -105,8 +105,10 @@ function XbotWithModels({ xbotUrl, productModels, selectedAnimation }: { xbotUrl
       
       // Apply position - use saved positions directly
       // The saved positions already include any offsets that were set when saving
-      // Add +20 offset to Y-axis for collection preview to adjust positioning
-      const adjustedY = model.positionY + 20
+      // Add offset to Y-axis: if negative, subtract 20 more; if positive, add 20
+      const adjustedY = model.positionY < 0 
+        ? model.positionY - 20  // Make more negative (move down)
+        : model.positionY + 20  // Make more positive (move up)
       
       console.log(`🎯 Applying position for ${model.bodyPartType}:`, {
         x: model.positionX,
@@ -114,7 +116,7 @@ function XbotWithModels({ xbotUrl, productModels, selectedAnimation }: { xbotUrl
         z: model.positionZ,
         scale: actualScale,
         originalY: model.positionY,
-        offset: 20
+        offset: model.positionY < 0 ? -20 : +20
       })
       
       clonedScene.position.set(
