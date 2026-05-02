@@ -222,8 +222,6 @@ export function CollectionPreview({ selectedModelIds, models }: CollectionPrevie
           positionZ: m.positionZ
         }
       })
-        rawData: { scale: m.scale, positionX: m.positionX, positionY: m.positionY, positionZ: m.positionZ }
-      })
       
       return model
     })
